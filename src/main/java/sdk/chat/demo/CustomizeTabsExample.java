@@ -1,0 +1,35 @@
+package sdk.chat.demo;
+
+import android.content.Context;
+
+import com.mikepenz.iconics.IconicsDrawable;
+import com.mikepenz.iconics.typeface.library.fontawesome.FontAwesome;
+import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial;
+
+public class CustomizeTabsExample {
+
+    public static void run(Context context) {
+
+        String title = "EditTab";
+
+        // Use FontAwesome or Google Material icons
+        IconicsDrawable fawIcon = new IconicsDrawable(context, FontAwesome.Icon.faw_user);
+        IconicsDrawable gmdIcon = new IconicsDrawable(context, GoogleMaterial.Icon.gmd_blur_on);
+
+
+//        Fragment fragment = new ChatFragment();
+
+        // Create and add the tab
+//        Tab tab = new Tab(title, drawable, fragment);
+//        ChatSDK.ui().setTab(tab, 1);
+//
+//        // Or add the tab like this
+//        ChatSDK.ui().setTab(title, drawable, fragment, 1);
+//
+//        // Remove the tab
+//        ChatSDK.ui().removeTab(1);
+
+
+    }
+
+}
