@@ -23,7 +23,10 @@ public class MainApp extends Application {
         try {
 
             // Setup Chat SDK
-            ChatSDKCoze.quickStartWithEmail(this, "pre_998", "AIzaSyCwwtZrlY9Rl8paM0R6iDNBEit_iexQ1aE", !Device.honor(), "team@sdk.chat",
+            boolean drawerEnabled = !Device.honor();
+            ChatSDKCoze.quickStartWithEmail(this, "pre_998", "AIzaSyCwwtZrlY9Rl8paM0R6iDNBEit_iexQ1aE",
+                    drawerEnabled,
+                    "",
                     AudioMessageModule.shared(),
 //                    FirebaseBlockingModule.shared(),
 //                    FirebaseReadReceiptsModule.shared(),

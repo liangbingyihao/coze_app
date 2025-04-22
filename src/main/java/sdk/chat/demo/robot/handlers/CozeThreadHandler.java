@@ -24,10 +24,12 @@ import sdk.chat.core.dao.Message;
 import sdk.chat.core.dao.Thread;
 import sdk.chat.core.dao.User;
 import sdk.chat.core.dao.UserThreadLink;
+import sdk.chat.core.events.NetworkEvent;
 import sdk.chat.core.interfaces.ThreadType;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.MessageSendStatus;
 import sdk.chat.core.types.MessageType;
+import sdk.chat.core.types.Progress;
 import sdk.chat.core.utils.Debug;
 import sdk.chat.demo.robot.CozeApiManager;
 import sdk.chat.demo.robot.wrappers.MessageWrapper;
@@ -160,8 +162,12 @@ public class CozeThreadHandler extends AbstractThreadHandler {
         return  CozeApiManager.shared().askRobot(message)
                 .subscribeOn(RX.io()).flatMap(data -> {
                     message.setEntityID(data.get("id").getAsString());
+//                    message.setMessageStatus(MessageSendStatus.Uploading,true);
+//                    ChatSDK.events().source().accept(NetworkEvent.messageProgressUpdated(message, new Progress(10,100)));
                     ChatSDK.db().update(message);
                     pushForMessage(message);
+//                    message.setMessageStatus(MessageSendStatus.Uploading,true);
+//                    ChatSDK.events().source().accept(NetworkEvent.messageProgressUpdated(message, new Progress(10,100)));
                     return Single.just(message);
                 }).ignoreElement();
 

@@ -30,6 +30,9 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name="sdk.chat.demo.robot.activities.CozeMainActivity"/>
+
         <activity android:name="sdk.chat.demo.examples.helper.CustomPostRegistrationActivity"/>
     </application>
 

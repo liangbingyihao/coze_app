@@ -38,6 +38,7 @@ import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.AccountDetails;
 import sdk.chat.core.types.MessageSendStatus;
 import sdk.chat.core.types.MessageType;
+import sdk.chat.core.types.Progress;
 import sdk.guru.common.RX;
 
 import com.google.gson.*;
@@ -248,6 +249,10 @@ public class CozeApiManager {
                     .header("Authorization", accessToken)
                     .build();
 
+//            Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
+//            message.setMessageStatus(MessageSendStatus.Uploading,true);
+//            ChatSDK.events().source().accept(NetworkEvent.messageProgressUpdated(message, new Progress(20,100)));
+
 
             client.newCall(request).enqueue(new Callback() {
                 @Override
@@ -301,7 +306,6 @@ public class CozeApiManager {
                 .flatMap(tick -> {
                     retryCount.set(0);
                     Logger.warn("tick..........." + tick.toString());
-                    //                                Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
                     //                                Message rsp = createMessageResp(message);
                     //                                if(rsp!=null){
                     //                                    disposables.clear();
@@ -327,12 +331,15 @@ public class CozeApiManager {
                             if (json != null) {
                                 Logger.warn("success...");
                                 JsonArray items = json.getAsJsonObject().getAsJsonArray("items");
-                                if(!items.isEmpty()){
+                                if (!items.isEmpty()) {
                                     Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
+                                    int pending = 0;
                                     for (JsonElement i : items) {
-                                        createMessageResp(message,i.getAsJsonObject());
+                                        pending += createMessageResp(message, i.getAsJsonObject()) ? 1 : 0;
                                     }
-                                    disposables.clear();
+                                    if (pending == 0) {
+                                        disposables.clear();
+                                    }
                                 }
 
                                 return Completable.complete();
@@ -351,19 +358,23 @@ public class CozeApiManager {
         disposables.add(disposable);
     }
 
-    protected Message createMessageResp(Message context,JsonObject detail) {
-        Message message = new Message();
-        message.setDate(new Date());
-        List<User> users = context.getThread().getUsers();
-        message.setSender(users.get(0));
-        message.setEntityID(detail.get("id").getAsString());
-        message.setType(MessageType.Text);
-        message.setMessageStatus(MessageSendStatus.Initial, false);
-        message.setIsRead(false);
-        ChatSDK.db().insertOrReplaceEntity(message);
-        context.getThread().addMessage(message, true, true, false);
+    protected boolean createMessageResp(Message context, JsonObject detail) {
+        Message message = ChatSDK.db().fetchMessageWithEntityID(detail.get("id").getAsString());
+        if (message == null) {
+            message = new Message();
+            message.setDate(new Date());
+            List<User> users = context.getThread().getUsers();
+            message.setSender(users.get(0));
+            message.setEntityID(detail.get("id").getAsString());
+            message.setType(MessageType.Text);
+            message.setMessageStatus(MessageSendStatus.Initial, false);
+            message.setIsRead(false);
+            ChatSDK.db().insertOrReplaceEntity(message);
+            context.getThread().addMessage(message, true, true, false);
+        }
         message.setText(detail.get("content").getAsString());
         ChatSDK.db().update(message, false);
+        ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
 //        Message resp = ChatSDK.thread().newMessage(MessageType.Text, context.getThread(), true);
 ////        if (messageDidCreateUpdateAction != null) {
 ////            messageDidCreateUpdateAction.update(message);
@@ -389,7 +400,7 @@ public class CozeApiManager {
 //            context.getThread().addMessage(resp, true);
 //        }).subscribe(ChatSDK.events());
 //        return resp;
-        return message;
+        return detail.get("status").getAsInt() != 2;
 
     }
 
