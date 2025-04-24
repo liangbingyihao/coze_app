@@ -1,4 +1,4 @@
-package sdk.chat.demo.robot.ui;
+package sdk.chat.demo.robot.activities;
 
 import android.content.Intent;
 import android.os.Bundle;

@@ -15,8 +15,7 @@ import sdk.chat.core.module.AbstractModule;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.session.Configure;
 import sdk.chat.core.utils.ProfileOption;
-import sdk.chat.demo.robot.activities.CozeMainActivity;
-import sdk.chat.ui.extras.MainDrawerActivity;
+import sdk.chat.demo.robot.activities.MainDrawerActivity;
 import sdk.chat.ui.extras.ScanQRCodeActivity;
 import sdk.chat.ui.extras.ShowQRCodeActivity;
 import sdk.guru.common.BaseConfig;
@@ -98,7 +97,7 @@ public class CozeExtrasModule extends AbstractModule {
     @Override
     public void activate(@Nullable Context context) {
         if (config.drawerEnabled) {
-            ChatSDK.ui().setMainActivity(CozeMainActivity.class);
+            ChatSDK.ui().setMainActivity(MainDrawerActivity.class);
         }
         if (config.qrCodesEnabled) {
             ChatSDK.ui().addSearchActivity(ScanQRCodeActivity.class, ChatSDK.getString(sdk.chat.ui.extras.R.string.qr_code));

@@ -1,28 +1,32 @@
 package sdk.chat.demo.robot.activities;
 
-import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.drawerlayout.widget.DrawerLayout;
+
+import com.mikepenz.fastadapter.FastAdapter;
+import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
+import com.mikepenz.materialdrawer.widget.MaterialDrawerSliderView;
 import java.util.List;
 
-import io.reactivex.Single;
-import sdk.chat.core.dao.Keys;
+import materialsearchview.MaterialSearchView;
 import sdk.chat.core.dao.Thread;
-import sdk.chat.core.interfaces.ThreadType;
-import sdk.chat.core.session.ChatSDK;
-import sdk.chat.core.utils.StringChecker;
 import sdk.chat.demo.pre.R;
-import sdk.chat.ui.ChatSDKUI;
-import sdk.chat.ui.activities.ChatActivity;
-import sdk.chat.ui.activities.LoginActivity;
-import sdk.chat.ui.extras.MainDrawerActivity;
+import sdk.chat.demo.robot.fragments.CozeChatFragment;
+import sdk.chat.ui.activities.MainActivity;
 import sdk.chat.ui.fragments.AbstractChatFragment;
 import sdk.chat.ui.fragments.ChatFragment;
-import sdk.guru.common.RX;
 
-public class CozeMainActivity extends MainDrawerActivity {
+public class CozeMainActivity extends MainActivity {
     protected List<Thread> threads;
     protected AbstractChatFragment chatFragment;
+    private DrawerLayout drawer;
+    private MaterialDrawerSliderView slider;
+
+    // 静态菜单项ID
+    private static final long NAV_HOME = 1L;
+    private static final long NAV_PROFILE = 2L;
+    private static final long NAV_SETTINGS = 3L;
 
     @Override
     protected int getLayout() {
@@ -34,12 +38,42 @@ public class CozeMainActivity extends MainDrawerActivity {
         super.onCreate(savedInstanceState);
 //        updateThread(savedInstanceState);
 
-//        if (savedInstanceState == null) {
-//            chatFragment = ChatSDKUI.getChatFragment(thread);
-//            getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, chatFragment).commit();
-//        } else {
-//            chatFragment = (ChatFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_container);
-//        }
+        if (savedInstanceState == null) {
+            chatFragment = new CozeChatFragment();
+            getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, chatFragment).commit();
+        } else {
+            chatFragment = (ChatFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        }
+
+    }
+
+    @Override
+    protected boolean searchEnabled() {
+        return false;
+    }
+
+    @Override
+    protected void search(String text) {
+
+    }
+
+    @Override
+    protected MaterialSearchView searchView() {
+        return null;
+    }
+
+    @Override
+    protected void reloadData() {
+
+    }
+
+    @Override
+    protected void clearData() {
+
+    }
+
+    @Override
+    protected void updateLocalNotificationsForTab() {
 
     }
 //

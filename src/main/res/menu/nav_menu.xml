@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- 分组1 -->
+    <group android:id="@+id/group1">
+<!--        <item-->
+<!--            android:id="@+id/nav_home"-->
+<!--            android:icon="@drawable/ic_home"-->
+<!--            android:title="首页"/>-->
+
+        <item
+            android:id="@+id/nav_gallery"
+            android:title="相册"/>
+    </group>
+
+    <!-- 分组2 -->
+    <group android:id="@+id/group2">
+        <item
+            android:id="@+id/nav_settings"
+            android:title="设置"/>
+    </group>
+</menu>

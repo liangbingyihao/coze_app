@@ -2,6 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.crashlytics'
 apply plugin: 'com.google.firebase.firebase-perf'
+apply plugin: 'org.jetbrains.kotlin.android'
 
 android {
     compileSdkVersion Integer.parseInt(project.ANDROID_COMPILE_SDK_VERSION)
@@ -55,6 +56,9 @@ android {
         lintConfig file('lint.xml')
     }
     namespace 'sdk.chat.demo.pre'
+    kotlinOptions {
+        jvmTarget = '11'
+    }
 
 
 }
@@ -65,6 +69,7 @@ dependencies {
     implementation "com.google.firebase:firebase-crashlytics"
     implementation "com.google.firebase:firebase-perf"
     implementation project(':android-networking')
+    api "com.github.bumptech.glide:glide:$glideVersion"
 //    implementation 'com.github.amitshekhariitbhu.Fast-Android-Networking:android-networking:v1.0.2'
 
 }

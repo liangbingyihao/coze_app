@@ -1,4 +1,5 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:animateLayoutChanges="true"
@@ -11,11 +12,11 @@
         android:layout_height="match_parent"
         android:fitsSystemWindows="true">
 
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center">
-
+            android:gravity="center"
+            android:orientation="vertical">
 <!--            <include layout="@layout/app_bar_default" />-->
             <sdk.chat.demo.robot.ui.CozeChatActionBar
                 android:id="@+id/chatActionBar"
@@ -27,16 +28,54 @@
                 android:layout_height="match_parent"
                 android:layout_below="@id/chatActionBar"
                 />
+<!--            <fragment-->
+<!--                android:id="@+id/myFragment"-->
+<!--                android:name="sdk.chat.demo.robot.fragments.CozeChatFragment"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="match_parent"/>-->
+        </LinearLayout>
 
-        </RelativeLayout>
-
-        <com.mikepenz.materialdrawer.widget.MaterialDrawerSliderView
-            android:id="@+id/slider"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="280dp"
             android:layout_height="match_parent"
             android:layout_gravity="start"
-            android:fitsSystemWindows="true"
-            />
+            android:orientation="vertical"
+            android:background="?attr/colorSurface">
+
+            <include layout="@layout/nav_header"/>
+
+            <!-- 动态菜单 (RecyclerView) -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/nav_recycler"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"/>
+
+            <!-- 底部 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:background="?attr/colorPrimary">
+
+                <com.mikepenz.iconics.view.IconicsImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    app:iiv_icon="faw-cog"
+                    app:iiv_color="@android:color/white"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:text="设置"
+                    android:textColor="@android:color/white"/>
+            </LinearLayout>
+        </LinearLayout>
 
     </androidx.drawerlayout.widget.DrawerLayout>
     <materialsearchview.MaterialSearchView

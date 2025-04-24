@@ -6,13 +6,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import androidx.annotation.LayoutRes;
-
-import io.reactivex.annotations.NonNull;
 import sdk.chat.core.dao.Keys;
 import sdk.chat.core.dao.Thread;
-import sdk.chat.core.events.EventType;
-import sdk.chat.core.events.NetworkEvent;
 import sdk.chat.core.handlers.TypingIndicatorHandler;
 import sdk.chat.core.interfaces.ThreadType;
 import sdk.chat.core.session.ChatSDK;
@@ -54,7 +49,7 @@ public class CozeChatFragment extends ChatFragment {
         replyView = rootView.findViewById(sdk.chat.ui.R.id.replyView);
         input = rootView.findViewById(sdk.chat.ui.R.id.input);
         listContainer = rootView.findViewById(sdk.chat.ui.R.id.listContainer);
-        searchView = rootView.findViewById(sdk.chat.ui.R.id.searchView);
+        searchView = getActivity().findViewById(R.id.searchView);
         root = rootView.findViewById(sdk.chat.ui.R.id.root);
         messageInputLinearLayout = rootView.findViewById(sdk.chat.ui.R.id.messageInputLinearLayout);
         keyboardOverlay = rootView.findViewById(sdk.chat.ui.R.id.keyboardOverlay);

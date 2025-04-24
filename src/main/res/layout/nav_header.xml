@@ -1,0 +1,132 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@android:color/white"
+    android:padding="16dp">
+
+    <!-- 第一行：应用名称 + 搜索按钮 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/app_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/app_name"
+            android:textColor="@color/gray"
+            android:textSize="20sp"/>
+
+        <com.mikepenz.iconics.view.IconicsImageView
+            android:id="@+id/btn_search"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?selectableItemBackgroundBorderless"
+            android:padding="8dp"
+            app:iiv_icon="faw-search"
+            app:iiv_color="#666666"/>
+    </LinearLayout>
+
+    <!-- 第二行：新建对话按钮 -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_new_chat"
+        style="@style/Widget.MyApp.Button.Outlined"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/conversations"
+        android:textColor="?attr/colorPrimary"
+        app:icon="@drawable/ic_add_circle"
+        app:strokeColor="?attr/colorPrimary"/>
+
+    <!-- 静态菜单项 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="vertical">
+
+        <!-- 我的收藏 -->
+        <LinearLayout
+            android:id="@+id/menu_favorites"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:background="?selectableItemBackground"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="8dp">
+
+            <com.mikepenz.iconics.view.IconicsImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                app:iiv_icon="faw-heart"
+                app:iiv_color="#666666"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:text="我的收藏"
+                android:textColor="@color/gray"
+                android:textSize="14sp"/>
+
+            <com.mikepenz.iconics.view.IconicsImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                app:iiv_icon="faw-chevron-right"
+                app:iiv_color="#999999"/>
+        </LinearLayout>
+
+        <!-- 分割线 -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="44dp"
+            android:background="#EEEEEE"/>
+
+        <!-- 我的周报 -->
+        <LinearLayout
+            android:id="@+id/menu_reports"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="?selectableItemBackground"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="8dp">
+
+            <com.mikepenz.iconics.view.IconicsImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                app:iiv_icon="faw-file-alt"
+                app:iiv_color="#666666"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:text="我的周报"
+                android:textColor="@color/gray"
+                android:textSize="14sp"/>
+
+            <com.mikepenz.iconics.view.IconicsImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                app:iiv_icon="faw-chevron-right"
+                app:iiv_color="#999999"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 分割线（与下方RecyclerView分隔） -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
+        android:layout_marginTop="8dp"
+        android:background="#F5F5F5"/>
+</LinearLayout>
