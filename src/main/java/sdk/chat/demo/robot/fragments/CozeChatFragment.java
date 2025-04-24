@@ -1,10 +1,14 @@
 package sdk.chat.demo.robot.fragments;
 
+import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Debug;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
 
 import sdk.chat.core.dao.Keys;
 import sdk.chat.core.dao.Thread;
@@ -16,29 +20,52 @@ import sdk.chat.ui.fragments.ChatFragment;
 import sdk.chat.ui.module.UIModule;
 
 public class CozeChatFragment extends ChatFragment {
+    private DataCallback dataCallback;
+
+    public interface DataCallback {
+        Thread getCurrentData();
+        void onDataUpdated(Thread thread);
+    }
 
     @Override
     protected int getLayout() {
         return R.layout.fragment_coze_chat;
     }
 
-    public void setThread(Thread thread) {
-        if(thread==null){
-            thread = ChatSDK.thread().getThreads(ThreadType.Private).get(0);
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof DataCallback) {
+            dataCallback = (DataCallback) context;
+            this.thread = dataCallback.getCurrentData();
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement DataCallback");
         }
-        this.thread = thread;
-        Bundle bundle = new Bundle();
-        bundle.putString(Keys.IntentKeyThreadEntityID, thread.getEntityID());
-        setArguments(bundle);
+    }
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        dataCallback = null;
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        if(thread==null){
-            setThread(null);
-        }
-        return super.onCreateView(inflater, container, savedInstanceState);
-    }
+//    public void setThread(Thread thread) {
+//        if(thread==null){
+//            thread = ChatSDK.thread().getThreads(ThreadType.Private).get(0);
+//        }
+//        this.thread = thread;
+//        Bundle bundle = new Bundle();
+//        bundle.putString(Keys.IntentKeyThreadEntityID, thread.getEntityID());
+//        setArguments(bundle);
+//    }
+
+//    @Override
+//    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+//        if(thread==null){
+//            setThread(null);
+//        }
+//        return super.onCreateView(inflater, container, savedInstanceState);
+//    }
 
 
     protected void initViews() {

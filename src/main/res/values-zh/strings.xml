@@ -5,4 +5,9 @@
     <string name="contacts">AI助手</string>
     <string name="conversations" formatted="false">新建对话</string>
     <string name="create_session_hint" formatted="false">我要试试</string>
+    <string name="today">今天</string>
+    <string name="yesterday">昨天</string>
+    <string name="days_ago">%d天前</string>
+    <string name="this_year_format">MM-dd</string>
+    <string name="default_format">yyyy-MM-dd</string>
 </resources>
