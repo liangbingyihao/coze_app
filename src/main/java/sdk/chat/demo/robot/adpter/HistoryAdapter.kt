@@ -13,14 +13,22 @@ sealed class HistoryItem  {
 }
 
 
-class HistoryAdapter(private val items: List<HistoryItem>,
-                     private val onItemClick: (HistoryItem.SessionItem) -> Unit) :
+class HistoryAdapter(private val items: MutableList<HistoryItem> = mutableListOf(),
+                     private val onItemClick: (Boolean,HistoryItem.SessionItem) -> Unit) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var selectedPosition = if(items.isNotEmpty()) 1 else -1
 
     companion object {
         private const val TYPE_DATE = 0
         private const val TYPE_ARTICLE = 1
+    }
+
+
+    fun updateAll(newItems: List<HistoryItem>) {
+        items.clear()
+        items.addAll(newItems)
+        selectedPosition = if(items.isNotEmpty()) 1 else -1
+        notifyDataSetChanged() // 触发全局刷新
     }
 
     fun getSelectItem(): HistoryItem.SessionItem? {
@@ -75,9 +83,6 @@ class HistoryAdapter(private val items: List<HistoryItem>,
         private val titleText: TextView = view.findViewById(R.id.title_text)
 
         fun bind(item: HistoryItem.SessionItem, position: Int) {
-//            if(selectedPosition==-1){
-//                selectedPosition = position
-//            }
             titleText.text = item.title
             itemView.isSelected = position == selectedPosition
             itemView.setOnClickListener {
@@ -92,7 +97,7 @@ class HistoryAdapter(private val items: List<HistoryItem>,
                     .distinct()
                     .forEach { notifyItemChanged(it) }
 
-                onItemClick(item)
+                onItemClick(previous!=selectedPosition,item)
             }
         }
     }

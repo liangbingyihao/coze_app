@@ -17,7 +17,7 @@ public class CozeNetworkAdapter extends BaseNetworkAdapter {
         thread = new CozeThreadHandler();
         publicThread = new FirebasePublicThreadHandler();
         search = new FirebaseSearchHandler();
-        contact = new FirebaseContactHandler();
+        contact = new CozeContactHandler();
     }
 
     public void stop() {

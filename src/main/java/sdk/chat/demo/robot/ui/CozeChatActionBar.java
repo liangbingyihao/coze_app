@@ -14,6 +14,7 @@ import com.google.android.material.appbar.AppBarLayout;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 import sdk.chat.core.dao.Thread;
+import sdk.chat.core.utils.Strings;
 import sdk.chat.demo.pre.R;
 import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.appbar.ChatActionBar;
@@ -69,6 +70,9 @@ public class CozeChatActionBar extends ChatActionBar {
     }
 
     public void reload(Thread thread) {
+        String displayName = Strings.nameForThread(thread);
+//        setTitle(displayName);
+        titleTextView.setText(thread.getEntityID());
     }
 
     public void setOnClickListener(OnClickListener onClickListener) {

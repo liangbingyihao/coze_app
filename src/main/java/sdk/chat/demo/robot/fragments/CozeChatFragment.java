@@ -24,7 +24,6 @@ public class CozeChatFragment extends ChatFragment {
 
     public interface DataCallback {
         Thread getCurrentData();
-        void onDataUpdated(Thread thread);
     }
 
     @Override
@@ -47,6 +46,10 @@ public class CozeChatFragment extends ChatFragment {
     public void onDetach() {
         super.onDetach();
         dataCallback = null;
+    }
+
+    public void reloadData() {
+        chatView.notifyDataSetChanged();
     }
 
 //    public void setThread(Thread thread) {

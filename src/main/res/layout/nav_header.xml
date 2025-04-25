@@ -41,8 +41,8 @@
         android:layout_marginTop="16dp"
         android:text="@string/conversations"
         android:textColor="?attr/colorPrimary"
-        app:icon="@drawable/ic_add_circle"
-        app:strokeColor="?attr/colorPrimary"/>
+        app:strokeColor="?attr/colorPrimary"
+        app:icon="@drawable/ic_add_circle"/>
 
     <!-- 静态菜单项 -->
     <LinearLayout

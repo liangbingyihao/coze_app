@@ -7,10 +7,14 @@ import androidx.annotation.Nullable;
 
 import com.google.firebase.database.DatabaseReference;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
@@ -45,106 +49,12 @@ import sdk.guru.realtime.RXRealtime;
 
 public class CozeThreadHandler extends AbstractThreadHandler {
 
-    @Override
-    public Single<List<Message>> loadMoreMessagesAfter(Thread thread, @Nullable Date after, boolean loadFromServer) {
-        return super.loadMoreMessagesAfter(thread, after, loadFromServer).flatMap(localMessages -> {
-            // If we have messages
-            // If we did load some messages locally, update the from date to the last of those messages
-            Date finalAfterDate = localMessages.size() > 0 ? localMessages.get(0).getDate() : after;
-
-            return FirebaseModule.config().provider.threadWrapper(thread).loadMoreMessagesAfter(finalAfterDate, 0).map((Function<List<Message>, List<Message>>) remoteMessages -> {
-
-                ArrayList<Message> mergedMessages = new ArrayList<>(localMessages);
-                mergedMessages.addAll(remoteMessages);
-
-//                if (ChatSDK.encryption() != null) {
-//                    for (Message m : mergedMessages) {
-//                        ChatSDK.encryption().decrypt(m);
-//                    }
-//                }
-
-                Debug.messageList(mergedMessages);
-
-                return mergedMessages;
-            });
-        });
-    }
-
-    public Single<List<Message>> loadMoreMessagesBefore(final Thread thread, final Date fromDate, boolean loadFromServer) {
-        return super.loadMoreMessagesBefore(thread, fromDate, loadFromServer).flatMap(localMessages -> {
-
-            int messageToLoad = ChatSDK.config().messagesToLoadPerBatch;
-            int localMessageSize = localMessages.size();
-
-            if (localMessageSize < messageToLoad && loadFromServer) {
-                // If we did load some messages locally, update the from date to the last of those messages
-                Date finalFromDate = localMessageSize > 0 ? localMessages.get(localMessageSize - 1).getDate() : fromDate;
-
-                return FirebaseModule.config().provider.threadWrapper(thread).loadMoreMessagesBefore(finalFromDate, messageToLoad).map((Function<List<Message>, List<Message>>) remoteMessages -> {
-
-                    ArrayList<Message> mergedMessages = new ArrayList<>(localMessages);
-                    mergedMessages.addAll(remoteMessages);
-
-//                    if (ChatSDK.encryption() != null) {
-//                        for (Message m : mergedMessages) {
-//                            ChatSDK.encryption().decrypt(m);
-//                        }
-//                    }
-
-                    Debug.messageList(mergedMessages);
-
-                    return mergedMessages;
-                });
-            }
-            return Single.just(localMessages);
-        });
-    }
-
-    /**
-     * Add given users list to the given thread.
-     * The RepetitiveCompletionListenerWithError will notify by his "onItem" method for each user that was successfully added.
-     * In the "onItemFailed" you can get all users that the system could not add to the server.
-     * When all users are added the system will call the "onDone" method.
-     **/
-    public Completable addUsersToThread(final Thread thread, final List<User> users) {
-        return FirebaseModule.config().provider.threadWrapper(thread).addUsers(users);
-    }
-
-    @Override
-    public boolean canAddUsersToThread(Thread thread) {
-        if (thread.typeIs(ThreadType.PrivateGroup)) {
-            String role = roleForUser(thread, ChatSDK.currentUser());
-            return Permission.isOr(role, Permission.Owner, Permission.Admin);
-        }
-        return false;
-    }
-
-    public Completable mute(Thread thread) {
-        return Completable.defer(() -> {
-            DatabaseReference threadUsersRef = FirebasePaths.threadUsersRef(thread.getEntityID()).child(ChatSDK.currentUserID()).child(Keys.Mute);
-            RXRealtime realtime = new RXRealtime();
-            return realtime.set(threadUsersRef, true);
-        });
-    }
-
-    public Completable unmute(Thread thread) {
-        return Completable.defer(() -> {
-            DatabaseReference threadUsersRef = FirebasePaths.threadUsersRef(thread.getEntityID()).child(ChatSDK.currentUserID()).child(Keys.Mute);
-            RXRealtime realtime = new RXRealtime();
-            return realtime.set(threadUsersRef, false);
-        });
-    }
-
     public Completable removeUsersFromThread(final Thread thread, List<User> users) {
-        return FirebaseModule.config().provider.threadWrapper(thread).removeUsers(users);
+        return Completable.complete();
     }
 
     public Completable pushThread(Thread thread) {
-        return FirebaseModule.config().provider.threadWrapper(thread).push();
-    }
-
-    public Completable pushThreadMeta(Thread thread) {
-        return FirebaseModule.config().provider.threadWrapper(thread).pushMeta();
+        return Completable.complete();
     }
 
     @Override
@@ -171,13 +81,20 @@ public class CozeThreadHandler extends AbstractThreadHandler {
                     return Single.just(message);
                 }).ignoreElement();
 
-//        return new MessageWrapper(message).send().andThen(new Completable() {
-//            @Override
-//            protected void subscribeActual(CompletableObserver observer) {
-//                pushForMessage(message);
-//                observer.onComplete();
-//            }
-//        });
+    }
+
+    public Single<Thread> createRobotThread() {
+        Thread t = ChatSDK.db().fetchThreadWithEntityID("-1");
+        if (t != null) {
+            return Single.just(t);
+        }
+        Thread thread = ChatSDK.db().createEntity(Thread.class);
+        thread.setEntityID("-1");
+        thread.setCreator(ChatSDK.currentUser());
+        thread.setCreationDate(new Date());
+        thread.setType(ThreadType.Private1to1);
+        ChatSDK.db().update(thread);
+        return Single.just(thread);
     }
 
     @SuppressLint("CheckResult")
@@ -204,12 +121,12 @@ public class CozeThreadHandler extends AbstractThreadHandler {
                         thread.setImageUrl(imageURL, false);
                     }
 
-                    ArrayList<User> users = new ArrayList<>(theUsers);
-                    User currentUser = ChatSDK.currentUser();
-
-                    if (!users.contains(currentUser)) {
-                        users.add(currentUser);
+                    ArrayList<User> users = new ArrayList<>();
+                    if(theUsers!=null&&!theUsers.isEmpty()){
+                        users.addAll(theUsers);
                     }
+                    User currentUser = ChatSDK.currentUser();
+                    users.add(currentUser);
                     thread.addUsers(users);
                     thread.setType(ThreadType.Private1to1);
                     ChatSDK.db().update(thread);
@@ -218,11 +135,8 @@ public class CozeThreadHandler extends AbstractThreadHandler {
     }
 
     public Completable deleteThread(Thread thread) {
-        return Completable.defer(() -> {
-            return FirebaseModule.config().provider.threadWrapper(thread).deleteThread()
-                    // Added to make sure thread removed (bug report from Dcom)
-                    .andThen(super.deleteThread(thread));
-        });
+        //FIXME
+        return Completable.complete();
     }
 
     protected void pushForMessage(final Message message) {
@@ -233,85 +147,13 @@ public class CozeThreadHandler extends AbstractThreadHandler {
     }
 
     public Completable deleteMessage(Message message) {
-        return Completable.defer(() -> {
-            if (message.getSender().isMe() && message.getMessageStatus().equals(MessageSendStatus.Sent) && !message.getMessageType().is(MessageType.System)) {
-                // If possible delete the files associated with this message
-
-                List<CachedFile> files = ChatSDK.db().fetchFilesWithIdentifier(message.getEntityID());
-                for (CachedFile file : files) {
-                    if (file.getRemotePath() != null) {
-                        ChatSDK.upload().deleteFile(file.getRemotePath()).subscribe();
-                    }
-                    ChatSDK.db().delete(file);
-                }
-
-                // TODO: Can we do this with cached files?
-//                MessagePayload payload = ChatSDK.getMessagePayload(message);
-//                if (payload != null) {
-//                    List<String> paths = payload.remoteURLs();
-//                    for (String path: paths) {
-//                        ChatSDK.upload().deleteFile(path).subscribe();
-//                    }
-//                }
-
-                return FirebaseModule.config().provider.messageWrapper(message).delete();
-            }
-            message.getThread().removeMessage(message);
-            return Completable.complete();
-        });
-    }
-
-    @Override
-    public boolean canDeleteMessage(Message message) {
-
-        // We do it this way because otherwise when we exceed the number of messages,
-        // This event is triggered as the messages go out of scope
-        if (message.getThread().getCanDeleteMessagesFrom()==null || message.getDate().getTime() < message.getThread().getCanDeleteMessagesFrom().getTime()) {
-            return false;
-        }
-
-        User currentUser = ChatSDK.currentUser();
-        Thread thread = message.getThread();
-
-        if (rolesEnabled(thread) && !thread.typeIs(ThreadType.Public)) {
-            String role = roleForUser(thread, currentUser);
-            int level = Permission.level(role);
-
-            if (level > Permission.level(Permission.Member)) {
-                return true;
-            }
-            if (level < Permission.level(Permission.Member)) {
-                return false;
-            }
-        }
-
-        if (isModerator(thread, currentUser)) {
-            return true;
-        }
-
-        if (!hasVoice(thread, currentUser)) {
-            return false;
-        }
-
-        if (message.getSender().isMe()) {
-            return true;
-        }
-
-        return false;
+        //FIXME
+        return Completable.complete();
     }
 
     public Completable leaveThread(Thread thread) {
-        return Completable.defer(() -> FirebaseModule.config().provider.threadWrapper(thread).leave());
-    }
-
-    @Override
-    public boolean canLeaveThread(Thread thread) {
-        if (thread.typeIs(ThreadType.PrivateGroup)) {
-            // Get the link
-            String role = roleForUser(thread, ChatSDK.currentUser());
-            return Permission.isOr(role, Permission.Owner, Permission.Admin, Permission.Member, Permission.Watcher);
-        }
-        return false;
+        //FIXME
+        return Completable.complete();
     }
 
     public Completable joinThread(Thread thread) {
@@ -328,137 +170,17 @@ public class CozeThreadHandler extends AbstractThreadHandler {
         return thread.typeIs(ThreadType.Group);
     }
 
-    @Override
-    public boolean canChangeRole(Thread thread, User user) {
-        if (!ChatSDK.config().rolesEnabled || !thread.typeIs(ThreadType.Group)) {
-            return false;
-        }
-
-        String myRole = roleForUser(thread, ChatSDK.currentUser());
-        String role = roleForUser(thread, user);
-
-        // We need to have a higher permission level than them
-        if (Permission.level(myRole) > Permission.level(role)) {
-            return Permission.isOr(myRole, Permission.Owner, Permission.Admin);
-        }
-        return false;
-    }
-
-    @Override
-    public String roleForUser(Thread thread, @NonNull User user) {
-        UserThreadLink link = thread.getUserThreadLink(user.getId());
-        if (link != null && link.hasLeft()) {
-            return Permission.None;
-        }
-        if (user.equalsEntity(thread.getCreator())) {
-            return Permission.Owner;
-        }
-        String role = thread.getPermission(user.getEntityID());
-        if (role == null) {
-            role = Permission.Member;
-        }
-        return role;
-    }
-
-    @Override
-    public Completable setRole(final String role, Thread thread, User user) {
-        return Completable.defer(() -> {
-//            role = Permission.fromLocalized(role);
-            return FirebaseModule.config().provider.threadWrapper(thread).setPermission(user.getEntityID(), role);
-        });
-    }
-
-    @Override
-    public List<String> availableRoles(Thread thread, User user) {
-        List<String> roles = new ArrayList<>();
-
-        String myRole = roleForUser(thread, ChatSDK.currentUser());
-
-        for (String role : Permission.all()) {
-            if (Permission.level(myRole) > Permission.level(role)) {
-                roles.add(role);
-            }
-        }
-
-        // In public chats it doesn't make sense to ban a user because
-        // the data is public. They can be made a watcher instead
-        if (thread.typeIs(ThreadType.Public)) {
-            roles.remove(Permission.Banned);
-        }
-
-        return roles;
-    }
 
     @Override
     public String localizeRole(String role) {
         return Permission.toLocalized(role);
     }
 
-    // Moderation
-    @Override
-    public Completable grantVoice(Thread thread, User user) {
-        return Completable.complete();
-    }
-
-    @Override
-    public Completable revokeVoice(Thread thread, User user) {
-        return Completable.complete();
-    }
-
-    @Override
-    public boolean hasVoice(Thread thread, User user) {
-        if (thread.containsUser(user) || thread.typeIs(ThreadType.Public)) {
-            String role = roleForUser(thread, user);
-            return Permission.isOr(role, Permission.Owner, Permission.Admin, Permission.Member);
-        }
-        return false;
-    }
-
-    @Override
-    public boolean canChangeVoice(Thread thread, User user) {
-        return false;
-    }
-
-    @Override
-    public Completable grantModerator(Thread thread, User user) {
-        return Completable.complete();
-    }
-
-    @Override
-    public Completable revokeModerator(Thread thread, User user) {
-        return Completable.complete();
-    }
-
-    @Override
-    public boolean canChangeModerator(Thread thread, User user) {
-        return false;
-    }
-
-    @Override
-    public boolean isModerator(Thread thread, User user) {
-        return false;
-    }
-
-    @Override
-    public boolean isBanned(Thread thread, User user) {
-        if (thread.containsUser(user) || thread.typeIs(ThreadType.Public)) {
-            String role = thread.getPermission(user);
-            return Permission.isOr(role, Permission.Banned);
-        }
-        return false;
-    }
 
     @Override
     public String generateNewMessageID(Thread thread) {
         // User Firebase to generate an ID
         return FirebasePaths.threadMessagesRef(thread.getEntityID()).push().getKey();
-    }
-
-    @Override
-    public Message newMessage(int type, Thread thread, boolean notify) {
-        Message message = super.newMessage(type, thread, notify);
-        ChatSDK.db().update(message);
-        return message;
     }
 
     @Override
@@ -471,22 +193,57 @@ public class CozeThreadHandler extends AbstractThreadHandler {
         return Completable.complete();
     }
 
-    @Override
-    public boolean canEditThreadDetails(Thread thread) {
-        if (thread.typeIs(ThreadType.Group)) {
-            String role = roleForUser(thread, ChatSDK.currentUser());
-            return Permission.isOr(role, Permission.Owner, Permission.Admin);
-        }
-        return false;
+
+    public Single<List<Thread>> listOrNewSessions() {
+        return listSessions(ThreadType.Private1to1)
+                .flatMap(sessions -> {
+                    if (!sessions.isEmpty()) {
+                        return Single.just(sessions);
+                    }
+                    // 如果不存在会话，则创建新会话后再查询
+                    return createThread("新会话", ChatSDK.contact().contacts(), ThreadType.Private1to1)
+                            .flatMap(ignored -> listSessions(ThreadType.Private1to1)) ;
+                })
+                .onErrorResumeNext(error -> {
+                    // 错误处理逻辑
+                    if (error instanceof IOException) {
+                        return Single.error(new IOException("Failed to list sessions", error));
+                    }
+                    return Single.error(error);
+                });
     }
 
-    @Override
-    public boolean canRemoveUserFromThread(Thread thread, User user) {
-        if (thread.typeIs(ThreadType.PrivateGroup)) {
-            String myRole = roleForUser(thread, ChatSDK.currentUser());
-            String role = roleForUser(thread, user);
-            return Permission.isOr(myRole, Permission.Owner, Permission.Admin) && Permission.isOr(role, Permission.Member, Permission.Watcher, Permission.Banned);
-        }
-        return false;
+    private Single<List<Thread>> listSessions(int type) {
+        return Single.fromCallable(() -> {
+            try {
+                List<Thread> data = ChatSDK.db().fetchThreadsWithType(type);
+                Collections.sort(data, (a, b) -> {
+                    return Long.compare(b.getCreationDate().getTime(), a.getCreationDate().getTime()); // 倒序
+                });
+                return data;
+            } catch (Exception e) {
+                throw new IOException("Failed to get threads", e);
+            }
+        }).subscribeOn(RX.io());
     }
+
+    public Single<List<Thread>> newAndListSessions() {
+        return listSessions(ThreadType.Private1to1)
+                .flatMap(sessions -> {
+                    if (!sessions.isEmpty() && sessions.get(0).getMessages().isEmpty()) {
+                        return Single.just(sessions);
+                    }
+                    // 如果不存在会话，则创建新会话后再查询
+                    return createThread("新会话", ChatSDK.contact().contacts(), ThreadType.Private1to1)
+                            .flatMap(ignored -> listSessions(ThreadType.Private1to1)) ;
+                })
+                .onErrorResumeNext(error -> {
+                    // 错误处理逻辑
+                    if (error instanceof IOException) {
+                        return Single.error(new IOException("Failed to list sessions", error));
+                    }
+                    return Single.error(error);
+                });
+    }
+
 }

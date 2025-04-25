@@ -22,10 +22,10 @@ import sdk.chat.ui.module.UIModule;
  */
 
 public class CozeInterfaceAdapter extends BaseInterfaceAdapter {
-    protected Fragment chatFragment = new CozeChatFragment();
+//    protected Fragment chatFragment = new CozeChatFragment();
 
     public CozeInterfaceAdapter() {
-
+        loginActivity = CozeLoginActivity.class;
     }
 
     public CozeInterfaceAdapter(Context context) {
@@ -65,12 +65,12 @@ public class CozeInterfaceAdapter extends BaseInterfaceAdapter {
     }
 
 
-    @Override
-    public Tab privateThreadsTab() {
-        if (privateThreadsTab == null) {
-            privateThreadsTab = new Tab(String.format(context.get().getString(R.string.conversations)), ChatSDKUI.icons().get(context.get(), ChatSDKUI.icons().chat, ChatSDKUI.icons().tabIconColor), chatFragment);
-        }
-        return privateThreadsTab;
-    }
+//    @Override
+//    public Tab privateThreadsTab() {
+//        if (privateThreadsTab == null) {
+//            privateThreadsTab = new Tab(String.format(context.get().getString(R.string.conversations)), ChatSDKUI.icons().get(context.get(), ChatSDKUI.icons().chat, ChatSDKUI.icons().tabIconColor), chatFragment);
+//        }
+//        return privateThreadsTab;
+//    }
 
 }

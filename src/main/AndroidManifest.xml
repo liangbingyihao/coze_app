@@ -32,6 +32,7 @@
 
         <activity
             android:name="sdk.chat.demo.robot.activities.MainDrawerActivity"/>
+        <activity android:name="sdk.chat.demo.robot.activities.CozeLoginActivity"/>
 
         <activity android:name="sdk.chat.demo.examples.helper.CustomPostRegistrationActivity"/>
     </application>

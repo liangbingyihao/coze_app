@@ -1,5 +1,7 @@
 package sdk.chat.demo.robot;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -99,11 +101,18 @@ public class CozeApiManager {
 
                         @Override
                         public void onResponse(Call call, Response response) throws IOException {
-                            String responseBody = response.body().string();
-                            JsonObject data = gson.fromJson(responseBody, JsonObject.class).getAsJsonObject("data");
-                            accessToken = "Bearer " + data.get("access_token").getAsString();
-                            details.setMetaValue("userId", data.get("user_id").getAsString());
-                            emitter.onSuccess(details);
+                            JsonObject resp = gson.fromJson(response.body().string(), JsonObject.class);
+                            try {
+                                if(resp!=null&&!resp.get("success").getAsBoolean()){
+                                    throw new Exception("login failed:"+resp.get("message").getAsString());
+                                }
+                                JsonObject data = resp.getAsJsonObject("data");
+                                accessToken = "Bearer " + data.get("access_token").getAsString();
+                                details.setMetaValue("userId", data.get("user_id").getAsString());
+                                emitter.onSuccess(details);
+                            } catch (Exception e) {
+                                emitter.onError(e);
+                            }
                         }
                     });
                     break;
@@ -185,7 +194,7 @@ public class CozeApiManager {
 
             client.newCall(request).enqueue(new Callback() {
                 @Override
-                public void onFailure(Call call, IOException error) {
+                public void onFailure(@NonNull Call call, @NonNull IOException error) {
                     Logger.warn("Message: " + message.getText() + "请求失败: " + error.getMessage());
                     emitter.onError(new Exception(ChatSDK.getString(sdk.chat.firebase.adapter.R.string.message_failed_to_send)));
                 }

@@ -3,34 +3,40 @@ package sdk.chat.demo.robot.activities
 import android.content.Context
 import android.os.Bundle
 import android.view.MenuItem
-import android.view.inputmethod.InputMethodManager
+import android.view.View
 import android.widget.Toast
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.functions.Consumer
+import io.reactivex.schedulers.Schedulers
 import materialsearchview.MaterialSearchView
 import sdk.chat.core.dao.Thread
-import sdk.chat.core.interfaces.ThreadType
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.HistoryAdapter
 import sdk.chat.demo.robot.adpter.HistoryItem
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil
 import sdk.chat.demo.robot.fragments.CozeChatFragment
+import sdk.chat.demo.robot.handlers.CozeThreadHandler
 import sdk.chat.demo.robot.ui.KeyboardDrawerHelper
 import sdk.chat.ui.ChatSDKUI
 import sdk.chat.ui.activities.MainActivity
+import sdk.guru.common.RX
 import kotlin.math.min
 
-class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback {
-    //    open lateinit var slider: MaterialDrawerSliderView
+
+class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.OnClickListener {
     open lateinit var drawerLayout: DrawerLayout
     open lateinit var searchView: MaterialSearchView
     private lateinit var recyclerView: RecyclerView
     private lateinit var sessions:List<Thread>
+    private var currentSession:Thread? = null
     private lateinit var sessionAdapter : HistoryAdapter
-//    private lateinit var navView: NavigationView
+    private val threadHander:CozeThreadHandler = ChatSDK.thread() as CozeThreadHandler
+    private val chatTag ="tag_chat";
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,17 +45,17 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback {
 
         drawerLayout = findViewById(R.id.root)
         searchView = findViewById(R.id.searchView)
+        findViewById<View>(R.id.btn_new_chat).setOnClickListener(this)
+        findViewById<View>(R.id.menu_favorites).setOnClickListener(this)
+        findViewById<View>(R.id.menu_reports).setOnClickListener(this)
 
         KeyboardDrawerHelper.setup(drawerLayout)
+        initViews()
+
 
         recyclerView = findViewById<RecyclerView>(R.id.nav_recycler)
         recyclerView.layoutManager = LinearLayoutManager(this)
         createSessionMenu()
-
-        initViews()
-
-        supportFragmentManager.beginTransaction().add(R.id.fragment_container, CozeChatFragment(),"tag_chat")
-            .commit()
 
 
 //        DrawerImageLoader.init(object : AbstractDrawerImageLoader() {
@@ -83,8 +89,8 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback {
 
     }
 
-    private fun createSessionMenu() {
-        sessions = ChatSDK.thread().getThreads(ThreadType.Private)
+    private fun toMenuItems(data: List<Thread>): ArrayList<HistoryItem> {
+        sessions = data
         val sessionMenus: ArrayList<HistoryItem> = ArrayList<HistoryItem>()
         var lastTime: String? = null
         for (i in 0 until min(sessions.size,50)) {
@@ -97,40 +103,35 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback {
             sessionMenus.add(HistoryItem.SessionItem(if (session.messages.isNotEmpty()) session.messages[0].text else "新会话",
                 session.id.toString()))
         }
-        sessionAdapter = HistoryAdapter(sessionMenus) { clickedItem ->
-            // 打开文章详情等操作
-            Toast.makeText(this, clickedItem.sessionId, Toast.LENGTH_SHORT).show()
-        }
-        recyclerView.adapter = sessionAdapter
+        return sessionMenus
     }
 
-//    private fun createMenuAdapter(): RecyclerView.Adapter<*> {
-//        val historyItems = listOf(
-//            HistoryItem.DateItem("今天"),
-//            HistoryItem.SessionItem("Android开发最佳实践", "https://example.com/1"),
-//            HistoryItem.SessionItem("Kotlin协程详解", "https://example.com/2"),
-//            HistoryItem.DateItem("昨天"),
-//            HistoryItem.SessionItem("Jetpack Compose入门", "https://example.com/3"),
-//            HistoryItem.SessionItem("MVVM架构解析", "https://example.com/4"),
-//            HistoryItem.DateItem("今天"),
-//            HistoryItem.SessionItem("Android开发最佳实践", "https://example.com/1"),
-//            HistoryItem.SessionItem("Kotlin协程详解", "https://example.com/2"),
-//            HistoryItem.DateItem("昨天"),
-//            HistoryItem.SessionItem("Jetpack Compose入门", "https://example.com/3"),
-//            HistoryItem.SessionItem("MVVM架构解析", "https://example.com/4"),
-//            HistoryItem.SessionItem("MVVM架构解析", "https://example.com/4"),
-//            HistoryItem.DateItem("今天"),
-//            HistoryItem.SessionItem("Android开发最佳实践", "https://example.com/1"),
-//            HistoryItem.SessionItem("Kotlin协程详解", "https://example.com/2"),
-//            HistoryItem.DateItem("昨天"),
-//            HistoryItem.SessionItem("Jetpack Compose入门", "https://example.com/3"),
-//        )
-//
-//        return HistoryAdapter(historyItems) { clickedItem ->
-//            // 打开文章详情等操作
-//            Toast.makeText(this, clickedItem.sessionId, Toast.LENGTH_SHORT).show()
-//        }
-//    }
+    private fun createSessionMenu() {
+        dm.add(
+            threadHander.listOrNewSessions()
+                .subscribeOn(Schedulers.io()) // Specify database operations on IO thread
+                .observeOn(AndroidSchedulers.mainThread()) // Results return to main thread
+                .subscribe(
+                    { data ->
+                        if (data != null) {
+                            val sessionMenus: ArrayList<HistoryItem> = toMenuItems(data)
+                            sessionAdapter = HistoryAdapter(sessionMenus) { changed,clickedItem ->
+                                toggleDrawer()
+                                if(changed){
+                                    setCurrentSession(clickedItem)
+                                }
+                            }
+                            recyclerView.adapter = sessionAdapter
+                            setCurrentSession(sessionAdapter.getSelectItem())
+                        } else {
+                            throw IllegalArgumentException("创建会话失败")
+                        }
+                    },
+                    this
+                )
+        )
+
+    }
 
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -148,20 +149,8 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback {
         if (drawerLayout.isOpen) {
             drawerLayout.closeDrawers()
         } else {
-            // 1. 获取当前焦点视图
-            val view = currentFocus
-            // 2. 如果有焦点视图且输入法开启
-            if (view != null) {
-                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.hideSoftInputFromWindow(view.windowToken, 0)
-                // 3. 延迟打开抽屉确保键盘完全收起
-                drawerLayout.postDelayed({
-                    drawerLayout.openDrawer(GravityCompat.START)
-                }, 100) // 100ms延迟足够键盘动画完成
-            } else {
-                // 4. 直接打开抽屉
-                drawerLayout.openDrawer(GravityCompat.START)
-            }
+            hideKeyboard()
+            drawerLayout.openDrawer(GravityCompat.START)
         }
     }
 
@@ -194,16 +183,41 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback {
 
     }
 
-    override fun getCurrentData(): Thread? {
-        var session:HistoryItem.SessionItem? = sessionAdapter.getSelectItem()
-        return if(session!=null){
-            sessions.firstOrNull { session.sessionId == it.id.toString() }
+    private fun setCurrentSession(selected:HistoryItem.SessionItem?){
+        currentSession = if(selected!=null){
+            sessions.firstOrNull { selected.sessionId == it.id.toString() }
         }else{
             null
         }
+        if(currentSession!=null){
+            supportFragmentManager.beginTransaction().replace(R.id.fragment_container, CozeChatFragment(),chatTag).commit()
+        }
     }
 
-    override fun onDataUpdated(thread: Thread?) {
-        TODO("Not yet implemented")
+    override fun getCurrentData(): Thread? {
+        return currentSession
+    }
+
+    override fun onClick(v: View?) {
+        toggleDrawer()
+        when (v?.id) {
+            R.id.btn_new_chat -> {
+                dm.add(
+                    threadHander.newAndListSessions()
+                        .observeOn(RX.main())
+                        .subscribe(Consumer { sessions: List<Thread>? ->
+                            if(sessions!=null){
+                                val sessionMenus: ArrayList<HistoryItem> = toMenuItems(sessions)
+                                sessionAdapter.updateAll(sessionMenus)
+                                setCurrentSession(sessionAdapter.getSelectItem())
+                            }else{
+                                throw IllegalArgumentException("创建失败")
+                            }
+                        }, this@MainDrawerActivity)
+                )
+            }
+            R.id.menu_favorites -> { Toast.makeText(this, "menu_favorites", Toast.LENGTH_SHORT).show() }
+            R.id.menu_reports -> { Toast.makeText(this, "menu_reports", Toast.LENGTH_SHORT).show() }
+        }
     }
 }

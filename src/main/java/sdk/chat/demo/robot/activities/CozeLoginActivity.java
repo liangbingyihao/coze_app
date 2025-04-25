@@ -8,9 +8,13 @@ import androidx.annotation.LayoutRes;
 
 import com.google.android.material.button.MaterialButton;
 
+import sdk.chat.core.session.ChatSDK;
+import sdk.chat.core.types.AccountDetails;
 import sdk.chat.core.utils.StringChecker;
 import sdk.chat.demo.pre.R;
+import sdk.chat.ui.activities.BaseActivity;
 import sdk.chat.ui.activities.LoginActivity;
+import sdk.chat.ui.module.UIModule;
 
 public class CozeLoginActivity extends LoginActivity {
 
@@ -28,21 +32,49 @@ public class CozeLoginActivity extends LoginActivity {
     }
 
     protected void initViews() {
-        super.initViews();
+        appIconImageView = findViewById(sdk.chat.ui.R.id.appIconImageView);
+        usernameTextInput = findViewById(sdk.chat.ui.R.id.usernameTextInput);
+        usernameTextInputLayout = findViewById(sdk.chat.ui.R.id.usernameTextInputLayout);
+        passwordTextInput = findViewById(sdk.chat.ui.R.id.passwordTextInput);
+        passwordTextInputLayout = findViewById(sdk.chat.ui.R.id.passwordTextInputLayout);
+        loginButton = findViewById(sdk.chat.ui.R.id.loginButton);
+        registerButton = findViewById(sdk.chat.ui.R.id.registerButton);
+        anonymousButton = findViewById(sdk.chat.ui.R.id.anonymousButton);
+        resetPasswordButton = findViewById(sdk.chat.ui.R.id.resetPasswordButton);
+        root = findViewById(sdk.chat.ui.R.id.root);
+
+        resetPasswordButton.setVisibility(UIModule.config().resetPasswordEnabled ? View.VISIBLE : View.INVISIBLE);
+
+        if (!ChatSDK.auth().accountTypeEnabled(AccountDetails.Type.Anonymous)) {
+            anonymousButton.setVisibility(View.GONE);
+        }
+
+        // Set the debug username and password details for testing
+        if (!StringChecker.isNullOrEmpty(ChatSDK.config().debugUsername)) {
+            usernameTextInput.setText(ChatSDK.config().debugUsername);
+        }
+        if (!StringChecker.isNullOrEmpty(ChatSDK.config().debugPassword)) {
+            passwordTextInput.setText(ChatSDK.config().debugPassword);
+        }
+
+        if (UIModule.config().usernameHint != null) {
+            usernameTextInputLayout.setHint(UIModule.config().usernameHint);
+        }
 
         advancedConfigurationButton = findViewById(R.id.advancedConfigurationButton);
-        usernameSubtitleTextView = findViewById(R.id.usernameSubtitleTextView);
+        advancedConfigurationButton.setVisibility(View.INVISIBLE);
 
-        advancedConfigurationButton.setOnClickListener(v -> {
-//            Intent intent = new Intent(this, XMPPConfigureActivity.class);
-//            startActivity(intent);
-        });
-
-//        if (XMPPModule.config().allowServerConfiguration) {
-//            advancedConfigurationButton.setVisibility(View.VISIBLE);
-//        } else {
-            advancedConfigurationButton.setVisibility(View.INVISIBLE);
-//        }
+//
+//        usernameSubtitleTextView = findViewById(R.id.usernameSubtitleTextView);
+//        advancedConfigurationButton.setOnClickListener(v -> {
+////            Intent intent = new Intent(this, XMPPConfigureActivity.class);
+////            startActivity(intent);
+//        });
+//
+////        if (XMPPModule.config().allowServerConfiguration) {
+////            advancedConfigurationButton.setVisibility(View.VISIBLE);
+////        } else {
+////        }
 
     }
 
