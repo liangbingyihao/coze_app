@@ -11,6 +11,7 @@ import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.ConnectionType;
 
 public class CozeContactHandler implements ContactHandler {
+
     @Override
     public List<User> contacts() {
         List<User> users = new ArrayList<>();

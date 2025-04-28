@@ -74,7 +74,6 @@ public class ChatSDKCoze  extends QuickStart {
                 .setSendSystemMessageWhenRoleChanges(true)
                 .build()
                 .addModules(deduplicate(newModules, modules))
-
                 // Activate
                 .build()
                 .activate(context, identifier);

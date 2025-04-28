@@ -70,9 +70,13 @@ public class CozeChatActionBar extends ChatActionBar {
     }
 
     public void reload(Thread thread) {
-        String displayName = Strings.nameForThread(thread);
-//        setTitle(displayName);
-        titleTextView.setText(thread.getEntityID());
+        String displayName = "";
+        if(!thread.getName().isEmpty()){
+            displayName = thread.getName();
+        }else if(!thread.getMessages().isEmpty()){
+            displayName = thread.getMessages().get(0).getText();
+        }
+        titleTextView.setText(displayName);
     }
 
     public void setOnClickListener(OnClickListener onClickListener) {

@@ -1,6 +1,5 @@
 package sdk.chat.demo.robot.activities
 
-import android.content.Context
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
@@ -10,6 +9,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.functions.Action
 import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import materialsearchview.MaterialSearchView
@@ -48,6 +48,7 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
         findViewById<View>(R.id.btn_new_chat).setOnClickListener(this)
         findViewById<View>(R.id.menu_favorites).setOnClickListener(this)
         findViewById<View>(R.id.menu_reports).setOnClickListener(this)
+        findViewById<View>(R.id.settings).setOnClickListener(this)
 
         KeyboardDrawerHelper.setup(drawerLayout)
         initViews()
@@ -86,7 +87,13 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
         )
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
-
+//        dm.add(
+//            ChatSDK.events().sourceOnSingle()
+//                .filter(NetworkEvent.filterType(EventType.ThreadsUpdated))
+//                .subscribe(Consumer { networkEvent: NetworkEvent? ->
+////                    loadData()
+//                })
+//        )
     }
 
     private fun toMenuItems(data: List<Thread>): ArrayList<HistoryItem> {
@@ -100,8 +107,12 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
                 lastTime = thisTime
                 sessionMenus.add(HistoryItem.DateItem(lastTime))
             }
-            sessionMenus.add(HistoryItem.SessionItem(if (session.messages.isNotEmpty()) session.messages[0].text else "新会话",
-                session.id.toString()))
+            var name = when {
+                session.name.isNotEmpty() -> session.name
+                session.messages.isNotEmpty() -> session.messages[0].text
+                else -> "新会话"
+            }
+            sessionMenus.add(HistoryItem.SessionItem(name,session.id.toString()))
         }
         return sessionMenus
     }
@@ -218,6 +229,10 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
             }
             R.id.menu_favorites -> { Toast.makeText(this, "menu_favorites", Toast.LENGTH_SHORT).show() }
             R.id.menu_reports -> { Toast.makeText(this, "menu_reports", Toast.LENGTH_SHORT).show() }
+            R.id.settings -> {
+//                ChatSDK.ui().startProfileActivity(this@MainDrawerActivity, ChatSDK.currentUserID())
+                ChatSDK.auth().logout().observeOn(RX.main()).doOnComplete(Action { ChatSDK.ui().startSplashScreenActivity(this@MainDrawerActivity) }).subscribe(this@MainDrawerActivity)
+            }
         }
     }
 }

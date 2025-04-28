@@ -119,7 +119,6 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/anonymousButton"
         style="?chatMaterialButtonStyle"
-        android:visibility="gone"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:text="@string/anonymous_login"

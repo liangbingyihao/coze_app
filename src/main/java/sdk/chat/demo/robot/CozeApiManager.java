@@ -56,7 +56,7 @@ public class CozeApiManager {
     private String accessToken;
     private final static String URL = "http://8.217.172.116:5000/api/";
     private final static String URL_LOGIN = URL + "auth/login";
-    private final static String URL_SESSION = URL + "session/add";
+    private final static String URL_SESSION = URL + "session";
     private final static String URL_MESSAGE = URL + "message";
 
     private final static CozeApiManager instance = new CozeApiManager();
@@ -72,61 +72,50 @@ public class CozeApiManager {
 
     public Single<AccountDetails> authenticate(final AccountDetails details) {
         return Single.create((SingleOnSubscribe<AccountDetails>) emitter -> {
-            switch (details.type) {
-                case Username:
-                    Map<String, String> params = new HashMap<>();
-                    params.put("username", details.username);
-                    params.put("password", details.password);
-//                    Type typeObject = new TypeToken<HashMap>() {
-//                    }.getType();
-//                    String gsonData = gson.toJson(params, typeObject);
-                    String gsonData = new JSONObject(params).toString();
-
-                    RequestBody body = RequestBody.create(
-                            gsonData,
-                            MediaType.parse("application/json; charset=utf-8")
-                    );
-
-                    Request request = new Request.Builder()
-                            .url(URL_LOGIN)
-                            .post(body)
-                            .build();
-
-                    client.newCall(request).enqueue(new Callback() {
-                        @Override
-                        public void onFailure(Call call, IOException error) {
-                            System.err.println("请求失败: " + error.getMessage());
-                            emitter.onError(error);
-                        }
-
-                        @Override
-                        public void onResponse(Call call, Response response) throws IOException {
-                            JsonObject resp = gson.fromJson(response.body().string(), JsonObject.class);
-                            try {
-                                if(resp!=null&&!resp.get("success").getAsBoolean()){
-                                    throw new Exception("login failed:"+resp.get("message").getAsString());
-                                }
-                                JsonObject data = resp.getAsJsonObject("data");
-                                accessToken = "Bearer " + data.get("access_token").getAsString();
-                                details.setMetaValue("userId", data.get("user_id").getAsString());
-                                emitter.onSuccess(details);
-                            } catch (Exception e) {
-                                emitter.onError(e);
-                            }
-                        }
-                    });
-                    break;
-
-                case Register:
-//                            return XMPPManager.shared().register(details.username, details.password).andThen(Completable.defer(() -> {
-//                                return loginSuccessful(details);
-//                            })).doOnError(throwable -> {
-////                                setAuthStateToIdle();
-//                                clearCurrentUserEntityID();
-//                            }).doFinally(this::setAuthStateToIdle);
-                default:
-                    emitter.onError(ChatSDK.getException(sdk.chat.firebase.adapter.R.string.no_login_type_defined));
+            Map<String, String> params = new HashMap<>();
+            if (details.type == AccountDetails.Type.Username) {
+                params.put("username", details.username);
+                params.put("password", details.password);
+            } else if (details.type == AccountDetails.Type.Custom) {
+                params.put("guest", details.token);
+            } else {
+                emitter.onError(ChatSDK.getException(sdk.chat.firebase.adapter.R.string.no_login_type_defined));
             }
+            String gsonData = new JSONObject(params).toString();
+
+            RequestBody body = RequestBody.create(
+                    gsonData,
+                    MediaType.parse("application/json; charset=utf-8")
+            );
+
+            Request request = new Request.Builder()
+                    .url(URL_LOGIN)
+                    .post(body)
+                    .build();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException error) {
+                    System.err.println("请求失败: " + error.getMessage());
+                    emitter.onError(error);
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    JsonObject resp = gson.fromJson(response.body().string(), JsonObject.class);
+                    try {
+                        if (resp != null && !resp.get("success").getAsBoolean()) {
+                            throw new Exception("login failed:" + resp.get("message").getAsString());
+                        }
+                        JsonObject data = resp.getAsJsonObject("data");
+                        accessToken = "Bearer " + data.get("access_token").getAsString();
+                        details.setMetaValue("userId", data.get("user_id").getAsString());
+                        emitter.onSuccess(details);
+                    } catch (Exception e) {
+                        emitter.onError(e);
+                    }
+                }
+            });
         }).subscribeOn(RX.io());
     }
 
@@ -233,6 +222,48 @@ public class CozeApiManager {
 //                    String gsonData = gson.toJson(params, typeObject);
 //        String gsonData = gson.toJson(message.getMetaValuesAsMap(), typeObject);
 
+    }
+
+    public Single<JsonObject> listSession(int page, int limit) {
+        return Single.create(emitter -> {
+
+
+            HttpUrl url = HttpUrl.parse(URL_SESSION)
+                    .newBuilder()
+                    .addQueryParameter("page", Integer.toString(page))
+                    .addQueryParameter("limit", Integer.toString(limit))
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .header("Authorization", accessToken)
+                    .build();
+
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    emitter.onError(e); // 请求失败
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    try {
+                        if (!response.isSuccessful()) {
+                            emitter.onError(new IOException("HTTP error: " + response.code()));
+                            return;
+                        }
+                        String responseBody = response.body() != null ? response.body().string() : "";
+                        JsonObject data = gson.fromJson(responseBody, JsonObject.class).getAsJsonObject("data");
+                        emitter.onSuccess(data); // 请求成功
+                    } catch (Exception e) {
+                        emitter.onError(e);
+                    } finally {
+                        response.close(); // 关闭 Response
+                    }
+                }
+            });
+        });
     }
 
 

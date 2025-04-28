@@ -22,7 +22,7 @@
 <!--        </activity>-->
 
         <activity
-            android:name="sdk.chat.ui.activities.SplashScreenActivity"
+            android:name="sdk.chat.demo.robot.activities.SplashScreenActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

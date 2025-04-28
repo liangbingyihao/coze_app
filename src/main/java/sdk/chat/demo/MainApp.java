@@ -1,18 +1,11 @@
 package sdk.chat.demo;
 
 import android.app.Application;
-
-import org.pmw.tinylog.Logger;
-
-import sdk.chat.app.firebase.ChatSDKFirebase;
 import sdk.chat.contact.ContactBookModule;
-import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.utils.Device;
 import sdk.chat.demo.robot.ChatSDKCoze;
-import sdk.chat.firbase.online.FirebaseLastOnlineModule;
-import sdk.chat.firebase.blocking.FirebaseBlockingModule;
-import sdk.chat.firebase.receipts.FirebaseReadReceiptsModule;
 import sdk.chat.message.audio.AudioMessageModule;
+import sdk.chat.demo.robot.extensions.DeviceIdHelper;
 
 public class MainApp extends Application {
 
@@ -21,7 +14,6 @@ public class MainApp extends Application {
         super.onCreate();
 
         try {
-
             // Setup Chat SDK
             boolean drawerEnabled = !Device.honor();
             ChatSDKCoze.quickStartWithEmail(this, "pre_998", "AIzaSyCwwtZrlY9Rl8paM0R6iDNBEit_iexQ1aE",
@@ -41,14 +33,14 @@ public class MainApp extends Application {
 //                    ContactBookModule.shared()
 //            );
 
-            ChatSDK.events().sourceOnMain().subscribe(event -> {
-                Logger.debug(event);
-            });
-
-            ChatSDK.events().errorSourceOnMain().subscribe(event -> {
-                Logger.debug(event);
-                event.printStackTrace();
-            });
+//            ChatSDK.events().sourceOnMain().subscribe(event -> {
+//                Logger.debug(event);
+//            });
+//
+//            ChatSDK.events().errorSourceOnMain().subscribe(event -> {
+//                Logger.debug(event);
+//                event.printStackTrace();
+//            });
 
         } catch (Exception e) {
             e.printStackTrace();

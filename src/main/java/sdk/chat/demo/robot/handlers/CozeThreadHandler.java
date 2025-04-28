@@ -2,52 +2,42 @@ package sdk.chat.demo.robot.handlers;
 
 import android.annotation.SuppressLint;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
-import com.google.firebase.database.DatabaseReference;
+import org.pmw.tinylog.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Completable;
-import io.reactivex.CompletableObserver;
 import io.reactivex.Single;
-import io.reactivex.SingleEmitter;
-import io.reactivex.functions.Function;
 import sdk.chat.core.base.AbstractThreadHandler;
-import sdk.chat.core.dao.CachedFile;
-import sdk.chat.core.dao.Keys;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.dao.Thread;
+import sdk.chat.core.dao.ThreadDao;
 import sdk.chat.core.dao.User;
-import sdk.chat.core.dao.UserThreadLink;
 import sdk.chat.core.events.NetworkEvent;
 import sdk.chat.core.interfaces.ThreadType;
 import sdk.chat.core.session.ChatSDK;
-import sdk.chat.core.types.MessageSendStatus;
-import sdk.chat.core.types.MessageType;
-import sdk.chat.core.types.Progress;
-import sdk.chat.core.utils.Debug;
 import sdk.chat.demo.robot.CozeApiManager;
-import sdk.chat.demo.robot.wrappers.MessageWrapper;
 import sdk.chat.firebase.adapter.FirebasePaths;
 import sdk.chat.firebase.adapter.moderation.Permission;
-import sdk.chat.firebase.adapter.module.FirebaseModule;
 import sdk.guru.common.RX;
-import sdk.guru.realtime.RXRealtime;
 
 /**
  * Created by benjaminsmiley-andrews on 25/05/2017.
  */
 
 public class CozeThreadHandler extends AbstractThreadHandler {
+    private final AtomicBoolean hasSyncedWithNetwork = new AtomicBoolean(false);
+    private List<Thread> sessionCache;
 
     public Completable removeUsersFromThread(final Thread thread, List<User> users) {
         return Completable.complete();
@@ -69,7 +59,7 @@ public class CozeThreadHandler extends AbstractThreadHandler {
      * The uploading to the server part can bee seen her {@see FirebaseCoreAdapter#PushMessageWithComplition}.
      */
     public Completable sendMessage(final Message message) {
-        return  CozeApiManager.shared().askRobot(message)
+        return CozeApiManager.shared().askRobot(message)
                 .subscribeOn(RX.io()).flatMap(data -> {
                     message.setEntityID(data.get("id").getAsString());
 //                    message.setMessageStatus(MessageSendStatus.Uploading,true);
@@ -122,7 +112,7 @@ public class CozeThreadHandler extends AbstractThreadHandler {
                     }
 
                     ArrayList<User> users = new ArrayList<>();
-                    if(theUsers!=null&&!theUsers.isEmpty()){
+                    if (theUsers != null && !theUsers.isEmpty()) {
                         users.addAll(theUsers);
                     }
                     User currentUser = ChatSDK.currentUser();
@@ -195,14 +185,14 @@ public class CozeThreadHandler extends AbstractThreadHandler {
 
 
     public Single<List<Thread>> listOrNewSessions() {
-        return listSessions(ThreadType.Private1to1)
+        return listSessions()
                 .flatMap(sessions -> {
                     if (!sessions.isEmpty()) {
                         return Single.just(sessions);
                     }
                     // 如果不存在会话，则创建新会话后再查询
                     return createThread("新会话", ChatSDK.contact().contacts(), ThreadType.Private1to1)
-                            .flatMap(ignored -> listSessions(ThreadType.Private1to1)) ;
+                            .flatMap(ignored -> listSessions());
                 })
                 .onErrorResumeNext(error -> {
                     // 错误处理逻辑
@@ -213,13 +203,50 @@ public class CozeThreadHandler extends AbstractThreadHandler {
                 });
     }
 
-    private Single<List<Thread>> listSessions(int type) {
+    private Single<List<Thread>> listSessions() {
+//
+//        // 2. 决定数据来源
+//        Single<List<Thread>> source = null;
+//        if(hasSyncedWithNetwork.get()){
+//            source = Single.fromCallable(() -> {
+//                List<Thread> sessions = ChatSDK.db().fetchThreadsWithType(ThreadType.Private1to1);
+//                return sessions != null ? sessions : Collections.emptyList();
+//            });
+//        }else{
+//            source = Single.fromCallable(() -> {
+//                List<Thread> sessions = ChatSDK.db().fetchThreadsWithType(ThreadType.Private1to1);
+//                return sessions != null ? sessions : Collections.emptyList();
+//            });
+//        }
+//
+//        return Single.fromCallable(() -> {
+//                    List<Thread> sessions = ChatSDK.db().fetchThreadsWithType(ThreadType.Private1to1);
+//                    return sessions != null ? sessions : Collections.emptyList();
+//                })
+//                .map(sessions -> {
+//                    Collections.sort(sessions, (a, b) -> {
+//                        return Long.compare(b.getCreationDate().getTime(), a.getCreationDate().getTime()); // 倒序
+//                    });
+//                    sessionCache = sessions; // 更新缓存
+//                    return sessionCache;
+//                })
+//                .subscribeOn(RX.io())
+//                .observeOn(RX.main());
+
+        // 1. 检查内存缓存
+        if (sessionCache != null && !sessionCache.isEmpty()) {
+            return Single.just(sessionCache);
+        }
         return Single.fromCallable(() -> {
             try {
-                List<Thread> data = ChatSDK.db().fetchThreadsWithType(type);
+                List<Thread> data = ChatSDK.db().fetchThreadsWithType(ThreadType.Private1to1);
                 Collections.sort(data, (a, b) -> {
                     return Long.compare(b.getCreationDate().getTime(), a.getCreationDate().getTime()); // 倒序
                 });
+
+                if(!hasSyncedWithNetwork.get()){
+                    triggerNetworkSync();
+                }
                 return data;
             } catch (Exception e) {
                 throw new IOException("Failed to get threads", e);
@@ -228,14 +255,17 @@ public class CozeThreadHandler extends AbstractThreadHandler {
     }
 
     public Single<List<Thread>> newAndListSessions() {
-        return listSessions(ThreadType.Private1to1)
+        return listSessions()
                 .flatMap(sessions -> {
                     if (!sessions.isEmpty() && sessions.get(0).getMessages().isEmpty()) {
                         return Single.just(sessions);
                     }
                     // 如果不存在会话，则创建新会话后再查询
                     return createThread("新会话", ChatSDK.contact().contacts(), ThreadType.Private1to1)
-                            .flatMap(ignored -> listSessions(ThreadType.Private1to1)) ;
+                            .flatMap(ignored -> {
+                                sessionCache = null;
+                                return listSessions();
+                            });
                 })
                 .onErrorResumeNext(error -> {
                     // 错误处理逻辑
@@ -246,4 +276,35 @@ public class CozeThreadHandler extends AbstractThreadHandler {
                 });
     }
 
+    @SuppressLint("CheckResult")
+    private void triggerNetworkSync() {
+        CozeApiManager.shared().listSession(1,50)
+                .subscribeOn(RX.io())
+                .observeOn(RX.io())
+                .subscribe(
+                        networkSessions -> {
+                            if (networkSessions != null) {
+                                JsonArray items = networkSessions.getAsJsonObject().getAsJsonArray("items");
+                                if (!items.isEmpty()) {
+                                    for (JsonElement i : items) {
+                                        JsonObject session = i.getAsJsonObject();
+                                        Thread entity = ChatSDK.db().fetchThreadWithEntityID(session.get("id").getAsString());
+                                        if(entity!=null){
+                                            entity.setName(session.get("session_name").getAsString());
+                                            ChatSDK.db().update(entity);
+                                        }
+                                    }
+                                }
+                            }
+                            hasSyncedWithNetwork.set(true);
+
+                            // 更新内存缓存
+                            sessionCache = null;
+
+                            ChatSDK.events().source().accept(NetworkEvent.threadsUpdated());
+                        },
+                        error -> {
+                        }
+                );
+    }
 }
