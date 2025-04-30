@@ -1,34 +1,11 @@
 package sdk.chat.demo.robot.handlers;
 
-import com.google.firebase.auth.FirebaseUser;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
-import org.jivesoftware.smack.AbstractXMPPConnection;
-import org.jivesoftware.smack.XMPPConnection;
-import org.jxmpp.jid.Jid;
-import org.jxmpp.jid.impl.JidCreate;
-import org.jxmpp.jid.parts.Localpart;
-import org.jxmpp.stringprep.XmppStringprepException;
 import org.pmw.tinylog.Logger;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import app.xmpp.adapter.R;
 import io.reactivex.Completable;
-import io.reactivex.Single;
-import io.reactivex.SingleOnSubscribe;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 import sdk.chat.core.base.AbstractAuthenticationHandler;
 import sdk.chat.core.dao.User;
 import sdk.chat.core.events.NetworkEvent;
@@ -36,7 +13,7 @@ import sdk.chat.core.hook.HookEvent;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.AccountDetails;
 import sdk.chat.core.utils.KeyStorage;
-import sdk.chat.demo.robot.CozeApiManager;
+import sdk.chat.demo.robot.api.CozeApiManager;
 import sdk.chat.demo.robot.extensions.DeviceIdHelper;
 import sdk.guru.common.RX;
 
@@ -78,14 +55,6 @@ public class CozeAuthenticationHandler extends AbstractAuthenticationHandler {
     @Override
     public Completable authenticate(final AccountDetails details) {
         return Completable.defer(() -> {
-
-//            String database = details.username + XMPPManager.getCurrentServer(ChatSDK.ctx()).domain;
-//            ChatSDK.db().openDatabase(database);
-
-//            if (isAuthenticatedThisSession() || isAuthenticated()) {
-////                return Completable.error(ChatSDK.getException(R.string.already_authenticated));
-//                return loginSuccessful(details);
-//            }
             if (!isAuthenticating()) {
                 authenticating = CozeApiManager.shared().authenticate(details).flatMapCompletable(this::loginSuccessful).cache();
             }

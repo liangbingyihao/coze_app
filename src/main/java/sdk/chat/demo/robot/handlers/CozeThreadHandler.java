@@ -6,8 +6,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import org.pmw.tinylog.Logger;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,12 +19,11 @@ import io.reactivex.Single;
 import sdk.chat.core.base.AbstractThreadHandler;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.dao.Thread;
-import sdk.chat.core.dao.ThreadDao;
 import sdk.chat.core.dao.User;
 import sdk.chat.core.events.NetworkEvent;
 import sdk.chat.core.interfaces.ThreadType;
 import sdk.chat.core.session.ChatSDK;
-import sdk.chat.demo.robot.CozeApiManager;
+import sdk.chat.demo.robot.api.CozeApiManager;
 import sdk.chat.firebase.adapter.FirebasePaths;
 import sdk.chat.firebase.adapter.moderation.Permission;
 import sdk.guru.common.RX;

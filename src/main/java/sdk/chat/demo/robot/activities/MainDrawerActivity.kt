@@ -1,6 +1,8 @@
 package sdk.chat.demo.robot.activities
 
+import android.content.Intent
 import android.os.Bundle
+import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
@@ -32,27 +34,38 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
     open lateinit var drawerLayout: DrawerLayout
     open lateinit var searchView: MaterialSearchView
     private lateinit var recyclerView: RecyclerView
-    private lateinit var sessions:List<Thread>
-    private var currentSession:Thread? = null
-    private lateinit var sessionAdapter : HistoryAdapter
-    private val threadHander:CozeThreadHandler = ChatSDK.thread() as CozeThreadHandler
-    private val chatTag ="tag_chat";
+    private lateinit var sessions: List<Thread>
+    private var currentSession: Thread? = null
+    private lateinit var sessionAdapter: HistoryAdapter
+    private val threadHander: CozeThreadHandler = ChatSDK.thread() as CozeThreadHandler
+    private val chatTag = "tag_chat";
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        // 加载菜单资源
+        menuInflater.inflate(R.menu.nav_menu, menu)
+//        IconicsMenuInflaterUtil.inflate(
+//            menuInflater,
+//            this,
+//            R.menu.menu_main,
+//            menu,
+//            true
+//        )
+        return true
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(layout)
 
         drawerLayout = findViewById(R.id.root)
-        searchView = findViewById(R.id.searchView)
+//        searchView = findViewById(R.id.btn_search)
         findViewById<View>(R.id.btn_new_chat).setOnClickListener(this)
         findViewById<View>(R.id.menu_favorites).setOnClickListener(this)
         findViewById<View>(R.id.menu_reports).setOnClickListener(this)
         findViewById<View>(R.id.settings).setOnClickListener(this)
 
         KeyboardDrawerHelper.setup(drawerLayout)
-        initViews()
-
+//        initViews()
 
         recyclerView = findViewById<RecyclerView>(R.id.nav_recycler)
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -87,6 +100,9 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
         )
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
+        requestPermissions();
+
+
 //        dm.add(
 //            ChatSDK.events().sourceOnSingle()
 //                .filter(NetworkEvent.filterType(EventType.ThreadsUpdated))
@@ -100,10 +116,11 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
         sessions = data
         val sessionMenus: ArrayList<HistoryItem> = ArrayList<HistoryItem>()
         var lastTime: String? = null
-        for (i in 0 until min(sessions.size,50)) {
+        for (i in 0 until min(sessions.size, 50)) {
             var session = sessions[i]
-            var thisTime = DateLocalizationUtil.getFriendlyDate(this@MainDrawerActivity,session.creationDate)
-            if(thisTime!=lastTime){
+            var thisTime =
+                DateLocalizationUtil.getFriendlyDate(this@MainDrawerActivity, session.creationDate)
+            if (thisTime != lastTime) {
                 lastTime = thisTime
                 sessionMenus.add(HistoryItem.DateItem(lastTime))
             }
@@ -112,7 +129,7 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
                 session.messages.isNotEmpty() -> session.messages[0].text
                 else -> "新会话"
             }
-            sessionMenus.add(HistoryItem.SessionItem(name,session.id.toString()))
+            sessionMenus.add(HistoryItem.SessionItem(name, session.id.toString()))
         }
         return sessionMenus
     }
@@ -126,9 +143,9 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
                     { data ->
                         if (data != null) {
                             val sessionMenus: ArrayList<HistoryItem> = toMenuItems(data)
-                            sessionAdapter = HistoryAdapter(sessionMenus) { changed,clickedItem ->
+                            sessionAdapter = HistoryAdapter(sessionMenus) { changed, clickedItem ->
                                 toggleDrawer()
-                                if(changed){
+                                if (changed) {
                                     setCurrentSession(clickedItem)
                                 }
                             }
@@ -149,6 +166,20 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
         return when (item.itemId) {
             android.R.id.home -> {
                 toggleDrawer()
+                true
+            }
+
+            R.id.action_record -> {
+                startActivity(
+                    Intent(
+                        this@MainDrawerActivity,
+                        SpeechToTextActivity::class.java
+                    )
+                )
+                true
+            }
+
+            R.id.action_filter -> {
                 true
             }
 
@@ -194,14 +225,21 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
 
     }
 
-    private fun setCurrentSession(selected:HistoryItem.SessionItem?){
-        currentSession = if(selected!=null){
+    private fun setCurrentSession(selected: HistoryItem.SessionItem?) {
+        currentSession = if (selected != null) {
             sessions.firstOrNull { selected.sessionId == it.id.toString() }
-        }else{
+        } else {
             null
         }
-        if(currentSession!=null){
-            supportFragmentManager.beginTransaction().replace(R.id.fragment_container, CozeChatFragment(),chatTag).commit()
+        if (currentSession != null) {
+            val fragment: CozeChatFragment? =
+                supportFragmentManager.findFragmentByTag(chatTag) as? CozeChatFragment;
+            if (fragment == null) {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container, CozeChatFragment(), chatTag).commit()
+            } else {
+                fragment.onNewIntent(currentSession);
+            }
         }
     }
 
@@ -217,22 +255,32 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
                     threadHander.newAndListSessions()
                         .observeOn(RX.main())
                         .subscribe(Consumer { sessions: List<Thread>? ->
-                            if(sessions!=null){
+                            if (sessions != null) {
                                 val sessionMenus: ArrayList<HistoryItem> = toMenuItems(sessions)
                                 sessionAdapter.updateAll(sessionMenus)
                                 setCurrentSession(sessionAdapter.getSelectItem())
-                            }else{
+                            } else {
                                 throw IllegalArgumentException("创建失败")
                             }
                         }, this@MainDrawerActivity)
                 )
             }
-            R.id.menu_favorites -> { Toast.makeText(this, "menu_favorites", Toast.LENGTH_SHORT).show() }
-            R.id.menu_reports -> { Toast.makeText(this, "menu_reports", Toast.LENGTH_SHORT).show() }
+
+            R.id.menu_favorites -> {
+                Toast.makeText(this, "menu_favorites", Toast.LENGTH_SHORT).show()
+            }
+
+            R.id.menu_reports -> {
+                Toast.makeText(this, "menu_reports", Toast.LENGTH_SHORT).show()
+            }
+
             R.id.settings -> {
 //                ChatSDK.ui().startProfileActivity(this@MainDrawerActivity, ChatSDK.currentUserID())
-                ChatSDK.auth().logout().observeOn(RX.main()).doOnComplete(Action { ChatSDK.ui().startSplashScreenActivity(this@MainDrawerActivity) }).subscribe(this@MainDrawerActivity)
+                ChatSDK.auth().logout().observeOn(RX.main()).doOnComplete(Action {
+                    ChatSDK.ui().startSplashScreenActivity(this@MainDrawerActivity)
+                }).subscribe(this@MainDrawerActivity)
             }
         }
     }
+
 }

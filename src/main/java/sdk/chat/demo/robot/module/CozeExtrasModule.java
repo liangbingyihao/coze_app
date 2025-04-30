@@ -11,11 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import sdk.chat.core.dao.Keys;
+import sdk.chat.core.handlers.MessageHandler;
 import sdk.chat.core.module.AbstractModule;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.session.Configure;
 import sdk.chat.core.utils.ProfileOption;
 import sdk.chat.demo.robot.activities.MainDrawerActivity;
+import sdk.chat.demo.robot.handlers.CozeMsgHandler;
 import sdk.chat.ui.extras.ScanQRCodeActivity;
 import sdk.chat.ui.extras.ShowQRCodeActivity;
 import sdk.guru.common.BaseConfig;
@@ -23,6 +25,7 @@ import sdk.guru.common.DisposableMap;
 
 
 public class CozeExtrasModule extends AbstractModule {
+    private static final CozeMsgHandler msgHandler = new CozeMsgHandler();
 
     public static final CozeExtrasModule instance = new CozeExtrasModule();
 
@@ -140,6 +143,10 @@ public class CozeExtrasModule extends AbstractModule {
 
     public boolean isPremium() {
         return false;
+    }
+
+    public MessageHandler getMessageHandler() {
+        return msgHandler;
     }
 
 }

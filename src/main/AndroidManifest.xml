@@ -21,6 +21,11 @@
 <!--            </intent-filter>-->
 <!--        </activity>-->
 
+        <!-- 声明语音识别服务 -->
+        <meta-data
+            android:name="android.speech.RecognitionService"
+            android:resource="@xml/speech_recognition_service" />
+
         <activity
             android:name="sdk.chat.demo.robot.activities.SplashScreenActivity"
             android:exported="true">
@@ -35,6 +40,17 @@
         <activity android:name="sdk.chat.demo.robot.activities.CozeLoginActivity"/>
 
         <activity android:name="sdk.chat.demo.examples.helper.CustomPostRegistrationActivity"/>
+
+
+        <activity
+            android:name="sdk.chat.demo.robot.activities.SpeechToTextActivity"
+            android:exported="true">
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
+        </activity>
+
     </application>
 
 </manifest>

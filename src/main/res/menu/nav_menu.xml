@@ -2,22 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <!-- 分组1 -->
-    <group android:id="@+id/group1">
-<!--        <item-->
-<!--            android:id="@+id/nav_home"-->
-<!--            android:icon="@drawable/ic_home"-->
-<!--            android:title="首页"/>-->
+    <item
+        android:id="@+id/action_record"
+        android:title="录音"
+        app:showAsAction="never"/>
 
-        <item
-            android:id="@+id/nav_gallery"
-            android:title="相册"/>
-    </group>
+    <item
+        android:id="@+id/action_filter"
+        android:title="切换内容"
+        app:showAsAction="never"/>
 
-    <!-- 分组2 -->
-    <group android:id="@+id/group2">
-        <item
-            android:id="@+id/nav_settings"
-            android:title="设置"/>
-    </group>
 </menu>

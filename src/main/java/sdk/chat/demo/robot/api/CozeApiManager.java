@@ -1,4 +1,6 @@
-package sdk.chat.demo.robot;
+package sdk.chat.demo.robot.api;
+
+import android.annotation.SuppressLint;
 
 import androidx.annotation.NonNull;
 
@@ -18,7 +20,6 @@ import io.reactivex.Completable;
 import io.reactivex.ObservableSource;
 import io.reactivex.functions.Function;
 import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import okhttp3.HttpUrl;
@@ -34,13 +35,10 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import sdk.chat.core.dao.User;
 import sdk.chat.core.events.NetworkEvent;
-import sdk.chat.core.hook.HookEvent;
-import sdk.chat.core.interfaces.ThreadType;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.AccountDetails;
 import sdk.chat.core.types.MessageSendStatus;
 import sdk.chat.core.types.MessageType;
-import sdk.chat.core.types.Progress;
 import sdk.guru.common.RX;
 
 import com.google.gson.*;
@@ -52,7 +50,7 @@ import org.pmw.tinylog.Logger;
 
 public class CozeApiManager {
     private final Gson gson = new Gson();
-    private final OkHttpClient client = new OkHttpClient();
+    private final OkHttpClient client;
     private String accessToken;
     private final static String URL = "http://8.217.172.116:5000/api/";
     private final static String URL_LOGIN = URL + "auth/login";
@@ -69,6 +67,25 @@ public class CozeApiManager {
 
     }
 
+    {
+        client = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .addInterceptor(new TokenRefreshInterceptor())
+                .build();
+    }
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    @SuppressLint("CheckResult")
+    public String refreshTokenSync() {
+        accessToken = null;
+        authenticate(ChatSDK.auth().cachedAccountDetails()).blockingGet();
+        return accessToken;
+    }
 
     public Single<AccountDetails> authenticate(final AccountDetails details) {
         return Single.create((SingleOnSubscribe<AccountDetails>) emitter -> {
@@ -134,7 +151,7 @@ public class CozeApiManager {
 
             Request request = new Request.Builder()
                     .url(URL_SESSION)
-                    .header("Authorization", accessToken)
+//                    .header("Authorization", accessToken)
                     .post(body)
                     .build();
 
@@ -177,7 +194,7 @@ public class CozeApiManager {
 
             Request request = new Request.Builder()
                     .url(URL_MESSAGE)
-                    .header("Authorization", accessToken)
+//                    .header("Authorization", accessToken)
                     .post(body)
                     .build();
 
@@ -215,13 +232,6 @@ public class CozeApiManager {
 
         });
 
-//        params.put("username", details.username);
-//        params.put("password", details.password);
-//                    Type typeObject = new TypeToken<HashMap>() {
-//                    }.getType();
-//                    String gsonData = gson.toJson(params, typeObject);
-//        String gsonData = gson.toJson(message.getMetaValuesAsMap(), typeObject);
-
     }
 
     public Single<JsonObject> listSession(int page, int limit) {
@@ -236,7 +246,7 @@ public class CozeApiManager {
 
             Request request = new Request.Builder()
                     .url(url)
-                    .header("Authorization", accessToken)
+//                    .header("Authorization", accessToken)
                     .build();
 
 
@@ -286,12 +296,8 @@ public class CozeApiManager {
 
             Request request = new Request.Builder()
                     .url(url)
-                    .header("Authorization", accessToken)
+//                    .header("Authorization", accessToken)
                     .build();
-
-//            Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
-//            message.setMessageStatus(MessageSendStatus.Uploading,true);
-//            ChatSDK.events().source().accept(NetworkEvent.messageProgressUpdated(message, new Progress(20,100)));
 
 
             client.newCall(request).enqueue(new Callback() {
@@ -346,24 +352,9 @@ public class CozeApiManager {
                 .flatMap(tick -> {
                     retryCount.set(0);
                     Logger.warn("tick..........." + tick.toString());
-                    //                                Message rsp = createMessageResp(message);
-                    //                                if(rsp!=null){
-                    //                                    disposables.clear();
-                    //                                }
                     return getRobtResponse(sessionId, contextId)
                             .subscribeOn(RX.io())
                             .flatMap(Single::just).toObservable();
-//                            .flatMap(data -> {
-//                                Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
-//                                Message rsp = createMessageResp(message);
-//                                if(rsp!=null){
-//                                    disposables.clear();
-//                                }
-//                                return Single.just(data);
-//                            }).toObservable();
-
-//                            .retryWhen(createRetryHandler())
-//                            .timeout(REQUEST_TIMEOUT, TimeUnit.SECONDS);
                 })
                 .observeOn(RX.db())
                 .flatMapCompletable(json ->
@@ -413,6 +404,8 @@ public class CozeApiManager {
             context.getThread().addMessage(message, true, true, false);
         }
         message.setText(detail.get("content").getAsString());
+        message.setMetaValue("action",detail.get("action").getAsInt());
+//        message.setReply("action:"+detail.get("action").getAsString());
         ChatSDK.db().update(message, false);
         ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
 //        Message resp = ChatSDK.thread().newMessage(MessageType.Text, context.getThread(), true);

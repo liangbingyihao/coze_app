@@ -17,11 +17,11 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:orientation="vertical">
-<!--            <include layout="@layout/app_bar_default" />-->
-            <sdk.chat.demo.robot.ui.CozeChatActionBar
-                android:id="@+id/chatActionBar"
-                android:layout_width="match_parent"
-                android:layout_height="56dp" />
+            <include layout="@layout/app_bar_default" />
+<!--            <sdk.chat.demo.robot.ui.CozeChatActionBar-->
+<!--                android:id="@+id/chatActionBar"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="56dp" />-->
             <FrameLayout
                 android:id="@+id/fragment_container"
                 android:layout_width="match_parent"
@@ -61,6 +61,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:padding="16dp"
+                android:visibility="gone"
                 android:background="?attr/colorPrimary">
 
                 <com.mikepenz.iconics.view.IconicsImageView
@@ -79,9 +80,5 @@
         </LinearLayout>
 
     </androidx.drawerlayout.widget.DrawerLayout>
-    <materialsearchview.MaterialSearchView
-        android:id="@+id/searchView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
 
 </FrameLayout>

@@ -1,0 +1,26 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:ico="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_search"
+        android:title="搜索"
+        app:showAsAction="always"
+        ico:ico_icon="gmd-search"
+        ico:ico_color="?attr/colorOnPrimary"
+        ico:ico_size="24dp"/>
+
+    <item
+        android:id="@+id/action_settings"
+        android:title="设置"
+        app:showAsAction="never"
+        ico:ico_icon="gmd-settings"
+        ico:ico_color="?attr/navigationIconTint"/>
+
+    <item
+        android:id="@+id/action_help"
+        android:title="帮助"
+        app:showAsAction="never"
+        ico:ico_icon="gmd-help"
+        ico:ico_color="?attr/navigationIconTint"/>
+</menu>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">信仰小记</string>
+    <string name="app_name">恩语</string>
     <string name="register">注册</string>
     <string name="contacts">AI助手</string>
     <string name="conversations" formatted="false">新建对话</string>
