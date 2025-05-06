@@ -6,9 +6,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Debug;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
@@ -18,10 +15,7 @@ import android.widget.LinearLayout;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.fragment.app.FragmentContainerView;
 
@@ -32,12 +26,8 @@ import org.pmw.tinylog.Logger;
 
 import java.io.File;
 import java.io.Serializable;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.List;
 
 import io.reactivex.Completable;
-import materialsearchview.MaterialSearchView;
 import sdk.chat.core.dao.Keys;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.dao.MessageMetaValue;
@@ -55,26 +45,18 @@ import sdk.chat.core.types.MessageType;
 import sdk.chat.core.ui.AbstractKeyboardOverlayFragment;
 import sdk.chat.core.ui.KeyboardOverlayHandler;
 import sdk.chat.core.ui.Sendable;
-import sdk.chat.core.utils.ActivityResultPushSubjectHolder;
-import sdk.chat.core.utils.CurrentLocale;
-import sdk.chat.core.utils.PermissionRequestHandler;
 import sdk.chat.core.utils.StringChecker;
 import sdk.chat.demo.pre.R;
+import sdk.chat.demo.robot.ui.CustomChatView;
 import sdk.chat.demo.robot.ui.KeyboardOverlayHelper;
 import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.activities.preview.ChatPreviewActivity;
-import sdk.chat.ui.appbar.ChatActionBar;
 import sdk.chat.ui.audio.AudioBinder;
-import sdk.chat.ui.chat.model.ImageMessageHolder;
 import sdk.chat.ui.chat.model.MessageHolder;
 import sdk.chat.ui.fragments.AbstractChatFragment;
-import sdk.chat.ui.fragments.ChatFragment;
 import sdk.chat.ui.interfaces.TextInputDelegate;
-import sdk.chat.ui.keyboard.ChatFragmentKeyboardOverlayHelper;
 import sdk.chat.ui.keyboard.KeyboardAwareFrameLayout;
 import sdk.chat.ui.module.UIModule;
-import sdk.chat.ui.provider.MenuItemProvider;
-import sdk.chat.ui.utils.ToastHelper;
 import sdk.chat.ui.views.ChatView;
 import sdk.chat.ui.views.ReplyView;
 import sdk.guru.common.DisposableMap;
@@ -91,7 +73,7 @@ public class CozeChatFragment  extends AbstractChatFragment implements ChatView.
     // this should be set to no
     protected boolean removeUserFromChatOnExit = true;
     protected static boolean enableTrace = false;
-    protected ChatView chatView;
+    protected CustomChatView chatView;
     protected View divider;
     protected ReplyView replyView;
     protected MessageInput input;
@@ -515,8 +497,17 @@ public class CozeChatFragment  extends AbstractChatFragment implements ChatView.
         chatView.onLoadMore(0, 0);
     }
 
+    public void switchContent() {
+        if(chatView!=null){
+            chatView.switchContent();
+        }
+    }
+
     public void clear() {
         chatView.clear();
+        chatView.removeListeners();
+        dm.dispose();
+        addListeners();
     }
 
     public void clearSelection() {

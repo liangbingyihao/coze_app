@@ -19,7 +19,7 @@
 <!--            android:layout_width="match_parent"-->
 <!--            android:layout_height="wrap_content" />-->
 
-        <sdk.chat.ui.views.ChatView
+        <sdk.chat.demo.robot.ui.CustomChatView
             android:id="@+id/chatView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -52,7 +52,7 @@
                 android:id="@+id/input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:showAttachmentButton="true"
+                app:showAttachmentButton="false"
                 android:background="?chatViewMessageInputBackgroundColor"/>
 
             <androidx.fragment.app.FragmentContainerView

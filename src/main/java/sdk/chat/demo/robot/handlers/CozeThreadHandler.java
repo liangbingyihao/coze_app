@@ -201,35 +201,6 @@ public class CozeThreadHandler extends AbstractThreadHandler {
     }
 
     private Single<List<Thread>> listSessions() {
-//
-//        // 2. 决定数据来源
-//        Single<List<Thread>> source = null;
-//        if(hasSyncedWithNetwork.get()){
-//            source = Single.fromCallable(() -> {
-//                List<Thread> sessions = ChatSDK.db().fetchThreadsWithType(ThreadType.Private1to1);
-//                return sessions != null ? sessions : Collections.emptyList();
-//            });
-//        }else{
-//            source = Single.fromCallable(() -> {
-//                List<Thread> sessions = ChatSDK.db().fetchThreadsWithType(ThreadType.Private1to1);
-//                return sessions != null ? sessions : Collections.emptyList();
-//            });
-//        }
-//
-//        return Single.fromCallable(() -> {
-//                    List<Thread> sessions = ChatSDK.db().fetchThreadsWithType(ThreadType.Private1to1);
-//                    return sessions != null ? sessions : Collections.emptyList();
-//                })
-//                .map(sessions -> {
-//                    Collections.sort(sessions, (a, b) -> {
-//                        return Long.compare(b.getCreationDate().getTime(), a.getCreationDate().getTime()); // 倒序
-//                    });
-//                    sessionCache = sessions; // 更新缓存
-//                    return sessionCache;
-//                })
-//                .subscribeOn(RX.io())
-//                .observeOn(RX.main());
-
         // 1. 检查内存缓存
         if (sessionCache != null && !sessionCache.isEmpty()) {
             return Single.just(sessionCache);
@@ -244,6 +215,7 @@ public class CozeThreadHandler extends AbstractThreadHandler {
                 if(!hasSyncedWithNetwork.get()){
                     triggerNetworkSync();
                 }
+                sessionCache = data;
                 return data;
             } catch (Exception e) {
                 throw new IOException("Failed to get threads", e);
@@ -274,21 +246,26 @@ public class CozeThreadHandler extends AbstractThreadHandler {
     }
 
     @SuppressLint("CheckResult")
-    private void triggerNetworkSync() {
+    public void triggerNetworkSync() {
         CozeApiManager.shared().listSession(1,50)
                 .subscribeOn(RX.io())
                 .observeOn(RX.io())
                 .subscribe(
                         networkSessions -> {
+                            boolean modified = false;
                             if (networkSessions != null) {
                                 JsonArray items = networkSessions.getAsJsonObject().getAsJsonArray("items");
                                 if (!items.isEmpty()) {
                                     for (JsonElement i : items) {
                                         JsonObject session = i.getAsJsonObject();
                                         Thread entity = ChatSDK.db().fetchThreadWithEntityID(session.get("id").getAsString());
-                                        if(entity!=null){
+                                        String newName = session.get("session_name").getAsString();
+                                        if(entity!=null&&newName!=null&&!newName.equals(entity.getName())){
                                             entity.setName(session.get("session_name").getAsString());
                                             ChatSDK.db().update(entity);
+                                            if(!modified){
+                                                modified = true;
+                                            }
                                         }
                                     }
                                 }
@@ -296,9 +273,10 @@ public class CozeThreadHandler extends AbstractThreadHandler {
                             hasSyncedWithNetwork.set(true);
 
                             // 更新内存缓存
-                            sessionCache = null;
-
-                            ChatSDK.events().source().accept(NetworkEvent.threadsUpdated());
+                            if(modified){
+                                sessionCache = null;
+                                ChatSDK.events().source().accept(NetworkEvent.threadsUpdated());
+                            }
                         },
                         error -> {
                         }

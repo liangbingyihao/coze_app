@@ -16,6 +16,8 @@ import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import materialsearchview.MaterialSearchView
 import sdk.chat.core.dao.Thread
+import sdk.chat.core.events.EventType
+import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.HistoryAdapter
@@ -23,7 +25,6 @@ import sdk.chat.demo.robot.adpter.HistoryItem
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil
 import sdk.chat.demo.robot.fragments.CozeChatFragment
 import sdk.chat.demo.robot.handlers.CozeThreadHandler
-import sdk.chat.demo.robot.ui.KeyboardDrawerHelper
 import sdk.chat.ui.ChatSDKUI
 import sdk.chat.ui.activities.MainActivity
 import sdk.guru.common.RX
@@ -37,8 +38,9 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
     private lateinit var sessions: List<Thread>
     private var currentSession: Thread? = null
     private lateinit var sessionAdapter: HistoryAdapter
-    private val threadHander: CozeThreadHandler = ChatSDK.thread() as CozeThreadHandler
+    private val threadHandler: CozeThreadHandler = ChatSDK.thread() as CozeThreadHandler
     private val chatTag = "tag_chat";
+    private var toReloadSessions = false;
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // 加载菜单资源
@@ -64,27 +66,32 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
         findViewById<View>(R.id.menu_reports).setOnClickListener(this)
         findViewById<View>(R.id.settings).setOnClickListener(this)
 
-        KeyboardDrawerHelper.setup(drawerLayout)
+//        KeyboardDrawerHelper.setup(drawerLayout)
+        drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
+            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
+                if (slideOffset > 0.3) {
+                    hideKeyboard()
+                }
+            }
+
+            override fun onDrawerOpened(drawerView: View) {
+                if(toReloadSessions){
+                    threadHandler.triggerNetworkSync()
+                }
+            }
+
+            override fun onDrawerClosed(drawerView: View) {
+            }
+
+            override fun onDrawerStateChanged(newState: Int) {
+            }
+        })
 //        initViews()
 
         recyclerView = findViewById<RecyclerView>(R.id.nav_recycler)
         recyclerView.layoutManager = LinearLayoutManager(this)
         createSessionMenu()
 
-
-//        DrawerImageLoader.init(object : AbstractDrawerImageLoader() {
-//            override fun set(imageView: ImageView, uri: Uri, placeholder: Drawable, tag: String?) {
-//                Glide.with(this@MainDrawerActivity)
-//                    .load(uri)
-//                    .dontAnimate()
-//                    .placeholder(placeholder)
-//                    .into(imageView)
-//            }
-//
-//            override fun cancel(imageView: ImageView) {
-//                Glide.with(this@MainDrawerActivity).clear(imageView)
-//            }
-//        })
 
         // Handle Toolbar
         setSupportActionBar(toolbar)
@@ -100,22 +107,24 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
         )
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
+        dm.add(ChatSDK.events().sourceOnMain().filter(NetworkEvent.filterType(EventType.ThreadsUpdated)).subscribe(Consumer {
+            createSessionMenu()
+            // Refresh the read count
+
+//            dm.add(privateTabName().subscribe(Consumer {
+//                slider.updateName(privateThreadItem.identifier, it)
+//            }))
+        }))
+
         requestPermissions();
 
-
-//        dm.add(
-//            ChatSDK.events().sourceOnSingle()
-//                .filter(NetworkEvent.filterType(EventType.ThreadsUpdated))
-//                .subscribe(Consumer { networkEvent: NetworkEvent? ->
-////                    loadData()
-//                })
-//        )
     }
 
     private fun toMenuItems(data: List<Thread>): ArrayList<HistoryItem> {
         sessions = data
         val sessionMenus: ArrayList<HistoryItem> = ArrayList<HistoryItem>()
         var lastTime: String? = null
+        toReloadSessions = false
         for (i in 0 until min(sessions.size, 50)) {
             var session = sessions[i]
             var thisTime =
@@ -129,6 +138,9 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
                 session.messages.isNotEmpty() -> session.messages[0].text
                 else -> "新会话"
             }
+            if(!toReloadSessions && "新会话" == name){
+                toReloadSessions = true
+            }
             sessionMenus.add(HistoryItem.SessionItem(name, session.id.toString()))
         }
         return sessionMenus
@@ -136,7 +148,7 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
 
     private fun createSessionMenu() {
         dm.add(
-            threadHander.listOrNewSessions()
+            threadHandler.listOrNewSessions()
                 .subscribeOn(Schedulers.io()) // Specify database operations on IO thread
                 .observeOn(AndroidSchedulers.mainThread()) // Results return to main thread
                 .subscribe(
@@ -180,6 +192,11 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
             }
 
             R.id.action_filter -> {
+                val fragment: CozeChatFragment? =
+                    supportFragmentManager.findFragmentByTag(chatTag) as? CozeChatFragment;
+                if (fragment != null) {
+                    fragment.switchContent();
+                }
                 true
             }
 
@@ -240,6 +257,7 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
             } else {
                 fragment.onNewIntent(currentSession);
             }
+            getToolbar()?.title = currentSession!!.name
         }
     }
 
@@ -252,7 +270,7 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
         when (v?.id) {
             R.id.btn_new_chat -> {
                 dm.add(
-                    threadHander.newAndListSessions()
+                    threadHandler.newAndListSessions()
                         .observeOn(RX.main())
                         .subscribe(Consumer { sessions: List<Thread>? ->
                             if (sessions != null) {
