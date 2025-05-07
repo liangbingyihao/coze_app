@@ -122,7 +122,7 @@ public class CozeChatFragment  extends AbstractChatFragment implements ChatView.
     @Override
     public void onClick(Message message) {
         if (getActivity() != null) {
-            if (message.getMessageType().is(MessageType.Text)) {
+            if (message.getMessageType().is(MessageType.System)) {
                 for (MessageMetaValue v : message.getMetaValues()) {
                     if ("action".equals(v.getKey()) && "1".equals(v.getValue())) {
                         handleMessageSend(ChatSDK.thread().sendMessageWithText(message.getText(), thread));

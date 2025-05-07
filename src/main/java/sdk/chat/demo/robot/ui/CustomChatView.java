@@ -44,4 +44,5 @@ public class CustomChatView extends ChatView {
             messagesListAdapter.addToEnd(filtered, false, false);
         });
     }
+
 }

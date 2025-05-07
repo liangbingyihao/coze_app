@@ -1,0 +1,71 @@
+
+<com.google.android.flexbox.FlexboxLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@id/bubble"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:layout_marginLeft="16dp"
+    android:layout_marginRight="16dp"
+    android:layout_marginTop="8dp"
+    app:alignItems="flex_end"
+    app:flexDirection="column"
+    app:flexWrap="wrap">
+
+    <!-- 聊天文本 -->
+    <TextView
+        android:id="@+id/messageText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/black"
+        android:textSize="16sp"
+        tools:text="111这是聊天气泡的文本内容1" />
+
+
+    <!-- 分割线 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="@color/white60"/>
+
+    <!-- 底部行（时间 + 操作菜单） -->
+    <com.google.android.flexbox.FlexboxLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:flexDirection="row"
+        app:alignItems="center"
+        app:justifyContent="flex_end">
+
+        <!-- 收藏按钮（IconicsImageView） -->
+        <com.mikepenz.iconics.view.IconicsImageView
+            android:id="@+id/btn_favorite"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="12dp"
+            app:iiv_size="18dp" />
+
+        <!-- 删除按钮（IconicsImageView） -->
+        <com.mikepenz.iconics.view.IconicsImageView
+            android:id="@+id/btn_delete"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="12dp"
+            app:iiv_color="@color/gray_1"
+            app:iiv_icon="gmd_delete"
+            app:iiv_size="18dp" />
+
+        <!-- 时间 -->
+        <TextView
+            android:id="@+id/messageTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            tools:text="10:20" />
+    </com.google.android.flexbox.FlexboxLayout>
+</com.google.android.flexbox.FlexboxLayout>

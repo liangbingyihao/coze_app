@@ -2,27 +2,19 @@ package sdk.chat.demo.robot;
 
 import android.content.Context;
 
-import com.google.firebase.auth.EmailAuthProvider;
-import com.google.firebase.auth.PhoneAuthProvider;
-
 import java.util.Arrays;
 import java.util.List;
 
-import sdk.chat.core.module.ImageMessageModule;
 import sdk.chat.core.module.Module;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.utils.QuickStart;
 import sdk.chat.demo.examples.helper.CustomPrivateThreadsFragment;
-import sdk.chat.demo.robot.handlers.CozeNetworkAdapter;
 import sdk.chat.demo.robot.module.CozeExtrasModule;
 import sdk.chat.demo.robot.module.CozeModule;
-import sdk.chat.demo.robot.ui.CozeMessageRegistration;
-import sdk.chat.firebase.adapter.module.FirebaseModule;
+import sdk.chat.demo.robot.ui.GWMessageRegistration;
 import sdk.chat.firebase.push.FirebasePushModule;
-import sdk.chat.firebase.ui.FirebaseUIModule;
 import sdk.chat.firebase.upload.FirebaseUploadModule;
 import sdk.chat.ui.ChatSDKUI;
-import sdk.chat.ui.extras.ExtrasModule;
 import sdk.chat.ui.module.UIModule;
 
 public class ChatSDKCoze  extends QuickStart {
@@ -79,7 +71,7 @@ public class ChatSDKCoze  extends QuickStart {
                 .build()
                 .activate(context, identifier);
         ChatSDKUI.setPrivateThreadsFragment(new CustomPrivateThreadsFragment());
-//        ChatSDKUI.shared().getMessageRegistrationManager().addMessageRegistration(new CozeMessageRegistration());
+        ChatSDKUI.shared().getMessageRegistrationManager().addMessageRegistration(new GWMessageRegistration());
 
     }
 

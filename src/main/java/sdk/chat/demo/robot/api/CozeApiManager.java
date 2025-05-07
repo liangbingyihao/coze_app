@@ -391,13 +391,18 @@ public class CozeApiManager {
 
     protected boolean createMessageResp(Message context, JsonObject detail) {
         Message message = ChatSDK.db().fetchMessageWithEntityID(detail.get("id").getAsString());
+        int action = detail.get("action").getAsInt();
         if (message == null) {
             message = new Message();
             message.setDate(new Date());
             List<User> users = context.getThread().getUsers();
             message.setSender(users.get(0));
             message.setEntityID(detail.get("id").getAsString());
-            message.setType(MessageType.Text);
+            if(action!=0){
+                message.setType(MessageType.System);
+            }else{
+                message.setType(MessageType.Text);
+            }
             message.setMessageStatus(MessageSendStatus.Initial, false);
             message.setIsRead(false);
             ChatSDK.db().insertOrReplaceEntity(message);
