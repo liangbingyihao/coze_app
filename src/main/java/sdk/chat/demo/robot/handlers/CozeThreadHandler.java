@@ -29,9 +29,6 @@ import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.MessageSendStatus;
 import sdk.chat.core.types.MessageType;
 import sdk.chat.demo.robot.api.CozeApiManager;
-import sdk.chat.firebase.adapter.FirebasePaths;
-import sdk.chat.firebase.adapter.moderation.Permission;
-import sdk.chat.firebase.adapter.module.FirebaseModule;
 import sdk.guru.common.RX;
 
 /**
@@ -196,14 +193,14 @@ public class CozeThreadHandler extends AbstractThreadHandler {
 
     @Override
     public String localizeRole(String role) {
-        return Permission.toLocalized(role);
+        return "";
     }
 
 
     @Override
     public String generateNewMessageID(Thread thread) {
         // User Firebase to generate an ID
-        return FirebasePaths.threadMessagesRef(thread.getEntityID()).push().getKey();
+        return Long.toString(System.currentTimeMillis());
     }
 
     @Override

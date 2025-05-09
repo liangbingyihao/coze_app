@@ -18,8 +18,6 @@ import sdk.chat.core.session.Configure;
 import sdk.chat.core.utils.ProfileOption;
 import sdk.chat.demo.robot.activities.MainDrawerActivity;
 import sdk.chat.demo.robot.handlers.CozeMsgHandler;
-import sdk.chat.ui.extras.ScanQRCodeActivity;
-import sdk.chat.ui.extras.ShowQRCodeActivity;
 import sdk.guru.common.BaseConfig;
 import sdk.guru.common.DisposableMap;
 
@@ -56,8 +54,8 @@ public class CozeExtrasModule extends AbstractModule {
         /**
          * Default image drawer header area
          */
-        @DrawableRes
-        public int drawerHeaderImage = sdk.chat.ui.extras.R.drawable.header;
+//        @DrawableRes
+//        public int drawerHeaderImage = sdk.chat.ui.extras.R.drawable.header;
 
         public Config(T onBuild) {
             super(onBuild);
@@ -78,10 +76,10 @@ public class CozeExtrasModule extends AbstractModule {
          * @param res
          * @return
          */
-        public Config<T> setDrawerHeaderImage(@DrawableRes int res) {
-            drawerHeaderImage = res;
-            return this;
-        }
+//        public Config<T> setDrawerHeaderImage(@DrawableRes int res) {
+//            drawerHeaderImage = res;
+//            return this;
+//        }
 
         /**
          * Enable Qr code invitations
@@ -103,23 +101,23 @@ public class CozeExtrasModule extends AbstractModule {
             ChatSDK.ui().setMainActivity(MainDrawerActivity.class);
         }
         if (config.qrCodesEnabled) {
-            ChatSDK.ui().addSearchActivity(ScanQRCodeActivity.class, ChatSDK.getString(sdk.chat.ui.extras.R.string.qr_code));
-
-            // Show the QR code when the user clicks the profile option
-            ChatSDK.ui().addProfileOption(new ProfileOption(ChatSDK.getString(sdk.chat.ui.extras.R.string.qr_code), (activity, userEntityID) -> {
-
-//                dm.add(ActivityResultPushSubjectHolder.shared()
-//                        .doFinally(() -> dm.dispose())
-//                        .subscribe(activityResult -> {
+//            ChatSDK.ui().addSearchActivity(ScanQRCodeActivity.class, ChatSDK.getString(sdk.chat.ui.extras.R.string.qr_code));
 //
+//            // Show the QR code when the user clicks the profile option
+//            ChatSDK.ui().addProfileOption(new ProfileOption(ChatSDK.getString(sdk.chat.ui.extras.R.string.qr_code), (activity, userEntityID) -> {
 //
+////                dm.add(ActivityResultPushSubjectHolder.shared()
+////                        .doFinally(() -> dm.dispose())
+////                        .subscribe(activityResult -> {
+////
+////
+////
+////                }));
 //
-//                }));
-
-                Intent intent = new Intent(activity, ShowQRCodeActivity.class);
-                intent.putExtra(Keys.IntentKeyUserEntityID, userEntityID);
-                activity.startActivity(intent);
-            }));
+//                Intent intent = new Intent(activity, ShowQRCodeActivity.class);
+//                intent.putExtra(Keys.IntentKeyUserEntityID, userEntityID);
+//                activity.startActivity(intent);
+//            }));
         }
     }
 

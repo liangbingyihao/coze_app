@@ -13,7 +13,7 @@ import sdk.chat.demo.robot.module.CozeExtrasModule;
 import sdk.chat.demo.robot.module.CozeModule;
 import sdk.chat.demo.robot.ui.GWMessageRegistration;
 import sdk.chat.firebase.push.FirebasePushModule;
-import sdk.chat.firebase.upload.FirebaseUploadModule;
+//import sdk.chat.firebase.upload.FirebaseUploadModule;
 import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.module.UIModule;
 
@@ -44,7 +44,7 @@ public class ChatSDKCoze  extends QuickStart {
 //                        .setPublicRoomsEnabled(true)
                         .build(),
 
-                FirebaseUploadModule.shared(),
+//                FirebaseUploadModule.shared(),
 
 //                LocationMessageModule.shared(),
 //                ImageMessageModule.shared(),

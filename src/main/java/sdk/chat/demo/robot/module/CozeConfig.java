@@ -1,21 +1,14 @@
 package sdk.chat.demo.robot.module;
 
-import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smack.roster.Roster;
-import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import sdk.chat.core.base.BaseNetworkAdapter;
 import sdk.chat.demo.robot.handlers.CozeNetworkAdapter;
 import sdk.guru.common.BaseConfig;
 
 public class CozeConfig<T> extends BaseConfig<T> {
 
-    public interface ConnectionConfigProvider {
-        void config(XMPPTCPConnectionConfiguration.Builder builder);
-    }
+//    public interface ConnectionConfigProvider {
+//        void config(XMPPTCPConnectionConfiguration.Builder builder);
+//    }
 
     public String domain;
     public String hostAddress;
@@ -32,20 +25,20 @@ public class CozeConfig<T> extends BaseConfig<T> {
     public boolean debugEnabled = false;
     public int pingInterval = 15;
     public boolean streamManagementEnabled = true;
-    public ConnectionConfigProvider connectionConfigProvider;
+//    public ConnectionConfigProvider connectionConfigProvider;
 
     public boolean reciprocalPresenceRequests = true;
-    public Roster.SubscriptionMode subscriptionMode = Roster.SubscriptionMode.accept_all;
+//    public Roster.SubscriptionMode subscriptionMode = Roster.SubscriptionMode.accept_all;
 
     public boolean saveNameToVCardNickname = true;
 
-    public List<Presence.Mode> onlinePresenceModes = new ArrayList<Presence.Mode>() {{
-        add(Presence.Mode.chat);
-        add(Presence.Mode.available);
-        add(Presence.Mode.dnd);
-        add(Presence.Mode.away);
-        add(Presence.Mode.xa);
-    }};
+//    public List<Presence.Mode> onlinePresenceModes = new ArrayList<Presence.Mode>() {{
+//        add(Presence.Mode.chat);
+//        add(Presence.Mode.available);
+//        add(Presence.Mode.dnd);
+//        add(Presence.Mode.away);
+//        add(Presence.Mode.xa);
+//    }};
 
     public boolean allowServerConfiguration = true;
 
@@ -251,20 +244,20 @@ public class CozeConfig<T> extends BaseConfig<T> {
      * Customize the XMPP connection
      * @return
      */
-    public CozeConfig<T> setConnectionConfigProvider(ConnectionConfigProvider provider) {
-        this.connectionConfigProvider = provider;
-        return this;
-    }
+//    public CozeConfig<T> setConnectionConfigProvider(ConnectionConfigProvider provider) {
+//        this.connectionConfigProvider = provider;
+//        return this;
+//    }
 
-    public CozeConfig<T> setOnlinePresenceModes(List<Presence.Mode> modes) {
-        this.onlinePresenceModes = modes;
-        return this;
-    }
-
-    public CozeConfig<T> setSubscriptionMode(Roster.SubscriptionMode mode) {
-        this.subscriptionMode = mode;
-        return this;
-    }
+//    public CozeConfig<T> setOnlinePresenceModes(List<Presence.Mode> modes) {
+//        this.onlinePresenceModes = modes;
+//        return this;
+//    }
+//
+//    public CozeConfig<T> setSubscriptionMode(Roster.SubscriptionMode mode) {
+//        this.subscriptionMode = mode;
+//        return this;
+//    }
 
     public CozeConfig<T> setReciprocalPresenceRequest(boolean value) {
         this.reciprocalPresenceRequests = value;

@@ -2,8 +2,6 @@ package sdk.chat.demo.robot.module;
 
 import android.content.Context;
 
-import app.xmpp.adapter.R;
-import app.xmpp.adapter.module.XMPPConfig;
 import sdk.chat.core.base.BaseNetworkAdapter;
 import sdk.chat.core.interfaces.InterfaceAdapter;
 import sdk.chat.core.module.AbstractModule;
@@ -27,7 +25,6 @@ public class CozeModule extends AbstractModule implements NetworkAdapterProvider
     }
 
     /**
-     * @see XMPPConfig
      * @return configuration object
      */
     public static CozeConfig<CozeModule> builder() {

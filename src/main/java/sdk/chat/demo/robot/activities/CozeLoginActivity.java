@@ -61,8 +61,8 @@ public class CozeLoginActivity extends LoginActivity {
             usernameTextInputLayout.setHint(UIModule.config().usernameHint);
         }
 
-        advancedConfigurationButton = findViewById(R.id.advancedConfigurationButton);
-        advancedConfigurationButton.setVisibility(View.INVISIBLE);
+//        advancedConfigurationButton = findViewById(R.id.advancedConfigurationButton);
+//        advancedConfigurationButton.setVisibility(View.INVISIBLE);
 
 //
 //        usernameSubtitleTextView = findViewById(R.id.usernameSubtitleTextView);

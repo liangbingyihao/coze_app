@@ -45,7 +45,7 @@ import sdk.chat.core.session.Config;
 import sdk.chat.core.session.StorageManager;
 import sdk.chat.core.types.AccountDetails;
 import sdk.chat.demo.examples.CustomChatActivity;
-import sdk.chat.demo.examples.activities.AProfileFragment;
+//import sdk.chat.demo.examples.activities.AProfileFragment;
 import sdk.chat.ui.fragments.ProfileFragment;
 
 public class APICheatSheet {
@@ -174,11 +174,11 @@ public class APICheatSheet {
         ChatSDK.ui().setChatActivity(CustomChatActivity.class);
 
         // Override a fragment
-        ChatSDK.ui().setProfileFragmentProvider(user -> {
-            ProfileFragment fragment =  new AProfileFragment();
-            fragment.setUser(user);
-            return fragment;
-        });
+//        ChatSDK.ui().setProfileFragmentProvider(user -> {
+//            ProfileFragment fragment =  new AProfileFragment();
+//            fragment.setUser(user);
+//            return fragment;
+//        });
 
     }
 

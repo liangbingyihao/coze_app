@@ -64,10 +64,15 @@ android {
 }
 
 dependencies {
-    implementation project(':chat-sdk-demo')
-    api project(':chat-sdk-app-firebase')
+//    implementation project(':chat-sdk-demo')
+//    api project(':chat-sdk-app-firebase')
+    api platform("com.google.firebase:firebase-bom:$firebaseBOM")
     implementation "com.google.firebase:firebase-crashlytics"
     implementation "com.google.firebase:firebase-perf"
+    api project(':chat-sdk-core-ui')
+    api project(':chat-sdk-firebase-push')
+    api project(':chat-sdk-pro-message-audio')
+    api project(':chat-sdk-pro-contact-book')
     implementation project(':android-networking')
     api "com.github.bumptech.glide:glide:$glideVersion"
     implementation 'com.google.android.flexbox:flexbox:3.0.0'
