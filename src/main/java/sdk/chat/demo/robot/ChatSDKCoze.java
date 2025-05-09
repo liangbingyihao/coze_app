@@ -40,6 +40,7 @@ public class ChatSDKCoze  extends QuickStart {
                 UIModule.builder()
                         .setLocationMessagesEnabled(false)
                         .setPublicRoomsEnabled(false)
+                        .setMessageSelectionEnabled(false)
 //                        .setPublicRoomsEnabled(true)
                         .build(),
 

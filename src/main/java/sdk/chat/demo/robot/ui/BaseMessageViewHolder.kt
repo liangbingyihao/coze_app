@@ -8,6 +8,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
+import com.google.android.flexbox.FlexboxLayout
 import com.mikepenz.iconics.IconicsDrawable
 import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
 import com.mikepenz.iconics.utils.color
@@ -22,6 +23,7 @@ import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.manager.DownloadablePayload
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.robot.IconUtils
+import sdk.chat.demo.robot.handlers.CozeThreadHandler
 import sdk.chat.ui.R
 import sdk.chat.ui.chat.model.MessageHolder
 import sdk.chat.ui.module.UIModule
@@ -46,7 +48,7 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
     Consumer<Throwable> {
 
     val keyIsGood: String = "is-good"
-    open var root: ConstraintLayout? = itemView.findViewById(R.id.root)
+    open var root: View? = itemView.findViewById(R.id.root)
     open var bubble: ViewGroup? = itemView.findViewById(R.id.bubble)
 
     open var messageIcon: ImageView? = itemView.findViewById(R.id.messageIcon)
@@ -123,6 +125,10 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
                 setFavorite(t.message.integerForKey(keyIsGood))
             }
         }
+        btnDelete?.setOnClickListener {
+            val threadHandler: CozeThreadHandler = ChatSDK.thread() as CozeThreadHandler
+            threadHandler.deleteMessage(t.message).subscribe();
+        }
         setFavorite(t.message.integerForKey(keyIsGood))
 
     }
@@ -145,6 +151,7 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
             }
             it.text = value
         }
+        text?.setTextIsSelectable(true);
     }
 
     open fun bindReadStatus(t: T) {

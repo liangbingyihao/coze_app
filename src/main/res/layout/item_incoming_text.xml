@@ -1,113 +1,111 @@
-<RelativeLayout
+<!--<?xml version="1.0" encoding="utf-8"?>-->
+<!--<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--    xmlns:app="http://schemas.android.com/apk/res-auto"-->
+<!--    android:id="@+id/root"-->
+<!--    android:layout_width="match_parent"-->
+<!--    android:layout_height="wrap_content"-->
+<!--    android:layout_marginStart="16dp"-->
+<!--    android:layout_marginTop="4dp"-->
+<!--    android:layout_marginEnd="16dp"-->
+<!--    android:layout_marginBottom="4dp">-->
+
+<!--    <LinearLayout-->
+<!--        android:id="@id/bubble"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginStart="8dp"-->
+<!--        android:layout_marginTop="3dp"-->
+<!--        android:layout_marginEnd="30dp"-->
+<!--        android:orientation="vertical"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent">-->
+
+
+<!--        <TextView-->
+<!--            android:id="@id/messageText"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="0dp"-->
+<!--            android:layout_weight="1"-->
+<!--            android:autoLink="all"-->
+<!--            android:linksClickable="true"-->
+<!--            android:textColorLink="?incomingTextLinkColor" />-->
+
+<!--    </LinearLayout>-->
+
+<!--    <TextView-->
+<!--        android:id="@id/messageTime"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginStart="0dp"-->
+<!--        app:layout_constraintStart_toStartOf="@id/bubble"-->
+<!--        app:layout_constraintTop_toBottomOf="@id/bubble" />-->
+
+<!--</androidx.constraintlayout.widget.ConstraintLayout>-->
+
+<com.google.android.flexbox.FlexboxLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@id/root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
     android:layout_marginLeft="16dp"
+    android:layout_marginTop="8dp"
     android:layout_marginRight="16dp"
-    android:layout_marginTop="8dp">
+    android:layout_marginBottom="8dp"
+    app:alignItems="flex_start"
+    app:flexDirection="column"
+    app:flexWrap="wrap">
 
-    <com.google.android.flexbox.FlexboxLayout
+    <FrameLayout
         android:id="@id/bubble"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/message_incoming_bubble_margin_right"
-        android:layout_marginRight="@dimen/message_incoming_bubble_margin_right"
-        android:orientation="vertical"
-        app:alignContent="stretch"
-        app:alignItems="stretch"
-        app:flexWrap="wrap"
-        app:justifyContent="flex_end">
-
+        android:layout_height="wrap_content">
+        <!-- 聊天文本 -->
         <TextView
-            android:id="@id/messageText"
+            android:id="@+id/messageText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/black"
-            android:text="1232334435435451211"
-            android:textSize="18sp"/>
+            android:textSize="16sp"
+            tools:text="111这是聊天气泡的文本内容1" />
+    </FrameLayout>
 
+
+    <!-- 底部行（时间 + 操作菜单） -->
+    <com.google.android.flexbox.FlexboxLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:alignItems="center"
+        app:flexDirection="row"
+        app:justifyContent="flex_start">
+
+        <!-- 收藏按钮（IconicsImageView） -->
+        <com.mikepenz.iconics.view.IconicsImageView
+            android:id="@+id/btn_favorite"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="12dp"
+            app:iiv_size="18dp" />
+
+        <!-- 删除按钮（IconicsImageView） -->
+        <com.mikepenz.iconics.view.IconicsImageView
+            android:id="@+id/btn_delete"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginStart="12dp"
+            app:iiv_color="@color/gray_1"
+            app:iiv_icon="gmd_delete"
+            app:iiv_size="18dp" />
+
+        <!-- 时间 -->
         <TextView
-            android:id="@id/messageTime"
+            android:id="@+id/messageTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/messageText"
-            android:layout_marginLeft="8dp"
-            android:layout_marginStart="8dp"
-            app:layout_alignSelf="center"/>
-
+            android:layout_marginStart="12dp"
+            android:textColor="@color/gray"
+            android:textSize="12sp"
+            tools:text="10:20" />
     </com.google.android.flexbox.FlexboxLayout>
-
-</RelativeLayout>
-
-<!--<com.google.android.flexbox.FlexboxLayout-->
-<!--    xmlns:android="http://schemas.android.com/apk/res/android"-->
-<!--    xmlns:app="http://schemas.android.com/apk/res-auto"-->
-<!--    xmlns:tools="http://schemas.android.com/tools"-->
-<!--    android:id="@id/bubble"-->
-<!--    android:layout_width="match_parent"-->
-<!--    android:layout_height="wrap_content"-->
-<!--    android:layout_marginBottom="8dp"-->
-<!--    android:layout_marginLeft="16dp"-->
-<!--    android:layout_marginRight="16dp"-->
-<!--    android:layout_marginTop="8dp"-->
-<!--    app:alignItems="flex_start"-->
-<!--    app:flexDirection="column"-->
-<!--    app:flexWrap="wrap">-->
-
-<!--    &lt;!&ndash; 聊天文本 &ndash;&gt;-->
-<!--    <TextView-->
-<!--        android:id="@+id/messageText"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:textColor="@color/black"-->
-<!--        android:textSize="16sp"-->
-<!--        tools:text="111这是聊天气泡的文本内容1" />-->
-
-
-<!--    &lt;!&ndash; 分割线 &ndash;&gt;-->
-<!--    <View-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="4dp"-->
-<!--        android:layout_marginTop="8dp"-->
-<!--        android:layout_marginBottom="8dp"-->
-<!--        android:background="@color/white60"/>-->
-
-<!--    &lt;!&ndash; 底部行（时间 + 操作菜单） &ndash;&gt;-->
-<!--    <com.google.android.flexbox.FlexboxLayout-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        app:flexDirection="row"-->
-<!--        app:alignItems="center"-->
-<!--        app:justifyContent="flex_start">-->
-
-<!--        &lt;!&ndash; 收藏按钮（IconicsImageView） &ndash;&gt;-->
-<!--        <com.mikepenz.iconics.view.IconicsImageView-->
-<!--            android:id="@+id/btn_favorite"-->
-<!--            android:layout_width="24dp"-->
-<!--            android:layout_height="24dp"-->
-<!--            android:layout_marginStart="12dp"-->
-<!--            app:iiv_size="18dp" />-->
-
-<!--        &lt;!&ndash; 删除按钮（IconicsImageView） &ndash;&gt;-->
-<!--        <com.mikepenz.iconics.view.IconicsImageView-->
-<!--            android:id="@+id/btn_delete"-->
-<!--            android:layout_width="24dp"-->
-<!--            android:layout_height="24dp"-->
-<!--            android:layout_marginStart="12dp"-->
-<!--            app:iiv_color="@color/gray_1"-->
-<!--            app:iiv_icon="gmd_delete"-->
-<!--            app:iiv_size="18dp" />-->
-
-<!--        &lt;!&ndash; 时间 &ndash;&gt;-->
-<!--        <TextView-->
-<!--            android:id="@+id/messageTime"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:layout_marginStart="12dp"-->
-<!--            android:textColor="@color/gray"-->
-<!--            android:textSize="12sp"-->
-<!--            tools:text="10:20" />-->
-<!--    </com.google.android.flexbox.FlexboxLayout>-->
-<!--</com.google.android.flexbox.FlexboxLayout>-->
+</com.google.android.flexbox.FlexboxLayout>

@@ -2,6 +2,8 @@ package sdk.chat.demo.robot.handlers;
 
 import android.annotation.SuppressLint;
 
+import androidx.annotation.Nullable;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -17,15 +19,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import io.reactivex.Completable;
 import io.reactivex.Single;
 import sdk.chat.core.base.AbstractThreadHandler;
+import sdk.chat.core.dao.CachedFile;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.dao.Thread;
 import sdk.chat.core.dao.User;
 import sdk.chat.core.events.NetworkEvent;
 import sdk.chat.core.interfaces.ThreadType;
 import sdk.chat.core.session.ChatSDK;
+import sdk.chat.core.types.MessageSendStatus;
+import sdk.chat.core.types.MessageType;
 import sdk.chat.demo.robot.api.CozeApiManager;
 import sdk.chat.firebase.adapter.FirebasePaths;
 import sdk.chat.firebase.adapter.moderation.Permission;
+import sdk.chat.firebase.adapter.module.FirebaseModule;
 import sdk.guru.common.RX;
 
 /**
@@ -35,6 +41,26 @@ import sdk.guru.common.RX;
 public class CozeThreadHandler extends AbstractThreadHandler {
     private final AtomicBoolean hasSyncedWithNetwork = new AtomicBoolean(false);
     private List<Thread> sessionCache;
+
+    @Override
+    public Single<List<Message>> loadMoreMessagesBefore(Thread thread, @Nullable Date before) {
+        return super.loadMoreMessagesBefore(thread, before);
+    }
+
+    @Override
+    public Single<List<Message>> loadMoreMessagesBefore(Thread thread, @Nullable Date before, boolean loadFromServer) {
+        return super.loadMoreMessagesBefore(thread, before, loadFromServer);
+    }
+
+    @Override
+    public Single<List<Message>> loadMoreMessagesAfter(Thread thread, @Nullable Date after, boolean loadFromServer) {
+//        return super.loadMoreMessagesAfter(thread, after, loadFromServer);
+
+        return super.loadMoreMessagesAfter(thread, after, loadFromServer).flatMap(localMessages -> {
+            ArrayList<Message> mergedMessages = new ArrayList<>(localMessages);
+            return Single.just(mergedMessages);
+        });
+    }
 
     public Completable removeUsersFromThread(final Thread thread, List<User> users) {
         return Completable.complete();
@@ -68,20 +94,6 @@ public class CozeThreadHandler extends AbstractThreadHandler {
                     return Single.just(message);
                 }).ignoreElement();
 
-    }
-
-    public Single<Thread> createRobotThread() {
-        Thread t = ChatSDK.db().fetchThreadWithEntityID("-1");
-        if (t != null) {
-            return Single.just(t);
-        }
-        Thread thread = ChatSDK.db().createEntity(Thread.class);
-        thread.setEntityID("-1");
-        thread.setCreator(ChatSDK.currentUser());
-        thread.setCreationDate(new Date());
-        thread.setType(ThreadType.Private1to1);
-        ChatSDK.db().update(thread);
-        return Single.just(thread);
     }
 
     @SuppressLint("CheckResult")
@@ -134,8 +146,32 @@ public class CozeThreadHandler extends AbstractThreadHandler {
     }
 
     public Completable deleteMessage(Message message) {
-        //FIXME
-        return Completable.complete();
+        return Completable.defer(() -> {
+            if (message.getSender().isMe() && message.getMessageStatus().equals(MessageSendStatus.Sent) && !message.getMessageType().is(MessageType.System)) {
+                // If possible delete the files associated with this message
+
+                List<CachedFile> files = ChatSDK.db().fetchFilesWithIdentifier(message.getEntityID());
+                for (CachedFile file: files) {
+                    if (file.getRemotePath() != null) {
+                        ChatSDK.upload().deleteFile(file.getRemotePath()).subscribe();
+                    }
+                    ChatSDK.db().delete(file);
+                }
+
+                // TODO: 删除后端...
+//                MessagePayload payload = ChatSDK.getMessagePayload(message);
+//                if (payload != null) {
+//                    List<String> paths = payload.remoteURLs();
+//                    for (String path: paths) {
+//                        ChatSDK.upload().deleteFile(path).subscribe();
+//                    }
+//                }
+
+//                return FirebaseModule.config().provider.messageWrapper(message).delete();
+            }
+            message.getThread().removeMessage(message);
+            return Completable.complete();
+        });
     }
 
     public Completable leaveThread(Thread thread) {

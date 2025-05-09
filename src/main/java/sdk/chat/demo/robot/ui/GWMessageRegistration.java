@@ -13,7 +13,7 @@ public class GWMessageRegistration extends TextMessageRegistration {
 //        holders.setIncomingTextConfig(GW.IncomingMessageViewHolder.class, R.layout.item_incoming_text)
 //                .setOutcomingTextConfig(GW.OutcomingMessageViewHolder.class, sdk.chat.ui.R.layout.view_holder_outcoming_text_message);
         holders.setIncomingTextConfig(GW.IncomingMessageViewHolder.class, R.layout.item_incoming_text)
-                .setOutcomingTextConfig(GW.OutcomingMessageViewHolder.class, sdk.chat.ui.R.layout.view_holder_outcoming_text_message);
+                .setOutcomingTextConfig(GW.OutcomingMessageViewHolder.class, R.layout.item_outcoming_text);
     }
 
 //    public boolean onClick(Activity activity, View rootView, Message message) {
