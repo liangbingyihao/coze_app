@@ -176,12 +176,12 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
         toReloadSessions = false
         for (i in 0 until min(sessions.size, 50)) {
             var session = sessions[i]
-            var thisTime =
-                DateLocalizationUtil.getFriendlyDate(this@MainDrawerActivity, session.creationDate)
-            if (thisTime != lastTime) {
-                lastTime = thisTime
-                sessionMenus.add(HistoryItem.DateItem(lastTime))
-            }
+//            var thisTime =
+//                DateLocalizationUtil.getFriendlyDate(this@MainDrawerActivity, session.creationDate)
+//            if (thisTime != lastTime) {
+//                lastTime = thisTime
+//                sessionMenus.add(HistoryItem.DateItem(lastTime))
+//            }
             var name = when {
                 session.name.isNotEmpty() -> session.name
                 session.messages.isNotEmpty() -> session.messages[0].text

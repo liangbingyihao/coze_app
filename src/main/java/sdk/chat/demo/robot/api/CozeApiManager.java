@@ -143,7 +143,7 @@ public class CozeApiManager {
         return Single.create(emitter -> {
 
             Map<String, String> params = new HashMap<>();
-            params.put("robt_id", robotId);
+            params.put("robot_id", robotId);
             Type typeObject = new TypeToken<HashMap>() {
             }.getType();
             String gsonData = gson.toJson(params, typeObject);

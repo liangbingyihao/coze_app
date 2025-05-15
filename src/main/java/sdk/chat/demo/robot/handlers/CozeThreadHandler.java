@@ -76,7 +76,7 @@ public class CozeThreadHandler extends AbstractThreadHandler {
     public Completable sendExploreMessage(final String text,final String contextId, final Thread thread) {
         return new MessageSendRig(new MessageType(MessageType.Text), thread, message -> {
             message.setText(text);
-            message.setMetaValue("contextId",contextId);
+            message.setMetaValue("context_id",contextId);
         }).run();
     }
 
@@ -250,9 +250,9 @@ public class CozeThreadHandler extends AbstractThreadHandler {
         return Single.fromCallable(() -> {
             try {
                 List<Thread> data = ChatSDK.db().fetchThreadsWithType(ThreadType.Private1to1);
-                Collections.sort(data, (a, b) -> {
-                    return Long.compare(b.getCreationDate().getTime(), a.getCreationDate().getTime()); // 倒序
-                });
+//                Collections.sort(data, (a, b) -> {
+//                    return Long.compare(b.getEntityID(), a.getCreationDate().getTime()); // 倒序
+//                });
 
                 if(!hasSyncedWithNetwork.get()){
                     triggerNetworkSync();
@@ -300,9 +300,14 @@ public class CozeThreadHandler extends AbstractThreadHandler {
                                 if (!items.isEmpty()) {
                                     for (JsonElement i : items) {
                                         JsonObject session = i.getAsJsonObject();
-                                        Thread entity = ChatSDK.db().fetchThreadWithEntityID(session.get("id").getAsString());
-                                        String newName = session.get("session_name").getAsString();
-                                        if(entity!=null&&newName!=null&&!newName.equals(entity.getName())){
+                                        String sessionName = session.get("session_name").getAsString();
+                                        Thread entity = ChatSDK.db().fetchOrCreateThreadWithEntityID(session.get("id").getAsString());
+                                        entity.setType(ThreadType.None);
+                                        ChatSDK.db().update(entity);
+                                        if(!modified){
+                                            modified = true;
+                                        }
+                                        if(!sessionName.equals(entity.getName())){
                                             entity.setName(session.get("session_name").getAsString());
                                             ChatSDK.db().update(entity);
                                             if(!modified){
