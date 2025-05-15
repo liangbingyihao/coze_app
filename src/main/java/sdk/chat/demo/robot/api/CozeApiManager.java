@@ -39,6 +39,7 @@ import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.AccountDetails;
 import sdk.chat.core.types.MessageSendStatus;
 import sdk.chat.core.types.MessageType;
+import sdk.chat.demo.robot.push.UpdateTokenWorker;
 import sdk.guru.common.RX;
 
 import com.google.gson.*;
@@ -96,8 +97,10 @@ public class CozeApiManager {
             } else if (details.type == AccountDetails.Type.Custom) {
                 params.put("guest", details.token);
             } else {
-                emitter.onError(ChatSDK.getException(sdk.chat.firebase.adapter.R.string.no_login_type_defined));
+                emitter.onError(new Exception("login type error"));
             }
+            String fcmToken = UpdateTokenWorker.checkAndUpdateToken(ChatSDK.ctx());
+            params.put("fcmToken", fcmToken);
             String gsonData = new JSONObject(params).toString();
 
             RequestBody body = RequestBody.create(
@@ -186,7 +189,7 @@ public class CozeApiManager {
     public Single<JsonObject> askRobot(Message message) {
         return Single.create(emitter -> {
             Map<String, String> params = message.getMetaValuesAsMap();
-            params.put("session_id", message.getThread().getEntityID());
+//            params.put("session_id", message.getThread().getEntityID());
             RequestBody body = RequestBody.create(
                     new JSONObject(params).toString(),
                     MediaType.parse("application/json; charset=utf-8")
@@ -202,7 +205,7 @@ public class CozeApiManager {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException error) {
                     Logger.warn("Message: " + message.getText() + "请求失败: " + error.getMessage());
-                    emitter.onError(new Exception(ChatSDK.getString(sdk.chat.firebase.adapter.R.string.message_failed_to_send)));
+                    emitter.onError(new Exception("send msg error"));
                 }
 
                 @Override
@@ -288,10 +291,8 @@ public class CozeApiManager {
     public Single<JsonObject> getRobtResponse(String sessionId, String contextId) {
         return Single.create(emitter -> {
 
-            HttpUrl url = HttpUrl.parse(URL_MESSAGE)
+            HttpUrl url = HttpUrl.parse(URL_MESSAGE+"/"+contextId)
                     .newBuilder()
-                    .addQueryParameter("session_id", sessionId)
-                    .addQueryParameter("context_id", contextId)
                     .build();
 
             Request request = new Request.Builder()
@@ -361,17 +362,40 @@ public class CozeApiManager {
                         {
                             if (json != null) {
                                 Logger.warn("success...");
-                                JsonArray items = json.getAsJsonObject().getAsJsonArray("items");
-                                if (!items.isEmpty()) {
-                                    Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
-                                    int pending = 0;
-                                    for (JsonElement i : items) {
-                                        pending += createMessageResp(message, i.getAsJsonObject()) ? 1 : 0;
-                                    }
-                                    if (pending == 0) {
-                                        disposables.clear();
-                                    }
+                                int status = json.get("status").getAsInt();
+                                String feedbackText = json.get("feedback_text").getAsString();
+                                if (status == 2) {
+                                    disposables.clear();
+                                }else if (status==1){
+                                    feedbackText = "(生成中)"+feedbackText;
                                 }
+                                Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
+                                message.setMetaValue("feedback",feedbackText);
+
+                                try{
+                                    JsonObject feedback = json.getAsJsonObject("feedback");
+                                    if(feedback!=null){
+                                        JsonArray exploreArray = feedback.getAsJsonArray("explore");
+                                        for (int i = 0; i < exploreArray.size(); i++) {
+                                            String explore = exploreArray.get(i).getAsString();
+                                            message.setMetaValue("explore_"+Integer.toString(i),explore);
+                                        }
+                                        message.setMetaValue("explore",exploreArray.size());
+                                    }
+                                } catch (Exception ignored) {
+                                }
+
+                                ChatSDK.db().update(message, false);
+                                ChatSDK.events().source().accept(NetworkEvent.threadMessagesUpdated(message.getThread()));
+
+
+//                                JsonArray items = json.getAsJsonObject().getAsJsonArray("items");
+//                                if (!items.isEmpty()) {
+//                                    int pending = 0;
+//                                    for (JsonElement i : items) {
+//                                        pending += createMessageResp(message, i.getAsJsonObject()) ? 1 : 0;
+//                                    }
+//                                }
 
                                 return Completable.complete();
                             } else {

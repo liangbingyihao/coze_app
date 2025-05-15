@@ -1,11 +1,14 @@
 package sdk.chat.demo.robot.activities
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -40,7 +43,8 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
     private lateinit var sessionAdapter: HistoryAdapter
     private val threadHandler: CozeThreadHandler = ChatSDK.thread() as CozeThreadHandler
     private val chatTag = "tag_chat";
-    private var toReloadSessions = false;
+    private var toReloadSessions = false
+    private var pickImageLauncher: ActivityResultLauncher<Intent?>? = null
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // 加载菜单资源
@@ -75,7 +79,7 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
             }
 
             override fun onDrawerOpened(drawerView: View) {
-                if(toReloadSessions){
+                if (toReloadSessions) {
                     threadHandler.triggerNetworkSync()
                 }
             }
@@ -107,17 +111,62 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
         )
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
-        dm.add(ChatSDK.events().sourceOnMain().filter(NetworkEvent.filterType(EventType.ThreadsUpdated)).subscribe(Consumer {
-            createSessionMenu()
-            // Refresh the read count
+        dm.add(
+            ChatSDK.events().sourceOnMain()
+                .filter(NetworkEvent.filterType(EventType.ThreadsUpdated)).subscribe(Consumer {
+                createSessionMenu()
+                // Refresh the read count
 
 //            dm.add(privateTabName().subscribe(Consumer {
 //                slider.updateName(privateThreadItem.identifier, it)
 //            }))
-        }))
+            })
+        )
 
         requestPermissions();
 
+        // 注册从相册选择图片的launcher
+        pickImageLauncher = registerForActivityResult(
+            StartActivityForResult(),
+            { result ->
+                if (result.getResultCode() === RESULT_OK) {
+                    val data: Intent? = result.getData()
+                    if (data != null) {
+                        val imageUri: Uri? = data.getData()
+                        // 处理选择的图片
+                        if (imageUri != null) {
+                            // 或者分享图片
+                            val shareIntent = Intent(Intent.ACTION_SEND)
+
+
+                            // 设置分享类型为图片和文本
+                            shareIntent.setType("image/*")
+
+
+                            // 添加图片URI
+                            shareIntent.putExtra(Intent.EXTRA_STREAM, imageUri)
+
+
+                            // 添加文本内容（包含下载链接）
+                            val shareText = "看看这个有趣的图片！下载我们的应用: " + "https://play.google.com/store/apps/details?id=com.color.colorvpn&hl=en"
+                            shareIntent.putExtra(Intent.EXTRA_TEXT, shareText)
+
+
+                            // 创建选择器，避免直接显示Intent.createChooser的标题
+                            val chooserIntent = Intent.createChooser(shareIntent, "分享到")
+
+
+                            // 验证是否有应用可以处理此Intent
+                            if (shareIntent.resolveActivity(getPackageManager()) != null) {
+                                startActivity(chooserIntent)
+                            } else {
+                                Toast.makeText(this, "没有找到可用的分享应用", Toast.LENGTH_SHORT)
+                                    .show()
+                            }
+                        }
+                    }
+                }
+            })
     }
 
     private fun toMenuItems(data: List<Thread>): ArrayList<HistoryItem> {
@@ -138,7 +187,7 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
                 session.messages.isNotEmpty() -> session.messages[0].text
                 else -> "新会话"
             }
-            if(!toReloadSessions && "新会话" == name){
+            if (!toReloadSessions && "新会话" == name) {
                 toReloadSessions = true
             }
             sessionMenus.add(HistoryItem.SessionItem(name, session.id.toString()))
@@ -158,7 +207,8 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
                             sessionAdapter = HistoryAdapter(sessionMenus) { changed, clickedItem ->
                                 toggleDrawer()
                                 if (changed) {
-                                    setCurrentSession(clickedItem)
+//                                    setCurrentSession(clickedItem)
+                                    ArticleListActivity.start(this@MainDrawerActivity,0)
                                 }
                             }
                             recyclerView.adapter = sessionAdapter
@@ -194,12 +244,16 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
             R.id.action_filter -> {
                 val fragment: CozeChatFragment? =
                     supportFragmentManager.findFragmentByTag(chatTag) as? CozeChatFragment;
-                if (fragment != null) {
-                    fragment.switchContent();
-                }
+                fragment?.switchContent()
                 true
             }
 
+            R.id.action_share -> {
+                val intent = Intent(Intent.ACTION_PICK)
+                intent.setType("image/*")
+                pickImageLauncher!!.launch(intent)
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }

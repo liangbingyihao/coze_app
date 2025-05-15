@@ -8,11 +8,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
-import com.google.android.flexbox.FlexboxLayout
-import com.mikepenz.iconics.IconicsDrawable
-import com.mikepenz.iconics.typeface.library.googlematerial.GoogleMaterial
-import com.mikepenz.iconics.utils.color
-import com.mikepenz.iconics.utils.colorRes
 import com.mikepenz.iconics.view.IconicsImageView
 import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessagesListAdapter
@@ -32,13 +27,14 @@ import sdk.chat.ui.view_holders.v2.MessageDirection
 import sdk.chat.ui.views.ProgressView
 import sdk.guru.common.DisposableMap
 import sdk.guru.common.RX
-import java.lang.Math.abs
 import java.text.DateFormat
-import kotlin.getValue
 
 open class GW {
-    open class IncomingMessageViewHolder(itemView: View): BaseMessageViewHolder<MessageHolder>(itemView, MessageDirection.Incoming)
-    open class OutcomingMessageViewHolder(itemView: View): BaseMessageViewHolder<MessageHolder>(itemView, MessageDirection.Outcoming)
+    open class IncomingMessageViewHolder(itemView: View) :
+        BaseMessageViewHolder<MessageHolder>(itemView, MessageDirection.Incoming)
+
+    open class OutcomingMessageViewHolder(itemView: View) :
+        BaseMessageViewHolder<MessageHolder>(itemView, MessageDirection.Outcoming)
 }
 
 
@@ -56,6 +52,7 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
     open var imageOverlay: ImageView? = itemView.findViewById(R.id.imageOverlay)
 
     open var text: TextView? = itemView.findViewById(R.id.messageText)
+    open var feedback: TextView? = itemView.findViewById(sdk.chat.demo.pre.R.id.feedback)
     open var time: TextView? = itemView.findViewById(R.id.messageTime)
 
     open var readStatus: ImageView? = itemView.findViewById(R.id.readStatus)
@@ -78,6 +75,15 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
 
     open val dm = DisposableMap()
     open val direction: MessageDirection = direction
+
+    //    open var explore1: View? = itemView.findViewById(sdk.chat.demo.pre.R.id.explore1)
+//    open var explore2: View? = itemView.findViewById(sdk.chat.demo.pre.R.id.explore2)
+//    open var explore3: View? = itemView.findViewById(sdk.chat.demo.pre.R.id.explore3)
+    val exploreView: Map<String, TextView> = mapOf(
+        "explore1" to itemView.findViewById<TextView>(sdk.chat.demo.pre.R.id.explore1),
+        "explore2" to itemView.findViewById<TextView>(sdk.chat.demo.pre.R.id.explore2),
+        "explore3" to itemView.findViewById<TextView>(sdk.chat.demo.pre.R.id.explore3)
+    )
 
 //    open var userClickListener: MessagesListAdapter.UserClickListener? = null
 
@@ -121,7 +127,10 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
         btnFavorite?.setOnClickListener {
             it.animate().scaleX(0.8f).scaleY(0.8f).setDuration(100).withEndAction {
                 it.animate().scaleX(1f).scaleY(1f).duration = 100
-                t.message.setMetaValue(keyIsGood, kotlin.math.abs(t.message.integerForKey(keyIsGood) - 1))
+                t.message.setMetaValue(
+                    keyIsGood,
+                    kotlin.math.abs(t.message.integerForKey(keyIsGood) - 1)
+                )
                 setFavorite(t.message.integerForKey(keyIsGood))
             }
         }
@@ -131,11 +140,36 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
         }
         setFavorite(t.message.integerForKey(keyIsGood))
 
+
+        var i = 0
+        while (i < 3) {
+            var exploreStr = t.message.stringForKey("explore_$i")
+            ++i
+            var v = exploreView.getValue("explore$i")
+            if(exploreStr!=null && exploreStr.isNotEmpty()){
+                v.text = exploreStr
+                v.paint.isUnderlineText = true
+                v.visibility = View.VISIBLE
+                v.setOnClickListener { view ->
+                    // 可以使用view参数
+                    view as TextView // 安全转换
+                    val threadHandler: CozeThreadHandler = ChatSDK.thread() as CozeThreadHandler
+                    threadHandler.sendExploreMessage(view.text.toString().trim(),t.message.entityID, t.message.thread).subscribe();
+                }
+            }else{
+                v.visibility = View.GONE
+            }
+        }
+
+        t.message.metaValuesAsMap
+        feedback?.let {
+            it.text = t.message.stringForKey("feedback");
+        }
     }
 
     private fun setFavorite(isGood: Int) {
         // 设置收藏按钮状态
-        if (isGood==1) {
+        if (isGood == 1) {
             btnFavorite?.icon = IconUtils.favoriteFilled
         } else {
             btnFavorite?.icon = IconUtils.favoriteBorder

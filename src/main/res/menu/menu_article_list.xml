@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- 下拉切换 Topic 的 Spinner -->
+    <item
+        android:id="@+id/spinner_topic"
+        android:title="主题"
+        app:actionViewClass="android.widget.Spinner"
+        app:showAsAction="always" />
+
+    <!-- 其他菜单项（可选） -->
+    <item
+        android:id="@+id/menu_search"
+        android:title="搜索"
+        app:showAsAction="ifRoom" />
+</menu>

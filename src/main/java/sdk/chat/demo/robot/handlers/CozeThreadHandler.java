@@ -25,6 +25,7 @@ import sdk.chat.core.dao.Thread;
 import sdk.chat.core.dao.User;
 import sdk.chat.core.events.NetworkEvent;
 import sdk.chat.core.interfaces.ThreadType;
+import sdk.chat.core.rigs.MessageSendRig;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.MessageSendStatus;
 import sdk.chat.core.types.MessageType;
@@ -72,6 +73,13 @@ public class CozeThreadHandler extends AbstractThreadHandler {
         return true;
     }
 
+    public Completable sendExploreMessage(final String text,final String contextId, final Thread thread) {
+        return new MessageSendRig(new MessageType(MessageType.Text), thread, message -> {
+            message.setText(text);
+            message.setMetaValue("contextId",contextId);
+        }).run();
+    }
+
     /**
      * Send a text,
      * The text need to have a owner thread attached to it or it cant be added.
@@ -86,6 +94,7 @@ public class CozeThreadHandler extends AbstractThreadHandler {
 //                    ChatSDK.events().source().accept(NetworkEvent.messageProgressUpdated(message, new Progress(10,100)));
                     ChatSDK.db().update(message);
                     pushForMessage(message);
+                    ChatSDK.events().source().accept(NetworkEvent.threadMessagesUpdated(message.getThread()));
 //                    message.setMessageStatus(MessageSendStatus.Uploading,true);
 //                    ChatSDK.events().source().accept(NetworkEvent.messageProgressUpdated(message, new Progress(10,100)));
                     return Single.just(message);
