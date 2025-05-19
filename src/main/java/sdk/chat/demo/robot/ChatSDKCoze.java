@@ -9,7 +9,7 @@ import sdk.chat.core.module.Module;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.utils.QuickStart;
 import sdk.chat.demo.examples.helper.CustomPrivateThreadsFragment;
-import sdk.chat.demo.robot.module.CozeExtrasModule;
+import sdk.chat.demo.robot.module.GWExtrasModule;
 import sdk.chat.demo.robot.module.CozeModule;
 import sdk.chat.demo.robot.ui.GWMessageRegistration;
 import sdk.chat.firebase.push.FirebasePushModule;
@@ -51,7 +51,7 @@ public class ChatSDKCoze  extends QuickStart {
 
                 FirebasePushModule.shared(),
 
-                CozeExtrasModule.builder(config -> {
+                GWExtrasModule.builder(config -> {
                     config.setDrawerEnabled(drawerEnabled);
                 })
 

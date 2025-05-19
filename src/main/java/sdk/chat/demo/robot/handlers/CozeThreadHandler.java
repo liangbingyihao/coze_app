@@ -20,8 +20,11 @@ import io.reactivex.Completable;
 import io.reactivex.Single;
 import sdk.chat.core.base.AbstractThreadHandler;
 import sdk.chat.core.dao.CachedFile;
+import sdk.chat.core.dao.DaoSession;
 import sdk.chat.core.dao.Message;
+import sdk.chat.core.dao.MessageDao;
 import sdk.chat.core.dao.Thread;
+import sdk.chat.core.dao.ThreadDao;
 import sdk.chat.core.dao.User;
 import sdk.chat.core.events.NetworkEvent;
 import sdk.chat.core.interfaces.ThreadType;
@@ -73,10 +76,10 @@ public class CozeThreadHandler extends AbstractThreadHandler {
         return true;
     }
 
-    public Completable sendExploreMessage(final String text,final String contextId, final Thread thread) {
+    public Completable sendExploreMessage(final String text, final String contextId, final Thread thread) {
         return new MessageSendRig(new MessageType(MessageType.Text), thread, message -> {
             message.setText(text);
-            message.setMetaValue("context_id",contextId);
+            message.setMetaValue("context_id", contextId);
         }).run();
     }
 
@@ -157,7 +160,7 @@ public class CozeThreadHandler extends AbstractThreadHandler {
                 // If possible delete the files associated with this message
 
                 List<CachedFile> files = ChatSDK.db().fetchFilesWithIdentifier(message.getEntityID());
-                for (CachedFile file: files) {
+                for (CachedFile file : files) {
                     if (file.getRemotePath() != null) {
                         ChatSDK.upload().deleteFile(file.getRemotePath()).subscribe();
                     }
@@ -224,15 +227,14 @@ public class CozeThreadHandler extends AbstractThreadHandler {
 
 
     public Single<List<Thread>> listOrNewSessions() {
+        //                    if (!sessions.isEmpty()) {
+        //                        return Single.just(sessions);
+        //                    }
+        //                    // 如果不存在会话，则创建新会话后再查询
+        //                    return createThread("新会话", ChatSDK.contact().contacts(), ThreadType.Private1to1)
+        //                            .flatMap(ignored -> listSessions());
         return listSessions()
-                .flatMap(sessions -> {
-                    if (!sessions.isEmpty()) {
-                        return Single.just(sessions);
-                    }
-                    // 如果不存在会话，则创建新会话后再查询
-                    return createThread("新会话", ChatSDK.contact().contacts(), ThreadType.Private1to1)
-                            .flatMap(ignored -> listSessions());
-                })
+                .flatMap(Single::just)
                 .onErrorResumeNext(error -> {
                     // 错误处理逻辑
                     if (error instanceof IOException) {
@@ -249,12 +251,13 @@ public class CozeThreadHandler extends AbstractThreadHandler {
         }
         return Single.fromCallable(() -> {
             try {
-                List<Thread> data = ChatSDK.db().fetchThreadsWithType(ThreadType.Private1to1);
+//                List<Thread> data = ChatSDK.db().getDaoCore().getDaoSession().getThreadDao().loadAll();
+                List<Thread> data = ChatSDK.db().fetchThreadsWithType(ThreadType.None);
 //                Collections.sort(data, (a, b) -> {
 //                    return Long.compare(b.getEntityID(), a.getCreationDate().getTime()); // 倒序
 //                });
 
-                if(!hasSyncedWithNetwork.get()){
+                if (!hasSyncedWithNetwork.get()) {
                     triggerNetworkSync();
                 }
                 sessionCache = data;
@@ -266,18 +269,17 @@ public class CozeThreadHandler extends AbstractThreadHandler {
     }
 
     public Single<List<Thread>> newAndListSessions() {
+        //                    if (!sessions.isEmpty() && sessions.get(0).getMessages().isEmpty()) {
+        //                        return Single.just(sessions);
+        //                    }
+        //                    // 如果不存在会话，则创建新会话后再查询
+        //                    return createThread("新会话", ChatSDK.contact().contacts(), ThreadType.Private1to1)
+        //                            .flatMap(ignored -> {
+        //                                sessionCache = null;
+        //                                return listSessions();
+        //                            });
         return listSessions()
-                .flatMap(sessions -> {
-                    if (!sessions.isEmpty() && sessions.get(0).getMessages().isEmpty()) {
-                        return Single.just(sessions);
-                    }
-                    // 如果不存在会话，则创建新会话后再查询
-                    return createThread("新会话", ChatSDK.contact().contacts(), ThreadType.Private1to1)
-                            .flatMap(ignored -> {
-                                sessionCache = null;
-                                return listSessions();
-                            });
-                })
+                .flatMap(Single::just)
                 .onErrorResumeNext(error -> {
                     // 错误处理逻辑
                     if (error instanceof IOException) {
@@ -289,30 +291,27 @@ public class CozeThreadHandler extends AbstractThreadHandler {
 
     @SuppressLint("CheckResult")
     public void triggerNetworkSync() {
-        CozeApiManager.shared().listSession(1,50)
+        CozeApiManager.shared().listSession(1, 50)
                 .subscribeOn(RX.io())
-                .observeOn(RX.io())
+//                .observeOn(RX.io())
                 .subscribe(
                         networkSessions -> {
                             boolean modified = false;
                             if (networkSessions != null) {
                                 JsonArray items = networkSessions.getAsJsonObject().getAsJsonArray("items");
                                 if (!items.isEmpty()) {
+                                    DaoSession threadDao = ChatSDK.db().getDaoCore().getDaoSession();
+
                                     for (JsonElement i : items) {
                                         JsonObject session = i.getAsJsonObject();
                                         String sessionName = session.get("session_name").getAsString();
-                                        Thread entity = ChatSDK.db().fetchOrCreateThreadWithEntityID(session.get("id").getAsString());
-                                        entity.setType(ThreadType.None);
-                                        ChatSDK.db().update(entity);
-                                        if(!modified){
-                                            modified = true;
-                                        }
-                                        if(!sessionName.equals(entity.getName())){
-                                            entity.setName(session.get("session_name").getAsString());
+                                        String entityId = session.get("id").getAsString();
+                                        Thread entity = ChatSDK.db().fetchOrCreateThreadWithEntityID(entityId);
+                                        if(!sessionName.equals(entity.getName())) {
+                                            entity.setName(sessionName);
+                                            entity.setType(ThreadType.None);
                                             ChatSDK.db().update(entity);
-                                            if(!modified){
-                                                modified = true;
-                                            }
+                                            modified = true;
                                         }
                                     }
                                 }
@@ -320,7 +319,7 @@ public class CozeThreadHandler extends AbstractThreadHandler {
                             hasSyncedWithNetwork.set(true);
 
                             // 更新内存缓存
-                            if(modified){
+                            if (modified) {
                                 sessionCache = null;
                                 ChatSDK.events().source().accept(NetworkEvent.threadsUpdated());
                             }
@@ -328,5 +327,25 @@ public class CozeThreadHandler extends AbstractThreadHandler {
                         error -> {
                         }
                 );
+    }
+
+    public Thread createChatSessions() {
+        String entityID = "0";
+        Thread thread = ChatSDK.db().fetchThreadWithEntityID(entityID);
+        if (thread != null) {
+            return thread;
+        }
+        thread = ChatSDK.db().createEntity(Thread.class);
+        thread.setEntityID("0");
+        thread.setCreator(ChatSDK.currentUser());
+        thread.setCreationDate(new Date());
+        thread.setName("chat", false);
+        ArrayList<User> users = new ArrayList<>(ChatSDK.contact().contacts());
+        User currentUser = ChatSDK.currentUser();
+        users.add(currentUser);
+        thread.addUsers(users);
+        thread.setType(ThreadType.Private1to1);
+        ChatSDK.db().update(thread);
+        return thread;
     }
 }

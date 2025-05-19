@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -241,7 +242,7 @@ public class CozeApiManager {
         return Single.create(emitter -> {
 
 
-            HttpUrl url = HttpUrl.parse(URL_SESSION)
+            HttpUrl url = Objects.requireNonNull(HttpUrl.parse(URL_SESSION))
                     .newBuilder()
                     .addQueryParameter("page", Integer.toString(page))
                     .addQueryParameter("limit", Integer.toString(limit))

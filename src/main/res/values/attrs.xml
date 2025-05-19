@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 定义渐变背景属性 -->
+    <attr name="gradientPrimary" format="reference"/>
+
+    <!-- 如果需要，可以同时定义其他渐变属性 -->
+    <attr name="gradientStartColor" format="color"/>
+    <attr name="gradientEndColor" format="color"/>
+    <attr name="gradientAngle" format="integer"/>
+</resources>

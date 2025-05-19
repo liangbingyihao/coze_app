@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Chat SDK</string>
+    <string name="app_name">GraceWord</string>
     <string name="firestream_link"><a href="https://www.google.com/">More Details</a></string>
     <string name="contacts">AI Assistant</string>
     <string name="conversations" formatted="false">Conversations</string>

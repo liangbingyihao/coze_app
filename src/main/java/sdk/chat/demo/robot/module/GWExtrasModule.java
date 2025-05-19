@@ -2,32 +2,28 @@ package sdk.chat.demo.robot.module;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.Intent;
 
-import androidx.annotation.DrawableRes;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import sdk.chat.core.dao.Keys;
 import sdk.chat.core.handlers.MessageHandler;
 import sdk.chat.core.module.AbstractModule;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.session.Configure;
-import sdk.chat.core.utils.ProfileOption;
 import sdk.chat.demo.robot.activities.MainDrawerActivity;
-import sdk.chat.demo.robot.handlers.CozeMsgHandler;
+import sdk.chat.demo.robot.handlers.GWMsgHandler;
 import sdk.guru.common.BaseConfig;
 import sdk.guru.common.DisposableMap;
 
 
-public class CozeExtrasModule extends AbstractModule {
-    private static final CozeMsgHandler msgHandler = new CozeMsgHandler();
+public class GWExtrasModule extends AbstractModule {
+    private static final GWMsgHandler msgHandler = new GWMsgHandler();
 
-    public static final CozeExtrasModule instance = new CozeExtrasModule();
+    public static final GWExtrasModule instance = new GWExtrasModule();
 
-    public static CozeExtrasModule shared() {
+    public static GWExtrasModule shared() {
         return instance;
     }
 
@@ -37,11 +33,11 @@ public class CozeExtrasModule extends AbstractModule {
      * @see Config
      * @return configuration object
      */
-    public static Config<CozeExtrasModule> builder() {
+    public static Config<GWExtrasModule> builder() {
         return instance.config;
     }
 
-    public static CozeExtrasModule builder(Configure<Config> config) throws Exception {
+    public static GWExtrasModule builder(Configure<Config> config) throws Exception {
         config.with(instance.config);
         return instance;
     }
@@ -93,7 +89,7 @@ public class CozeExtrasModule extends AbstractModule {
 
     }
 
-    protected Config<CozeExtrasModule> config = new Config<>(this);
+    protected Config<GWExtrasModule> config = new Config<>(this);
 
     @Override
     public void activate(@Nullable Context context) {

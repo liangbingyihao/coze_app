@@ -33,7 +33,7 @@ open class GW {
     open class IncomingMessageViewHolder(itemView: View) :
         BaseMessageViewHolder<MessageHolder>(itemView, MessageDirection.Incoming)
 
-    open class OutcomingMessageViewHolder(itemView: View) :
+    open class OutgoingMessageViewHolder(itemView: View) :
         BaseMessageViewHolder<MessageHolder>(itemView, MessageDirection.Outcoming)
 }
 
@@ -274,7 +274,7 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
         if (direction == MessageDirection.Incoming) {
             applyIncomingStyle(style)
         } else {
-            applyOutcomingStyle(style)
+//            applyOutgoingStyle(style)
         }
     }
 
@@ -325,33 +325,33 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
         }
     }
 
-    open fun applyOutcomingStyle(style: MessagesListStyle) {
+    open fun applyOutgoingStyle(style: MessagesListStyle) {
 
         progressView?.let {
             it.setTintColor(style.outcomingTextColor, style.outcomingDefaultBubbleColor)
         }
 
-        bubble?.let {
-            it.setPadding(
-                style.outcomingDefaultBubblePaddingLeft,
-                style.outcomingDefaultBubblePaddingTop,
-                style.outcomingDefaultBubblePaddingRight,
-                style.outcomingDefaultBubblePaddingBottom
-            )
-            ViewCompat.setBackground(it, style.getOutcomingBubbleDrawable())
-
-            it.background = DrawableUtil.getMessageSelector(
-                it.context,
-                R.attr.outcomingDefaultBubbleColor,
-                R.attr.outcomingDefaultBubbleSelectedColor,
-                R.attr.outcomingDefaultBubblePressedColor,
-                R.attr.outcomingBubbleDrawable
-            )
-        }
+//        bubble?.let {
+//            it.setPadding(
+//                style.outcomingDefaultBubblePaddingLeft,
+//                style.outcomingDefaultBubblePaddingTop,
+//                style.outcomingDefaultBubblePaddingRight,
+//                style.outcomingDefaultBubblePaddingBottom
+//            )
+//            ViewCompat.setBackground(it, style.getOutcomingBubbleDrawable())
+//
+//            it.background = DrawableUtil.getMessageSelector(
+//                it.context,
+//                R.attr.outcomingDefaultBubbleColor,
+//                R.attr.outcomingDefaultBubbleSelectedColor,
+//                R.attr.outcomingDefaultBubblePressedColor,
+//                R.attr.outcomingBubbleDrawable
+//            )
+//        }
 
         text?.let {
-            it.setTextColor(style.outcomingTextColor)
-            it.setTextSize(0, style.outcomingTextSize.toFloat())
+//            it.setTextColor(style.outcomingTextColor)
+//            it.setTextSize(0, style.outcomingTextSize.toFloat())
             it.setTypeface(it.typeface, style.outcomingTextStyle)
             it.autoLinkMask = style.textAutoLinkMask
             it.setLinkTextColor(style.outcomingTextLinkColor)

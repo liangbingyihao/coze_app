@@ -80,6 +80,8 @@ public class CozeAuthenticationHandler extends AbstractAuthenticationHandler {
                 user.addContact(robot.get(0));
                 ChatSDK.db().update(user);
             }
+            CozeThreadHandler handler = (CozeThreadHandler) ChatSDK.thread();
+            handler.createChatSessions();
 
             if (ChatSDK.hook() != null) {
                 HashMap<String, Object> data = new HashMap<>();
@@ -89,10 +91,10 @@ public class CozeAuthenticationHandler extends AbstractAuthenticationHandler {
 
 
 //            ChatSDK.core().sendAvailablePresence().subscribe();
-            ChatSDK.db().getDaoCore().getDaoSession().getMessageDao().queryBuilder()
-                    .where(MessageDao.Properties.Type.eq(MessageType.System))
-                    .buildDelete()
-                    .executeDeleteWithoutDetachingEntities();
+//            ChatSDK.db().getDaoCore().getDaoSession().getMessageDao().queryBuilder()
+//                    .where(MessageDao.Properties.Type.eq(MessageType.System))
+//                    .buildDelete()
+//                    .executeDeleteWithoutDetachingEntities();
 
             Logger.info("Authentication complete! name = " + user.getName() + ", id = " + user.getEntityID());
 

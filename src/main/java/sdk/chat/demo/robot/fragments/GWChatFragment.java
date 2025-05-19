@@ -47,6 +47,7 @@ import sdk.chat.core.ui.KeyboardOverlayHandler;
 import sdk.chat.core.ui.Sendable;
 import sdk.chat.core.utils.StringChecker;
 import sdk.chat.demo.pre.R;
+import sdk.chat.demo.robot.handlers.CozeThreadHandler;
 import sdk.chat.demo.robot.ui.CustomChatView;
 import sdk.chat.demo.robot.ui.KeyboardOverlayHelper;
 import sdk.chat.ui.ChatSDKUI;
@@ -62,7 +63,7 @@ import sdk.chat.ui.views.ReplyView;
 import sdk.guru.common.DisposableMap;
 import sdk.guru.common.RX;
 
-public class CozeChatFragment  extends AbstractChatFragment implements ChatView.Delegate, TextInputDelegate, ChatOptionsDelegate, KeyboardOverlayHandler {
+public class GWChatFragment extends AbstractChatFragment implements ChatView.Delegate, TextInputDelegate, ChatOptionsDelegate, KeyboardOverlayHandler {
     private DataCallback dataCallback;
     protected View rootView;
 
@@ -95,20 +96,9 @@ public class CozeChatFragment  extends AbstractChatFragment implements ChatView.
 
     @Override
     protected int getLayout() {
-        return R.layout.fragment_coze_chat;
+        return R.layout.fragment_gw_chat;
     }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof DataCallback) {
-            dataCallback = (DataCallback) context;
-            this.thread = dataCallback.getCurrentData();
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement DataCallback");
-        }
-    }
     @Override
     public void onDetach() {
         super.onDetach();
@@ -143,6 +133,9 @@ public class CozeChatFragment  extends AbstractChatFragment implements ChatView.
 
 
     public void setThread(Thread thread) {
+        if(true){
+            return;
+        }
         this.thread = thread;
         Bundle bundle = new Bundle();
         bundle.putString(Keys.IntentKeyThreadEntityID, thread.getEntityID());
@@ -492,6 +485,9 @@ public class CozeChatFragment  extends AbstractChatFragment implements ChatView.
 
     @Override
     public void onNewIntent(Thread thread) {
+        if(true){
+            return;
+        }
         this.thread = thread;
         clear();
         chatView.onLoadMore(0, 0);
@@ -675,6 +671,10 @@ public class CozeChatFragment  extends AbstractChatFragment implements ChatView.
     }
 
     public void restoreState(@Nullable Bundle savedInstanceState) {
+        if (thread == null) {
+            CozeThreadHandler handler = (CozeThreadHandler) ChatSDK.thread();
+            thread = handler.createChatSessions();
+        }
         String threadEntityID = null;
         if (savedInstanceState != null) {
             threadEntityID = savedInstanceState.getString(Keys.IntentKeyThreadEntityID);

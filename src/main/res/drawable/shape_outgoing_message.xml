@@ -1,0 +1,24 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 主气泡矩形 -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/bubble_color" />
+            <corners
+                android:topLeftRadius="8dp"
+                android:topRightRadius="8dp"
+                android:bottomLeftRadius="8dp"
+                android:bottomRightRadius="0dp" />
+        </shape>
+    </item>
+
+    <!-- 右下角尖角三角形 -->
+    <item android:right="-6dp"
+        android:bottom="-6dp">
+        <rotate android:fromDegrees="45">
+            <shape android:shape="rectangle">
+                <solid android:color="@color/bubble_color" />
+                <size android:width="12dp" android:height="12dp" />
+            </shape>
+        </rotate>
+    </item>
+</layer-list>

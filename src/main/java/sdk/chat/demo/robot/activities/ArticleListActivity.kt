@@ -10,11 +10,13 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.Toast
+import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.ArticleAdapter
+import sdk.chat.demo.robot.adpter.CustomSpinnerAdapter
 import sdk.chat.demo.robot.data.Article
 import sdk.chat.ui.activities.BaseActivity
 
@@ -59,28 +61,28 @@ class ArticleListActivity : BaseActivity() {
 
         // 添加分割线（可选）
         recyclerView.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
-    }
-
-    override fun getLayout(): Int {
-        return R.layout.activity_article_list;
-    }
 
 
+        // 设置自定义Toolbar
+        val toolbar: Toolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
 
-    // 3. 创建下拉菜单 Spinner
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_article_list, menu)
 
-        // 获取 Spinner
-        val spinnerItem = menu.findItem(R.id.spinner_topic)
-        val spinner = spinnerItem.actionView as Spinner
-
+        // 获取Spinner并设置适配器
+        val spinner: Spinner = toolbar.findViewById(R.id.spinner_topic)
+//        val adapter = ArrayAdapter.createFromResource(
+//            this,
+//            R.array.topics_array, android.R.layout.simple_spinner_item
+//        )
+//        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+//        spinner.setAdapter(adapter)
         // 配置 Spinner 适配器
-        spinner.adapter = ArrayAdapter(
+        spinner.adapter = CustomSpinnerAdapter(
             this,
-            android.R.layout.simple_spinner_dropdown_item,
+            R.layout.custom_spinner_item,
             topics
-        )
+        );
+
 
         // 监听选项切换
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -92,9 +94,42 @@ class ArticleListActivity : BaseActivity() {
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
-
-        return true
     }
+
+    override fun getLayout(): Int {
+        return R.layout.activity_article_list;
+    }
+
+
+
+//    // 3. 创建下拉菜单 Spinner
+//    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+//        menuInflater.inflate(R.menu.menu_article_list, menu)
+//
+//        // 获取 Spinner
+//        val spinnerItem = menu.findItem(R.id.spinner_topic)
+//        val spinner = spinnerItem.actionView as Spinner
+//
+//        // 配置 Spinner 适配器
+//        spinner.adapter = ArrayAdapter(
+//            this,
+//            android.R.layout.simple_spinner_dropdown_item,
+//            topics
+//        )
+//
+//        // 监听选项切换
+//        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+//            override fun onItemSelected(parent: AdapterView<*>?, view: View?, pos: Int, id: Long) {
+//                val selectedTopic = topics[pos]
+//                Toast.makeText(this@ArticleListActivity, "切换主题: $selectedTopic", Toast.LENGTH_SHORT).show()
+//                // 这里加载对应主题的数据
+//            }
+//
+//            override fun onNothingSelected(parent: AdapterView<*>?) {}
+//        }
+//
+//        return true
+//    }
 
     // 4. 处理返回键点击
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

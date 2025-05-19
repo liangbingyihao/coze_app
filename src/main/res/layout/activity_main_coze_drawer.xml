@@ -3,9 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:animateLayoutChanges="true"
-    android:fitsSystemWindows="true"
-    android:background="?activityBackgroundColor"
-    >
+    android:background="@drawable/gradient_primary"
+    android:fitsSystemWindows="true">
     <androidx.drawerlayout.widget.DrawerLayout
         android:id="@+id/root"
         android:layout_width="match_parent"
@@ -29,7 +28,7 @@
                 />
 <!--            <fragment-->
 <!--                android:id="@+id/myFragment"-->
-<!--                android:name="sdk.chat.demo.robot.fragments.CozeChatFragment"-->
+<!--                android:name="sdk.chat.demo.robot.fragments.GWChatFragment"-->
 <!--                android:layout_width="match_parent"-->
 <!--                android:layout_height="match_parent"/>-->
         </LinearLayout>

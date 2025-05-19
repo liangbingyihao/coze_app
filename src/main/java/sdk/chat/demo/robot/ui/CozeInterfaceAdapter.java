@@ -1,21 +1,14 @@
 package sdk.chat.demo.robot.ui;
 
 import android.content.Context;
-import android.content.Intent;
-
-import androidx.fragment.app.Fragment;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import sdk.chat.core.Tab;
-import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.activities.CozeLoginActivity;
-import sdk.chat.demo.robot.fragments.CozeChatFragment;
 import sdk.chat.ui.BaseInterfaceAdapter;
 import sdk.chat.ui.ChatSDKUI;
-import sdk.chat.ui.fragments.ContactsFragment;
-import sdk.chat.ui.module.UIModule;
 
 /**
  * Created by benjaminsmiley-andrews on 12/07/2017.

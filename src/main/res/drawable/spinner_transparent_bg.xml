@@ -1,0 +1,25 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <layer-list>
+            <!-- 透明背景 -->
+            <item>
+                <shape>
+                    <solid android:color="@android:color/transparent"/>
+                </shape>
+            </item>
+            <!-- 使用drawable代替bitmap -->
+            <item android:gravity="end|center_vertical" android:right="8dp">
+                <vector
+                    android:width="24dp"
+                    android:height="24dp"
+                    android:viewportWidth="24"
+                    android:viewportHeight="24"
+                    android:tint="#FF000000">
+                    <path
+                        android:fillColor="@android:color/white"
+                        android:pathData="M7,10l5,5 5,-5z"/>
+                </vector>
+            </item>
+        </layer-list>
+    </item>
+</selector>

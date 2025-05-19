@@ -25,16 +25,16 @@ import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.HistoryAdapter
 import sdk.chat.demo.robot.adpter.HistoryItem
-import sdk.chat.demo.robot.extensions.DateLocalizationUtil
-import sdk.chat.demo.robot.fragments.CozeChatFragment
+import sdk.chat.demo.robot.fragments.GWChatFragment
 import sdk.chat.demo.robot.handlers.CozeThreadHandler
 import sdk.chat.ui.ChatSDKUI
+import sdk.chat.ui.activities.BaseActivity
 import sdk.chat.ui.activities.MainActivity
 import sdk.guru.common.RX
 import kotlin.math.min
 
 
-class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.OnClickListener {
+class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnClickListener {
     open lateinit var drawerLayout: DrawerLayout
     open lateinit var searchView: MaterialSearchView
     private lateinit var recyclerView: RecyclerView
@@ -95,6 +95,9 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
         recyclerView = findViewById<RecyclerView>(R.id.nav_recycler)
         recyclerView.layoutManager = LinearLayoutManager(this)
         createSessionMenu()
+
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, GWChatFragment(), chatTag).commit()
 
 
         // Handle Toolbar
@@ -187,6 +190,7 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
                 session.messages.isNotEmpty() -> session.messages[0].text
                 else -> "新会话"
             }
+            name=session.entityID+","+name+","+session.type.toString();
             if (!toReloadSessions && "新会话" == name) {
                 toReloadSessions = true
             }
@@ -212,7 +216,7 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
                                 }
                             }
                             recyclerView.adapter = sessionAdapter
-                            setCurrentSession(sessionAdapter.getSelectItem())
+//                            setCurrentSession(sessionAdapter.getSelectItem())
                         } else {
                             throw IllegalArgumentException("创建会话失败")
                         }
@@ -242,8 +246,8 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
             }
 
             R.id.action_filter -> {
-                val fragment: CozeChatFragment? =
-                    supportFragmentManager.findFragmentByTag(chatTag) as? CozeChatFragment;
+                val fragment: GWChatFragment? =
+                    supportFragmentManager.findFragmentByTag(chatTag) as? GWChatFragment;
                 fragment?.switchContent()
                 true
             }
@@ -303,13 +307,13 @@ class MainDrawerActivity : MainActivity(), CozeChatFragment.DataCallback, View.O
             null
         }
         if (currentSession != null) {
-            val fragment: CozeChatFragment? =
-                supportFragmentManager.findFragmentByTag(chatTag) as? CozeChatFragment;
+            val fragment: GWChatFragment? =
+                supportFragmentManager.findFragmentByTag(chatTag) as? GWChatFragment;
             if (fragment == null) {
                 supportFragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container, CozeChatFragment(), chatTag).commit()
+                    .replace(R.id.fragment_container, GWChatFragment(), chatTag).commit()
             } else {
-                fragment.onNewIntent(currentSession);
+//                fragment.onNewIntent(currentSession);
             }
             getToolbar()?.title = currentSession!!.name
         }

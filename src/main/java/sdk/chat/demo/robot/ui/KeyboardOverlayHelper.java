@@ -13,7 +13,7 @@ import java.util.List;
 
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.ui.AbstractKeyboardOverlayFragment;
-import sdk.chat.demo.robot.fragments.CozeChatFragment;
+import sdk.chat.demo.robot.fragments.GWChatFragment;
 import sdk.chat.ui.R;
 import sdk.chat.ui.keyboard.KeyboardAwareFrameLayout;
 import sdk.chat.ui.keyboard.KeyboardOverlayOptionsFragment;
@@ -26,7 +26,7 @@ public class KeyboardOverlayHelper {
          void didHideOverlay(String key);
      }
 
-    protected WeakReference<CozeChatFragment> chatFragment;
+    protected WeakReference<GWChatFragment> chatFragment;
 
     protected boolean keyboardOverlayActive = false;
 
@@ -35,12 +35,12 @@ public class KeyboardOverlayHelper {
 
     protected List<Listener> listeners = new ArrayList<>();
 
-    public KeyboardOverlayHelper(CozeChatFragment fragment) {
+    public KeyboardOverlayHelper(GWChatFragment fragment) {
         chatFragment = new WeakReference<>(fragment);
         setupKeyboardListeners();
     }
 
-    protected CozeChatFragment cf() {
+    protected GWChatFragment cf() {
         return chatFragment.get();
     }
 
