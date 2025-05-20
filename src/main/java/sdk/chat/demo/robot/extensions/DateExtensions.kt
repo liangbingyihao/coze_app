@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 object DateLocalizationUtil {
+    val dayFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
     fun getFriendlyDate(context: Context, date: Date): String {
         val now = Calendar.getInstance()
@@ -18,6 +19,13 @@ object DateLocalizationUtil {
             isSameYear(now, target) -> formatDate(date, context.getString(R.string.this_year_format))
             else -> formatDate(date, context.getString(R.string.default_format))
         }
+    }
+
+    fun formatDay(date: Date?): String {
+        if(date==null){
+            return ""
+        }
+        return dayFormat.format(date)
     }
 
     private fun isToday(cal1: Calendar, cal2: Calendar): Boolean {

@@ -26,9 +26,8 @@ import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.HistoryAdapter
 import sdk.chat.demo.robot.adpter.HistoryItem
 import sdk.chat.demo.robot.fragments.GWChatFragment
-import sdk.chat.demo.robot.handlers.CozeThreadHandler
+import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.ui.ChatSDKUI
-import sdk.chat.ui.activities.BaseActivity
 import sdk.chat.ui.activities.MainActivity
 import sdk.guru.common.RX
 import kotlin.math.min
@@ -41,7 +40,7 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
     private lateinit var sessions: List<Thread>
     private var currentSession: Thread? = null
     private lateinit var sessionAdapter: HistoryAdapter
-    private val threadHandler: CozeThreadHandler = ChatSDK.thread() as CozeThreadHandler
+    private val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
     private val chatTag = "tag_chat";
     private var toReloadSessions = false
     private var pickImageLauncher: ActivityResultLauncher<Intent?>? = null

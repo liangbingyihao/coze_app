@@ -47,7 +47,7 @@ import sdk.chat.core.ui.KeyboardOverlayHandler;
 import sdk.chat.core.ui.Sendable;
 import sdk.chat.core.utils.StringChecker;
 import sdk.chat.demo.pre.R;
-import sdk.chat.demo.robot.handlers.CozeThreadHandler;
+import sdk.chat.demo.robot.handlers.GWThreadHandler;
 import sdk.chat.demo.robot.ui.CustomChatView;
 import sdk.chat.demo.robot.ui.KeyboardOverlayHelper;
 import sdk.chat.ui.ChatSDKUI;
@@ -306,23 +306,23 @@ public class GWChatFragment extends AbstractChatFragment implements ChatView.Del
     }
 
     protected void addListeners() {
-        dm.add(ChatSDK.events().sourceOnMain()
-                .filter(NetworkEvent.filterType(EventType.ThreadMetaUpdated, EventType.ThreadUserAdded, EventType.ThreadUserRemoved))
-                .filter(NetworkEvent.filterThreadEntityID(thread.getEntityID()))
-                .subscribe(networkEvent -> {
-                    // If we are added, we will get voice...
-                    User user = networkEvent.getUser();
-                    if (user != null && user.isMe()) {
-                        showOrHideTextInputView();
-                    }
-                }));
-
-        dm.add(ChatSDK.events().sourceOnMain()
-                .filter(NetworkEvent.filterType(EventType.UserMetaUpdated, EventType.UserPresenceUpdated))
-                .filter(networkEvent -> thread.containsUser(networkEvent.getUser()))
-                .subscribe(networkEvent -> {
-                    reloadData();
-                }));
+//        dm.add(ChatSDK.events().sourceOnMain()
+//                .filter(NetworkEvent.filterType(EventType.ThreadMetaUpdated, EventType.ThreadUserAdded, EventType.ThreadUserRemoved))
+//                .filter(NetworkEvent.filterThreadEntityID(thread.getEntityID()))
+//                .subscribe(networkEvent -> {
+//                    // If we are added, we will get voice...
+//                    User user = networkEvent.getUser();
+//                    if (user != null && user.isMe()) {
+//                        showOrHideTextInputView();
+//                    }
+//                }));
+//
+//        dm.add(ChatSDK.events().sourceOnMain()
+//                .filter(NetworkEvent.filterType(EventType.UserMetaUpdated, EventType.UserPresenceUpdated))
+//                .filter(networkEvent -> thread.containsUser(networkEvent.getUser()))
+//                .subscribe(networkEvent -> {
+//                    reloadData();
+//                }));
 
         dm.add(ChatSDK.events().sourceOnMain()
                 .filter(NetworkEvent.filterType(EventType.TypingStateUpdated))
@@ -672,7 +672,7 @@ public class GWChatFragment extends AbstractChatFragment implements ChatView.Del
 
     public void restoreState(@Nullable Bundle savedInstanceState) {
         if (thread == null) {
-            CozeThreadHandler handler = (CozeThreadHandler) ChatSDK.thread();
+            GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
             thread = handler.createChatSessions();
         }
         String threadEntityID = null;

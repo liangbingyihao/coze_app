@@ -14,7 +14,7 @@ public class CozeNetworkAdapter extends BaseNetworkAdapter {
         events = new GWEventHandler();
 //        core = new FirebaseCoreHandler();
         auth = new CozeAuthenticationHandler();
-        thread = new CozeThreadHandler();
+        thread = new GWThreadHandler();
 //        publicThread = new FirebasePublicThreadHandler();
 //        search = new FirebaseSearchHandler();
         contact = new CozeContactHandler();

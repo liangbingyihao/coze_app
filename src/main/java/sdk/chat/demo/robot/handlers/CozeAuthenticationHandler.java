@@ -7,13 +7,11 @@ import java.util.List;
 
 import io.reactivex.Completable;
 import sdk.chat.core.base.AbstractAuthenticationHandler;
-import sdk.chat.core.dao.MessageDao;
 import sdk.chat.core.dao.User;
 import sdk.chat.core.events.NetworkEvent;
 import sdk.chat.core.hook.HookEvent;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.AccountDetails;
-import sdk.chat.core.types.MessageType;
 import sdk.chat.core.utils.KeyStorage;
 import sdk.chat.demo.robot.api.CozeApiManager;
 import sdk.chat.demo.robot.extensions.DeviceIdHelper;
@@ -80,7 +78,7 @@ public class CozeAuthenticationHandler extends AbstractAuthenticationHandler {
                 user.addContact(robot.get(0));
                 ChatSDK.db().update(user);
             }
-            CozeThreadHandler handler = (CozeThreadHandler) ChatSDK.thread();
+            GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
             handler.createChatSessions();
 
             if (ChatSDK.hook() != null) {

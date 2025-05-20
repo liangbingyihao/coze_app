@@ -18,7 +18,7 @@ import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.manager.DownloadablePayload
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.robot.IconUtils
-import sdk.chat.demo.robot.handlers.CozeThreadHandler
+import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.ui.R
 import sdk.chat.ui.chat.model.MessageHolder
 import sdk.chat.ui.module.UIModule
@@ -65,7 +65,7 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
 
     open var resendTextView: TextView? = itemView.findViewById(R.id.resendTextView)
     open var resendContainer: ConstraintLayout? = itemView.findViewById(R.id.resendContainer)
-    open var resendImageView: ImageView? = itemView.findViewById(R.id.resendImageView)
+    open var sessionName: TextView? = itemView.findViewById(sdk.chat.demo.pre.R.id.session_name)
 
     open val btnFavorite: IconicsImageView? =
         itemView.findViewById(sdk.chat.demo.pre.R.id.btn_favorite)
@@ -110,6 +110,7 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
             it.isSelected = isSelected
         }
 
+//        setText(t.message.id.toString()+","+t.message.entityID.toString()+","+t.text, t.enableLinkify())
         setText(t.text, t.enableLinkify())
 
         time?.let {
@@ -135,7 +136,7 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
             }
         }
         btnDelete?.setOnClickListener {
-            val threadHandler: CozeThreadHandler = ChatSDK.thread() as CozeThreadHandler
+            val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
             threadHandler.deleteMessage(t.message).subscribe();
         }
         setFavorite(t.message.integerForKey(keyIsGood))
@@ -153,7 +154,7 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
                 v.setOnClickListener { view ->
                     // 可以使用view参数
                     view as TextView // 安全转换
-                    val threadHandler: CozeThreadHandler = ChatSDK.thread() as CozeThreadHandler
+                    val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
                     threadHandler.sendExploreMessage(view.text.toString().trim(),t.message.entityID, t.message.thread).subscribe();
                 }
             }else{
@@ -164,6 +165,11 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
         t.message.metaValuesAsMap
         feedback?.let {
             it.text = t.message.stringForKey("feedback");
+        }
+        sessionName?.let {
+            if(t.message.threadId!=null){
+                it.text = t.message.threadId.toString();
+            }
         }
     }
 

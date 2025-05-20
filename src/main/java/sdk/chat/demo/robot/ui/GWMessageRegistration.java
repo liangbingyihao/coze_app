@@ -4,7 +4,11 @@ import android.content.Context;
 
 import com.stfalcon.chatkit.messages.MessageHolders;
 
+import sdk.chat.core.dao.Message;
+import sdk.chat.core.types.MessageType;
+import sdk.chat.core.types.ReadStatus;
 import sdk.chat.demo.pre.R;
+import sdk.chat.ui.chat.model.MessageHolder;
 import sdk.chat.ui.custom.TextMessageRegistration;
 
 public class GWMessageRegistration extends TextMessageRegistration {
@@ -16,6 +20,13 @@ public class GWMessageRegistration extends TextMessageRegistration {
                 .setOutcomingTextConfig(GW.OutgoingMessageViewHolder.class, R.layout.item_outgoing_text);
     }
 
+    @Override
+    public MessageHolder onNewMessageHolder(Message message) {
+        if (message.typeIs(MessageType.Text)) {
+            return new GWMessageHolder(message);
+        }
+        return null;
+    }
 //    public boolean onClick(Activity activity, View rootView, Message message) {
 //        if (message.getMessageType().is(MessageType.Text)) {
 //            for (MessageMetaValue v : message.getMetaValues()) {

@@ -71,6 +71,7 @@ dependencies {
     implementation("com.google.firebase:firebase-inappmessaging-display")
     implementation "com.google.firebase:firebase-perf"
     implementation "com.google.firebase:firebase-messaging"
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation "com.google.code.gson:gson:$gsonVersion"
     api project(':chat-sdk-core-ui')
     api project(':chat-sdk-firebase-push')

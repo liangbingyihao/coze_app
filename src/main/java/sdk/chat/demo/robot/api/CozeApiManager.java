@@ -40,6 +40,7 @@ import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.AccountDetails;
 import sdk.chat.core.types.MessageSendStatus;
 import sdk.chat.core.types.MessageType;
+import sdk.chat.demo.robot.handlers.GWThreadHandler;
 import sdk.chat.demo.robot.push.UpdateTokenWorker;
 import sdk.guru.common.RX;
 
@@ -223,7 +224,7 @@ public class CozeApiManager {
                         }
 //                        ChatSDK.thread().sendLocalSystemMessage("获取回复中...",message.getThread());
                         JsonObject data = gson.fromJson(responseBody, JsonObject.class).getAsJsonObject("data");
-                        startPolling(message.getThread().getEntityID(), data.get("id").getAsString());
+                        startPolling(data.get("id").getAsString());
                         emitter.onSuccess(data); // 请求成功
                     } catch (Exception e) {
                         emitter.onError(e);
@@ -289,10 +290,10 @@ public class CozeApiManager {
         accessToken = null;
     }
 
-    public Single<JsonObject> getRobtResponse(String sessionId, String contextId) {
+    public Single<JsonObject> getRobtResponse(String contextId) {
         return Single.create(emitter -> {
 
-            HttpUrl url = HttpUrl.parse(URL_MESSAGE+"/"+contextId)
+            HttpUrl url = HttpUrl.parse(URL_MESSAGE + "/" + contextId)
                     .newBuilder()
                     .build();
 
@@ -338,7 +339,7 @@ public class CozeApiManager {
     private static final long OPERATION_TIMEOUT = 2; // 整体操作2分钟超时
     private static final int MAX_RETRIES = 3; // 最大重试次数
 
-    public synchronized void startPolling(String sessionId, String contextId) {
+    public synchronized void startPolling(String contextId) {
         if (isPolling) {
             Logger.warn("轮询已在运行中");
             return;
@@ -347,14 +348,12 @@ public class CozeApiManager {
         isPolling = true;
         Disposable disposable = Observable.interval(INITIAL_DELAY, POLL_INTERVAL, TimeUnit.SECONDS)
                 .doOnDispose(() -> {
-                            Logger.warn("stop tick...........");
                             isPolling = false;
                         }
                 )
                 .flatMap(tick -> {
                     retryCount.set(0);
-                    Logger.warn("tick..........." + tick.toString());
-                    return getRobtResponse(sessionId, contextId)
+                    return getRobtResponse(contextId)
                             .subscribeOn(RX.io())
                             .flatMap(Single::just).toObservable();
                 })
@@ -362,31 +361,41 @@ public class CozeApiManager {
                 .flatMapCompletable(json ->
                         {
                             if (json != null) {
-                                Logger.warn("success...");
                                 int status = json.get("status").getAsInt();
                                 String feedbackText = json.get("feedback_text").getAsString();
-                                if (status == 2) {
-                                    disposables.clear();
-                                }else if (status==1){
-                                    feedbackText = "(生成中)"+feedbackText;
-                                }
                                 Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
-                                message.setMetaValue("feedback",feedbackText);
+                                long sessionId = 0;
+                                String sessionName = "";
+                                if (status == 2) {
+                                    sessionId = json.get("session_id").getAsLong();
+                                    if (sessionId > 0) {
+                                        message.setThreadId(sessionId);
+                                    }
+                                    disposables.clear();
+                                } else if (status == 1) {
+                                    feedbackText = "(生成中)" + feedbackText;
+                                }
+                                message.setMetaValue("feedback", feedbackText);
 
-                                try{
+                                try {
                                     JsonObject feedback = json.getAsJsonObject("feedback");
-                                    if(feedback!=null){
+                                    if (feedback != null) {
                                         JsonArray exploreArray = feedback.getAsJsonArray("explore");
                                         for (int i = 0; i < exploreArray.size(); i++) {
                                             String explore = exploreArray.get(i).getAsString();
-                                            message.setMetaValue("explore_"+Integer.toString(i),explore);
+                                            message.setMetaValue("explore_" + Integer.toString(i), explore);
                                         }
-                                        message.setMetaValue("explore",exploreArray.size());
+                                        message.setMetaValue("explore", exploreArray.size());
+                                        sessionName = feedback.get("event").getAsString();
                                     }
                                 } catch (Exception ignored) {
                                 }
 
                                 ChatSDK.db().update(message, false);
+                                if (sessionId > 0) {
+                                    GWThreadHandler threadHandler = (GWThreadHandler) ChatSDK.thread();
+                                    threadHandler.updateThread(Long.toString(sessionId), sessionName);
+                                }
                                 ChatSDK.events().source().accept(NetworkEvent.threadMessagesUpdated(message.getThread()));
 
 
@@ -423,9 +432,9 @@ public class CozeApiManager {
             List<User> users = context.getThread().getUsers();
             message.setSender(users.get(0));
             message.setEntityID(detail.get("id").getAsString());
-            if(action!=0){
+            if (action != 0) {
                 message.setType(MessageType.System);
-            }else{
+            } else {
                 message.setType(MessageType.Text);
             }
             message.setMessageStatus(MessageSendStatus.Initial, false);
@@ -434,7 +443,7 @@ public class CozeApiManager {
             context.getThread().addMessage(message, true, true, false);
         }
         message.setText(detail.get("content").getAsString());
-        message.setMetaValue("action",detail.get("action").getAsInt());
+        message.setMetaValue("action", detail.get("action").getAsInt());
 //        message.setReply("action:"+detail.get("action").getAsString());
         ChatSDK.db().update(message, false);
         ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));

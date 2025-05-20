@@ -8,9 +8,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import org.greenrobot.greendao.query.QueryBuilder;
+
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -20,11 +21,11 @@ import io.reactivex.Completable;
 import io.reactivex.Single;
 import sdk.chat.core.base.AbstractThreadHandler;
 import sdk.chat.core.dao.CachedFile;
+import sdk.chat.core.dao.DaoCore;
 import sdk.chat.core.dao.DaoSession;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.dao.MessageDao;
 import sdk.chat.core.dao.Thread;
-import sdk.chat.core.dao.ThreadDao;
 import sdk.chat.core.dao.User;
 import sdk.chat.core.events.NetworkEvent;
 import sdk.chat.core.interfaces.ThreadType;
@@ -32,6 +33,7 @@ import sdk.chat.core.rigs.MessageSendRig;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.MessageSendStatus;
 import sdk.chat.core.types.MessageType;
+import sdk.chat.core.types.ReadStatus;
 import sdk.chat.demo.robot.api.CozeApiManager;
 import sdk.guru.common.RX;
 
@@ -39,9 +41,38 @@ import sdk.guru.common.RX;
  * Created by benjaminsmiley-andrews on 25/05/2017.
  */
 
-public class CozeThreadHandler extends AbstractThreadHandler {
+public class GWThreadHandler extends AbstractThreadHandler {
     private final AtomicBoolean hasSyncedWithNetwork = new AtomicBoolean(false);
     private List<Thread> sessionCache;
+
+    private  List<Message> fetchMessagesEarlier(Long startId) {
+        // Logger.debug(java.lang.Thread.currentThread().getName());
+        DaoCore daoCore = ChatSDK.db().getDaoCore();
+
+
+        QueryBuilder<Message> qb = daoCore.getDaoSession().queryBuilder(Message.class);
+//        qb.where(MessageDao.Properties.ThreadId.eq(threadID));
+//
+//        // Making sure no null messages infected the sort.
+//        qb.where(MessageDao.Properties.Date.isNotNull());
+//        qb.where(MessageDao.Properties.SenderId.isNotNull());
+
+        if(startId >0) {
+            qb.where(MessageDao.Properties.Id.lt(startId));
+        }
+//        if(from != null) {
+//            qb.where(MessageDao.Properties.Date.gt(from.getTime()));
+//        }
+
+        qb.orderDesc(MessageDao.Properties.Date).limit(20);
+
+
+        return qb.list();
+    }
+
+    public Single<List<Message>> loadMessagesEarlier(@Nullable Long startId, boolean loadFromServer){
+        return Single.defer(() -> Single.just(fetchMessagesEarlier(startId))).subscribeOn(RX.db());
+    }
 
     @Override
     public Single<List<Message>> loadMoreMessagesBefore(Thread thread, @Nullable Date before) {
@@ -148,10 +179,10 @@ public class CozeThreadHandler extends AbstractThreadHandler {
     }
 
     protected void pushForMessage(final Message message) {
-        if (ChatSDK.push() != null && message.getThread().typeIs(ThreadType.Private)) {
-            Map<String, Object> data = ChatSDK.push().pushDataForMessage(message);
-            ChatSDK.push().sendPushNotification(data);
-        }
+//        if (ChatSDK.push() != null && message.getThread().typeIs(ThreadType.Private)) {
+//            Map<String, Object> data = ChatSDK.push().pushDataForMessage(message);
+//            ChatSDK.push().sendPushNotification(data);
+//        }
     }
 
     public Completable deleteMessage(Message message) {
@@ -244,7 +275,7 @@ public class CozeThreadHandler extends AbstractThreadHandler {
                 });
     }
 
-    private Single<List<Thread>> listSessions() {
+    public Single<List<Thread>> listSessions() {
         // 1. 检查内存缓存
         if (sessionCache != null && !sessionCache.isEmpty()) {
             return Single.just(sessionCache);
@@ -300,17 +331,11 @@ public class CozeThreadHandler extends AbstractThreadHandler {
                             if (networkSessions != null) {
                                 JsonArray items = networkSessions.getAsJsonObject().getAsJsonArray("items");
                                 if (!items.isEmpty()) {
-                                    DaoSession threadDao = ChatSDK.db().getDaoCore().getDaoSession();
-
                                     for (JsonElement i : items) {
                                         JsonObject session = i.getAsJsonObject();
                                         String sessionName = session.get("session_name").getAsString();
                                         String entityId = session.get("id").getAsString();
-                                        Thread entity = ChatSDK.db().fetchOrCreateThreadWithEntityID(entityId);
-                                        if(!sessionName.equals(entity.getName())) {
-                                            entity.setName(sessionName);
-                                            entity.setType(ThreadType.None);
-                                            ChatSDK.db().update(entity);
+                                        if(updateThread(entityId,sessionName)){
                                             modified = true;
                                         }
                                     }
@@ -348,4 +373,33 @@ public class CozeThreadHandler extends AbstractThreadHandler {
         ChatSDK.db().update(thread);
         return thread;
     }
+
+    public boolean updateThread(String threadId,String sessionName){
+        Thread entity = ChatSDK.db().fetchOrCreateThreadWithEntityID(threadId);
+        if(!sessionName.equals(entity.getName())) {
+            entity.setName(sessionName);
+            entity.setType(ThreadType.None);
+            ChatSDK.db().update(entity);
+            sessionCache = null;
+            return true;
+        }
+        return false;
+    }
+
+
+    public Message newMessage(int type, Thread thread, boolean notify) {
+        Message message = new Message();
+        message.setSender(ChatSDK.currentUser());
+        message.setDate(new Date());
+
+        message.setEntityID(generateNewMessageID(thread));
+        message.setType(type);
+        message.setMessageStatus(MessageSendStatus.Initial, false);
+        message.setIsRead(true);
+
+        ChatSDK.db().insertOrReplaceEntity(message);
+
+        return message;
+    }
+
 }

@@ -5,7 +5,7 @@ import androidx.recyclerview.widget.RecyclerView
 import android.view.View
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
-import sdk.chat.demo.robot.data.Article
+import sdk.chat.demo.robot.adpter.data.Article
 import sdk.chat.demo.pre.R;
 import androidx.recyclerview.widget.ListAdapter
 
