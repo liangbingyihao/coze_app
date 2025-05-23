@@ -16,7 +16,8 @@ sealed class HistoryItem  {
 class HistoryAdapter(private val items: MutableList<HistoryItem> = mutableListOf(),
                      private val onItemClick: (Boolean,HistoryItem.SessionItem) -> Unit) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-    private var selectedPosition = if(items.isNotEmpty()) 1 else -1
+//    private var selectedPosition = if(items.isNotEmpty()) 1 else -1
+    private var selectedPosition = -1
 
     companion object {
         private const val TYPE_DATE = 0
@@ -84,7 +85,7 @@ class HistoryAdapter(private val items: MutableList<HistoryItem> = mutableListOf
 
         fun bind(item: HistoryItem.SessionItem, position: Int) {
             titleText.text = item.title
-            itemView.isSelected = position == selectedPosition
+//            itemView.isSelected = position == selectedPosition
             itemView.setOnClickListener {
                 val clickedPosition = absoluteAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }
                     ?: return@setOnClickListener

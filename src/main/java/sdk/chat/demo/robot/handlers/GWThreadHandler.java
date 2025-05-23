@@ -9,23 +9,29 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import org.greenrobot.greendao.query.QueryBuilder;
+import org.pmw.tinylog.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.reactivex.Completable;
+import io.reactivex.Observable;
 import io.reactivex.Single;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import sdk.chat.core.base.AbstractThreadHandler;
 import sdk.chat.core.dao.CachedFile;
 import sdk.chat.core.dao.DaoCore;
-import sdk.chat.core.dao.DaoSession;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.dao.MessageDao;
 import sdk.chat.core.dao.Thread;
+import sdk.chat.core.dao.ThreadDao;
 import sdk.chat.core.dao.User;
 import sdk.chat.core.events.NetworkEvent;
 import sdk.chat.core.interfaces.ThreadType;
@@ -33,36 +39,25 @@ import sdk.chat.core.rigs.MessageSendRig;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.MessageSendStatus;
 import sdk.chat.core.types.MessageType;
-import sdk.chat.core.types.ReadStatus;
-import sdk.chat.demo.robot.api.CozeApiManager;
+import sdk.chat.demo.robot.api.GWApiManager;
+import sdk.chat.demo.robot.extensions.DateLocalizationUtil;
 import sdk.guru.common.RX;
-
-/**
- * Created by benjaminsmiley-andrews on 25/05/2017.
- */
 
 public class GWThreadHandler extends AbstractThreadHandler {
     private final AtomicBoolean hasSyncedWithNetwork = new AtomicBoolean(false);
     private List<Thread> sessionCache;
+    private Message welcome;
 
-    private  List<Message> fetchMessagesEarlier(Long startId) {
+    private List<Message> fetchMessagesEarlier(Long startId) {
         // Logger.debug(java.lang.Thread.currentThread().getName());
         DaoCore daoCore = ChatSDK.db().getDaoCore();
 
 
         QueryBuilder<Message> qb = daoCore.getDaoSession().queryBuilder(Message.class);
-//        qb.where(MessageDao.Properties.ThreadId.eq(threadID));
-//
-//        // Making sure no null messages infected the sort.
-//        qb.where(MessageDao.Properties.Date.isNotNull());
-//        qb.where(MessageDao.Properties.SenderId.isNotNull());
 
-        if(startId >0) {
+        if (startId > 0) {
             qb.where(MessageDao.Properties.Id.lt(startId));
         }
-//        if(from != null) {
-//            qb.where(MessageDao.Properties.Date.gt(from.getTime()));
-//        }
 
         qb.orderDesc(MessageDao.Properties.Date).limit(20);
 
@@ -70,8 +65,27 @@ public class GWThreadHandler extends AbstractThreadHandler {
         return qb.list();
     }
 
-    public Single<List<Message>> loadMessagesEarlier(@Nullable Long startId, boolean loadFromServer){
-        return Single.defer(() -> Single.just(fetchMessagesEarlier(startId))).subscribeOn(RX.db());
+    public Single<List<Message>> loadMessagesBySession(@Nullable String sessionId) {
+        return Single.defer(() -> {
+            DaoCore daoCore = ChatSDK.db().getDaoCore();
+            QueryBuilder<Message> qb = daoCore.getDaoSession().queryBuilder(Message.class);
+            if (sessionId != null) {
+                qb.where(MessageDao.Properties.ThreadId.eq(Long.parseLong(sessionId)));
+            }
+            qb.orderDesc(MessageDao.Properties.Date);
+            List<Message> data = qb.list();
+            return Single.just(data);
+        }).subscribeOn(RX.db());
+    }
+
+    public Single<List<Message>> loadMessagesEarlier(@Nullable Long startId, boolean loadFromServer) {
+        return Single.defer(() -> {
+            List<Message> messages = fetchMessagesEarlier(startId);
+            if (messages.isEmpty()) {
+
+            }
+            return Single.just(messages);
+        }).subscribeOn(RX.db());
     }
 
     @Override
@@ -121,8 +135,9 @@ public class GWThreadHandler extends AbstractThreadHandler {
      * The uploading to the server part can bee seen her {@see FirebaseCoreAdapter#PushMessageWithComplition}.
      */
     public Completable sendMessage(final Message message) {
-        return CozeApiManager.shared().askRobot(message)
+        return GWApiManager.shared().askRobot(message)
                 .subscribeOn(RX.io()).flatMap(data -> {
+                    startPolling(data.get("id").getAsString());
                     message.setEntityID(data.get("id").getAsString());
 //                    message.setMessageStatus(MessageSendStatus.Uploading,true);
 //                    ChatSDK.events().source().accept(NetworkEvent.messageProgressUpdated(message, new Progress(10,100)));
@@ -146,7 +161,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
             }
         }
 
-        return CozeApiManager.shared().saveSession("1")
+        return GWApiManager.shared().saveSession("1")
                 .subscribeOn(RX.io()).flatMap(data -> {
                     final Thread thread = ChatSDK.db().createEntity(Thread.class);
                     thread.setEntityID(data.get("id").getAsString());
@@ -282,8 +297,13 @@ public class GWThreadHandler extends AbstractThreadHandler {
         }
         return Single.fromCallable(() -> {
             try {
-//                List<Thread> data = ChatSDK.db().getDaoCore().getDaoSession().getThreadDao().loadAll();
-                List<Thread> data = ChatSDK.db().fetchThreadsWithType(ThreadType.None);
+                DaoCore daoCore = ChatSDK.db().getDaoCore();
+                QueryBuilder<Thread> qb = daoCore.getDaoSession().queryBuilder(Thread.class);
+                qb.where(ThreadDao.Properties.Type.eq(ThreadType.None));
+                qb.orderDesc(ThreadDao.Properties.LastMessageDate);
+                List<Thread> data = qb.list();
+
+//                List<Thread> data = ChatSDK.db().fetchThreadsWithType(ThreadType.None);
 //                Collections.sort(data, (a, b) -> {
 //                    return Long.compare(b.getEntityID(), a.getCreationDate().getTime()); // 倒序
 //                });
@@ -322,7 +342,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
 
     @SuppressLint("CheckResult")
     public void triggerNetworkSync() {
-        CozeApiManager.shared().listSession(1, 50)
+        GWApiManager.shared().listSession(1, 50)
                 .subscribeOn(RX.io())
 //                .observeOn(RX.io())
                 .subscribe(
@@ -335,7 +355,8 @@ public class GWThreadHandler extends AbstractThreadHandler {
                                         JsonObject session = i.getAsJsonObject();
                                         String sessionName = session.get("session_name").getAsString();
                                         String entityId = session.get("id").getAsString();
-                                        if(updateThread(entityId,sessionName)){
+                                        Date updateAt = DateLocalizationUtil.INSTANCE.toDate(session.get("updated_at").getAsString());
+                                        if (updateThread(entityId, sessionName, updateAt)) {
                                             modified = true;
                                         }
                                     }
@@ -374,16 +395,23 @@ public class GWThreadHandler extends AbstractThreadHandler {
         return thread;
     }
 
-    public boolean updateThread(String threadId,String sessionName){
+    public boolean updateThread(String threadId, String sessionName, Date updateAt) {
         Thread entity = ChatSDK.db().fetchOrCreateThreadWithEntityID(threadId);
-        if(!sessionName.equals(entity.getName())) {
+        boolean modified = false;
+        if (!sessionName.equals(entity.getName())) {
             entity.setName(sessionName);
             entity.setType(ThreadType.None);
+            modified = true;
+        }
+        if (updateAt != null && (entity.getLastMessageDate() == null || entity.getLastMessageDate().before(updateAt))) {
+            entity.setLastMessageDate(updateAt);
+            modified = true;
+        }
+        if (modified) {
             ChatSDK.db().update(entity);
             sessionCache = null;
-            return true;
         }
-        return false;
+        return modified;
     }
 
 
@@ -402,4 +430,199 @@ public class GWThreadHandler extends AbstractThreadHandler {
         return message;
     }
 
+    @SuppressLint("CheckResult")
+    public Single<Message> getWelcomeMsg() {
+        if (welcome != null) {
+            return Single.just(welcome);
+        }
+        return Single.fromCallable(() -> {
+            try {
+                DaoCore daoCore = ChatSDK.db().getDaoCore();
+                QueryBuilder<Message> qb = daoCore.getDaoSession().queryBuilder(Message.class);
+                qb.where(MessageDao.Properties.EntityID.eq("welcome")).limit(1);
+                List<Message> data = qb.list();
+
+                if (data.isEmpty()) {
+                    GWApiManager.shared().getMessageDetail("welcome")
+                            .subscribeOn(RX.io())
+                            .subscribe(
+                                    json -> {
+                                        Message message = new Message();
+                                        message.setEntityID("welcome");
+                                        message.setSender(ChatSDK.currentUser());
+                                        message.setDate(new Date());
+                                        message.setType(MessageType.Text);
+                                        message.setMessageStatus(MessageSendStatus.Initial, false);
+                                        ChatSDK.db().insertOrReplaceEntity(message);
+                                        updateMessage(message,json);
+                                    },
+                                    error -> {
+                                    }
+                            );
+                }
+                welcome = data.get(0);
+                return welcome;
+            } catch (Exception e) {
+                throw new IOException("Failed to get threads", e);
+            }
+        }).subscribeOn(RX.io());
+//        return listSessions()
+//                .flatMap(Single::just)
+//                .onErrorResumeNext(error -> {
+//                    // 错误处理逻辑
+//                    if (error instanceof IOException) {
+//                        return Single.error(new IOException("Failed to list sessions", error));
+//                    }
+//                    return Single.error(error);
+//                });
+    }
+
+    private void updateMessage(Message message,JsonObject json){
+        int status = json.get("status").getAsInt();
+        String feedbackText = json.get("feedback_text").getAsString();
+        long sessionId = 0;
+        String sessionName = "";
+        if (status == 2) {
+            sessionId = json.get("session_id").getAsLong();
+            if (sessionId > 0) {
+                message.setThreadId(sessionId);
+            }
+            disposables.clear();
+            try {
+                JsonObject feedback = json.getAsJsonObject("feedback");
+                if (feedback != null) {
+                    JsonArray exploreArray = feedback.getAsJsonArray("function");
+                    for (int i = 0; i < exploreArray.size(); i++) {
+                        String function = exploreArray.get(i).getAsJsonArray().toString();
+                        message.setMetaValue("explore_" + Integer.toString(i), function);
+                    }
+                    sessionName = feedback.get("topic").getAsString();
+                    String summary = feedback.get("summary").getAsString();
+                    if (summary != null) {
+                        message.setMetaValue("summary", summary);
+                    }
+                    String colorTag = feedback.get("color_tag").getAsString();
+                    if (colorTag != null) {
+                        message.setMetaValue("colorTag", colorTag);
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+        } else if (status == 1) {
+            feedbackText = "(生成中)" + feedbackText;
+        }
+        message.setMetaValue("feedback", feedbackText);
+
+
+        ChatSDK.db().update(message, false);
+        if (sessionId > 0) {
+            GWThreadHandler threadHandler = (GWThreadHandler) ChatSDK.thread();
+            threadHandler.updateThread(Long.toString(sessionId), sessionName, new Date());
+            ChatSDK.events().source().accept(NetworkEvent.threadsUpdated());
+        }
+        ChatSDK.events().source().accept(NetworkEvent.threadMessagesUpdated(message.getThread()));
+
+
+    }
+
+
+    private final CompositeDisposable disposables = new CompositeDisposable();
+    private final AtomicInteger retryCount = new AtomicInteger(0);    // 配置参数
+    private volatile boolean isPolling = false;
+    private static final long INITIAL_DELAY = 0; // 立即开始
+    private static final long POLL_INTERVAL = 3; // 5秒间隔
+    private static final long REQUEST_TIMEOUT = 15; // 单个请求10秒超时
+    private static final long OPERATION_TIMEOUT = 2; // 整体操作2分钟超时
+    private static final int MAX_RETRIES = 3; // 最大重试次数
+
+    public synchronized boolean isPolling() {
+        return isPolling;
+    }
+
+    public synchronized void stopPolling() {
+        disposables.clear();
+        isPolling = false;
+    }
+
+    public synchronized void startPolling(String contextId) {
+        if (isPolling) {
+            Logger.warn("轮询已在运行中");
+            return;
+        }
+
+        isPolling = true;
+        Disposable disposable = Observable.interval(INITIAL_DELAY, POLL_INTERVAL, TimeUnit.SECONDS)
+                .doOnDispose(() -> {
+                            isPolling = false;
+                        }
+                )
+                .flatMap(tick -> {
+                    retryCount.set(0);
+                    return GWApiManager.shared().getMessageDetail(contextId)
+                            .subscribeOn(RX.io())
+                            .flatMap(Single::just).toObservable();
+                })
+                .observeOn(RX.db())
+                .flatMapCompletable(json ->
+                        {
+                            if (json != null) {
+                                Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
+                                updateMessage(message,json);
+//                                int status = json.get("status").getAsInt();
+//                                String feedbackText = json.get("feedback_text").getAsString();
+//                                Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
+//                                long sessionId = 0;
+//                                String sessionName = "";
+//                                if (status == 2) {
+//                                    sessionId = json.get("session_id").getAsLong();
+//                                    if (sessionId > 0) {
+//                                        message.setThreadId(sessionId);
+//                                    }
+//                                    disposables.clear();
+//                                    try {
+//                                        JsonObject feedback = json.getAsJsonObject("feedback");
+//                                        if (feedback != null) {
+//                                            JsonArray exploreArray = feedback.getAsJsonArray("function");
+//                                            for (int i = 0; i < exploreArray.size(); i++) {
+//                                                String function = exploreArray.get(i).getAsJsonArray().toString();
+//                                                message.setMetaValue("explore_" + Integer.toString(i), function);
+//                                            }
+//                                            sessionName = feedback.get("topic").getAsString();
+//                                            String summary = feedback.get("summary").getAsString();
+//                                            if (summary != null) {
+//                                                message.setMetaValue("summary", summary);
+//                                            }
+//                                        }
+//                                    } catch (Exception ignored) {
+//                                    }
+//                                } else if (status == 1) {
+//                                    feedbackText = "(生成中)" + feedbackText;
+//                                }
+//                                message.setMetaValue("feedback", feedbackText);
+//
+//
+//                                ChatSDK.db().update(message, false);
+//                                if (sessionId > 0) {
+//                                    GWThreadHandler threadHandler = (GWThreadHandler) ChatSDK.thread();
+//                                    threadHandler.updateThread(Long.toString(sessionId), sessionName, new Date());
+//                                    ChatSDK.events().source().accept(NetworkEvent.threadsUpdated());
+//                                }
+//                                ChatSDK.events().source().accept(NetworkEvent.threadMessagesUpdated(message.getThread()));
+
+
+                                return Completable.complete();
+                            } else {
+                                return Completable.error(new Throwable());
+                            }
+                        }
+                )
+                .timeout(OPERATION_TIMEOUT, TimeUnit.MINUTES)
+                .observeOn(RX.main())
+                .subscribe(() -> {
+                            Logger.warn("success...");
+                        },
+                        error -> Logger.warn("failed..." + error.getMessage()));
+
+        disposables.add(disposable);
+    }
 }

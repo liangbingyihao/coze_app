@@ -1,3 +1,9 @@
+<!--<androidx.coordinatorlayout.widget.CoordinatorLayout-->
+<!--    xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--    xmlns:app="http://schemas.android.com/apk/res-auto"-->
+<!--    android:layout_width="match_parent"-->
+<!--    android:layout_height="match_parent"-->
+<!--    android:background="@drawable/gradient_primary">-->
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -20,82 +26,46 @@
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_back"
-                android:layout_gravity="center"/>
+                android:layout_gravity="center"
+                android:src="@drawable/ic_back" />
         </FrameLayout>
 
         <TextView
             android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:drawablePadding="6dp"
             android:ellipsize="end"
             android:gravity="center"
-            android:layout_gravity="center"
-            android:text="hahahha"
-            android:singleLine="true"
             android:maxLength="10"
+            android:singleLine="true"
             android:textColor="@color/item_text_normal"
-            android:textSize="16sp">
+            android:textSize="16sp"
+            app:drawableEndCompat="@drawable/ic_down">
 
         </TextView>
     </FrameLayout>
 
-    <!--    &lt;!&ndash; 1. AppBarLayout + Toolbar (可折叠)-->
-    <!--        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"&ndash;&gt;-->
-    <!--    <com.google.android.material.appbar.AppBarLayout-->
-    <!--        android:id="@+id/appBar"-->
-    <!--        android:layout_width="match_parent"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:background="@android:color/transparent"-->
-    <!--        android:elevation="0dp"-->
-    <!--        app:elevation="0dp"-->
-    <!--        app:liftOnScroll="false">-->
-    <!--        &lt;!&ndash; 添加 Toolbar &ndash;&gt;-->
-    <!--        <androidx.appcompat.widget.Toolbar-->
-    <!--            android:id="@+id/toolbar"-->
-    <!--            android:layout_width="match_parent"-->
-    <!--            android:layout_height="?attr/actionBarSize"-->
-    <!--            android:gravity="center"-->
-    <!--            app:navigationIcon="?attr/homeAsUpIndicator">-->
-
-    <!--            &lt;!&ndash;            <RelativeLayout&ndash;&gt;-->
-    <!--            &lt;!&ndash;                android:layout_width="match_parent"&ndash;&gt;-->
-    <!--            &lt;!&ndash;                android:layout_height="match_parent">&ndash;&gt;-->
-
-    <!--            <androidx.appcompat.widget.AppCompatSpinner-->
-    <!--                android:id="@+id/spinner_topic"-->
-    <!--                android:layout_width="200dp"-->
-    <!--                android:layout_height="wrap_content"-->
-    <!--                android:layout_centerInParent="true"-->
-    <!--                android:layout_gravity="center"-->
-    <!--                android:background="@drawable/spinner_transparent_bg"-->
-    <!--                android:dropDownWidth="match_parent"-->
-    <!--                android:dropDownHorizontalOffset="0dp"-->
-    <!--                android:dropDownVerticalOffset="?attr/actionBarSize"-->
-    <!--                android:ellipsize="end"-->
-    <!--                android:paddingStart="16dp"-->
-    <!--                android:paddingEnd="32dp"-->
-    <!--                android:spinnerMode="dropdown" />-->
-
-    <!--            &lt;!&ndash;            </RelativeLayout>&ndash;&gt;-->
-
-    <!--        </androidx.appcompat.widget.Toolbar>-->
-    <!--    </com.google.android.material.appbar.AppBarLayout>-->
-
-    <!-- RecyclerView -->
-
-    <!--    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout-->
-    <!--        android:id="@+id/swipeRefreshLayout"-->
-    <!--        android:layout_width="match_parent"-->
-    <!--        android:layout_height="match_parent">-->
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="?attr/actionBarSize"
-        android:clipToPadding="false"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+        android:layout_marginTop="?attr/actionBarSize">
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="64dp"
+            android:layerType="software"
+            android:background="@drawable/dashed_line_vertical" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+    </FrameLayout>
     <!--    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>-->
 
     <!-- 加载更多进度条 -->

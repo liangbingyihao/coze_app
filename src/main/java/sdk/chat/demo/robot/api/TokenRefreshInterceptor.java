@@ -25,7 +25,7 @@ public class TokenRefreshInterceptor implements Interceptor {
                 if (!isRefreshing.get()) {
                     isRefreshing.set(true);
                     try {
-                        String newToken = CozeApiManager.shared().refreshTokenSync();
+                        String newToken = GWApiManager.shared().refreshTokenSync();
                         if (newToken != null && !newToken.isEmpty()) {
                             // 使用新Token重试请求
                             return chain.proceed(addAuthHeader(originalRequest, newToken));
@@ -57,7 +57,7 @@ public class TokenRefreshInterceptor implements Interceptor {
     }
 
     private Request addAuthHeader(Request originalRequest) {
-        return addAuthHeader(originalRequest, CozeApiManager.shared().getAccessToken());
+        return addAuthHeader(originalRequest, GWApiManager.shared().getAccessToken());
     }
 
     private Request addAuthHeader(Request originalRequest, String token) {

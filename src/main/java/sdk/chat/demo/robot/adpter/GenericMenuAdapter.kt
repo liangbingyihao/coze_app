@@ -51,4 +51,5 @@ abstract class GenericMenuAdapter<T, VH : GenericMenuAdapter.ViewHolder<T>>(
         holder.bind(getItem(position), position, position == selectedPosition)
         return view
     }
+
 }

@@ -1,4 +1,6 @@
 package sdk.chat.demo.robot.adpter
+
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -22,6 +24,7 @@ class ArticleAdapter(
         val tvTime: TextView = itemView.findViewById(R.id.tvTime)
         val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
         val tvContent: TextView = itemView.findViewById(R.id.tvContent)
+        val tvContentMask: View = itemView.findViewById(R.id.tvTimeMask)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -35,8 +38,16 @@ class ArticleAdapter(
         holder.tvTime.text = article.time
         holder.tvTitle.text = article.title
         holder.tvContent.text = article.content
-
+        holder.tvContent.setBackgroundColor(article.colorTag)
         holder.itemView.setOnClickListener { onItemClick(article) }
+
+        if (position % 2 == 1) {
+            holder.tvTime.visibility = View.INVISIBLE
+            holder.tvContentMask.visibility = View.INVISIBLE
+        } else {
+            holder.tvTime.visibility = View.VISIBLE
+            holder.tvContentMask.visibility = View.VISIBLE
+        }
 
 //        val timeLineView = holder.itemView.findViewById<View>(R.id.timeLine)
 //        timeLineView.layoutParams.height = if (isLastItem) {

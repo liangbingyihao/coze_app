@@ -162,7 +162,7 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
             }
         }
 
-        t.message.metaValuesAsMap
+//        t.message.metaValuesAsMap
         feedback?.let {
             it.text = t.message.stringForKey("feedback");
         }

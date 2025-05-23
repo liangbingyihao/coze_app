@@ -2,11 +2,15 @@ package sdk.chat.demo.robot.extensions
 import android.content.Context
 import android.text.format.DateUtils
 import sdk.chat.demo.pre.R
+import java.text.ParseException
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 object DateLocalizationUtil {
     val dayFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    var sdf: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
 
     fun getFriendlyDate(context: Context, date: Date): String {
         val now = Calendar.getInstance()
@@ -26,6 +30,14 @@ object DateLocalizationUtil {
             return ""
         }
         return dayFormat.format(date)
+    }
+
+    fun toDate(dateStr: String): Date {
+        try {
+            return sdf.parse(dateStr)
+        } catch (e: ParseException) {
+        }
+        return Date();
     }
 
     private fun isToday(cal1: Calendar, cal2: Calendar): Boolean {

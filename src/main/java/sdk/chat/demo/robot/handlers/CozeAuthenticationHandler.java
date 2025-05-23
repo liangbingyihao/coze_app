@@ -13,7 +13,7 @@ import sdk.chat.core.hook.HookEvent;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.AccountDetails;
 import sdk.chat.core.utils.KeyStorage;
-import sdk.chat.demo.robot.api.CozeApiManager;
+import sdk.chat.demo.robot.api.GWApiManager;
 import sdk.chat.demo.robot.extensions.DeviceIdHelper;
 import sdk.guru.common.RX;
 
@@ -56,7 +56,7 @@ public class CozeAuthenticationHandler extends AbstractAuthenticationHandler {
     public Completable authenticate(final AccountDetails details) {
         return Completable.defer(() -> {
             if (!isAuthenticating()) {
-                authenticating = CozeApiManager.shared().authenticate(details).flatMapCompletable(this::loginSuccessful).cache();
+                authenticating = GWApiManager.shared().authenticate(details).flatMapCompletable(this::loginSuccessful).cache();
             }
             return authenticating;
         }).doFinally(this::cancel);
@@ -79,6 +79,7 @@ public class CozeAuthenticationHandler extends AbstractAuthenticationHandler {
                 ChatSDK.db().update(user);
             }
             GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
+            handler.getWelcomeMsg().subscribe();
             handler.createChatSessions();
 
             if (ChatSDK.hook() != null) {
@@ -116,7 +117,7 @@ public class CozeAuthenticationHandler extends AbstractAuthenticationHandler {
     @Override
     public Boolean isAuthenticated() {
 //        XMPPConnection connection = XMPPManager.shared().getConnection();
-        return CozeApiManager.shared().isAuthenticated();
+        return GWApiManager.shared().isAuthenticated();
     }
 
     @Override
@@ -125,7 +126,7 @@ public class CozeAuthenticationHandler extends AbstractAuthenticationHandler {
 
             ChatSDK.events().source().accept(NetworkEvent.logout());
 
-            CozeApiManager.shared().logout();
+            GWApiManager.shared().logout();
 
             clearCurrentUserEntityID();
             ChatSDK.shared().getKeyStorage().clear();

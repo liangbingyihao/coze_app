@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ListView
 import android.widget.PopupWindow
+import android.widget.TextView
 import sdk.chat.demo.pre.R
 import kotlin.math.min
 import androidx.core.graphics.drawable.toDrawable
@@ -20,15 +21,36 @@ class GenericMenuPopupWindow<T, VH : GenericMenuAdapter.ViewHolder<T>>(
 ) {
     private var popupWindow: PopupWindow? = null
     private var listView: ListView? = null
+    private var tvTitle: TextView? = null
+    private var menuTitle: String? = null
+    private var anchorLocation: IntArray? = null
 
     fun show() {
         if (popupWindow?.isShowing == true) {
             dismiss()
             return
         }
+        if(popupWindow==null){
+            initPopupWindow()
+        }
+        // 3. 获取anchor在屏幕中的位置
+        if(anchorLocation==null){
+            anchorLocation = IntArray(2)
+            anchor.getLocationOnScreen(anchorLocation)
+        }
+        // 4. 显示PopupWindow（精确覆盖）
+        popupWindow?.showAtLocation(
+            anchor,
+            Gravity.NO_GRAVITY,
+            anchorLocation?.get(0) ?: 0, // x坐标
+            anchorLocation?.get(1) ?: 0  // y坐标
+        )
+//        popupWindow?.showAsDropDown(anchor, 0, 0, Gravity.START)
+    }
 
-        initPopupWindow()
-        popupWindow?.showAsDropDown(anchor, 0, 0, Gravity.START)
+    fun setTitle(title: String) {
+        menuTitle = title
+        tvTitle?.text = title
     }
 
     fun dismiss() {
@@ -45,6 +67,8 @@ class GenericMenuPopupWindow<T, VH : GenericMenuAdapter.ViewHolder<T>>(
         val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         val popupView = inflater.inflate(R.layout.popup_window_layout, null)
         listView = popupView.findViewById(R.id.menu_listview)
+        tvTitle = popupView.findViewById(R.id.menu_title)
+        tvTitle?.setText(menuTitle)
 
         listView?.adapter = adapter
         listView?.setOnItemClickListener { _, _, position, _ ->
@@ -52,7 +76,7 @@ class GenericMenuPopupWindow<T, VH : GenericMenuAdapter.ViewHolder<T>>(
             onItemSelected(adapter.getItem(position), position)
             dismiss()
         }
-        var b:View = popupView.findViewById(R.id.blank_room)
+        var b:View = popupView.findViewById(R.id.popup_container)
         b.setOnClickListener { v->dismiss() }
 
         popupWindow = PopupWindow(

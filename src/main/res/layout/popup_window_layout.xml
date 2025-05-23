@@ -1,16 +1,36 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/popup_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:elevation="8dp">
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/white">
+        <TextView
+            android:id="@+id/menu_title"
+            android:layout_width="wrap_content"
+            android:layout_height="?attr/actionBarSize"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:singleLine="true"
+            android:maxLength="10"
+            android:text="123456"
+            android:textColor="@color/item_text_normal"
+            android:textSize="16sp"
+            android:drawablePadding="6dp"
+            app:drawableEndCompat="@drawable/ic_up"/>
+    </FrameLayout>
     <ListView
         android:id="@+id/menu_listview"
         android:layout_width="match_parent"
         android:layout_height="400dp"
-        android:background="@color/white"
         android:divider="@color/gray_divider"
         android:dividerHeight="1dp"
+        android:background="@color/white"
         android:maxHeight="400dp"/>
     <View
         android:id="@+id/blank_room"

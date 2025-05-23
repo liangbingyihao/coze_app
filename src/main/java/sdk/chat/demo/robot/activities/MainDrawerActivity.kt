@@ -116,13 +116,13 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
         dm.add(
             ChatSDK.events().sourceOnMain()
                 .filter(NetworkEvent.filterType(EventType.ThreadsUpdated)).subscribe(Consumer {
-                createSessionMenu()
-                // Refresh the read count
+                    createSessionMenu()
+                    // Refresh the read count
 
 //            dm.add(privateTabName().subscribe(Consumer {
 //                slider.updateName(privateThreadItem.identifier, it)
 //            }))
-            })
+                })
         )
 
         requestPermissions();
@@ -150,7 +150,8 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
 
 
                             // 添加文本内容（包含下载链接）
-                            val shareText = "看看这个有趣的图片！下载我们的应用: " + "https://play.google.com/store/apps/details?id=com.color.colorvpn&hl=en"
+                            val shareText =
+                                "看看这个有趣的图片！下载我们的应用: " + "https://play.google.com/store/apps/details?id=com.color.colorvpn&hl=en"
                             shareIntent.putExtra(Intent.EXTRA_TEXT, shareText)
 
 
@@ -189,11 +190,11 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
                 session.messages.isNotEmpty() -> session.messages[0].text
                 else -> "新会话"
             }
-            name=session.entityID+","+name+","+session.type.toString();
+//            name = session.entityID + "," + name + "," + session.type.toString();
             if (!toReloadSessions && "新会话" == name) {
                 toReloadSessions = true
             }
-            sessionMenus.add(HistoryItem.SessionItem(name, session.id.toString()))
+            sessionMenus.add(HistoryItem.SessionItem(name, session.entityID))
         }
         return sessionMenus
     }
@@ -209,10 +210,13 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
                             val sessionMenus: ArrayList<HistoryItem> = toMenuItems(data)
                             sessionAdapter = HistoryAdapter(sessionMenus) { changed, clickedItem ->
                                 toggleDrawer()
-                                if (changed) {
+//                                if (changed) {
 //                                    setCurrentSession(clickedItem)
-                                    ArticleListActivity.start(this@MainDrawerActivity,0)
-                                }
+                                    ArticleListActivity.start(
+                                        this@MainDrawerActivity,
+                                        clickedItem.sessionId
+                                    )
+//                                }
                             }
                             recyclerView.adapter = sessionAdapter
 //                            setCurrentSession(sessionAdapter.getSelectItem())
@@ -257,6 +261,7 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
                 pickImageLauncher!!.launch(intent)
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -325,21 +330,21 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
     override fun onClick(v: View?) {
         toggleDrawer()
         when (v?.id) {
-            R.id.btn_new_chat -> {
-                dm.add(
-                    threadHandler.newAndListSessions()
-                        .observeOn(RX.main())
-                        .subscribe(Consumer { sessions: List<Thread>? ->
-                            if (sessions != null) {
-                                val sessionMenus: ArrayList<HistoryItem> = toMenuItems(sessions)
-                                sessionAdapter.updateAll(sessionMenus)
-                                setCurrentSession(sessionAdapter.getSelectItem())
-                            } else {
-                                throw IllegalArgumentException("创建失败")
-                            }
-                        }, this@MainDrawerActivity)
-                )
-            }
+//            R.id.btn_new_chat -> {
+//                dm.add(
+//                    threadHandler.newAndListSessions()
+//                        .observeOn(RX.main())
+//                        .subscribe(Consumer { sessions: List<Thread>? ->
+//                            if (sessions != null) {
+//                                val sessionMenus: ArrayList<HistoryItem> = toMenuItems(sessions)
+//                                sessionAdapter.updateAll(sessionMenus)
+//                                setCurrentSession(sessionAdapter.getSelectItem())
+//                            } else {
+//                                throw IllegalArgumentException("创建失败")
+//                            }
+//                        }, this@MainDrawerActivity)
+//                )
+//            }
 
             R.id.menu_favorites -> {
                 Toast.makeText(this, "menu_favorites", Toast.LENGTH_SHORT).show()
