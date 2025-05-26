@@ -9,7 +9,7 @@ import java.util.Date
 import java.util.Locale
 
 object DateLocalizationUtil {
-    val dayFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val dayFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
     var sdf: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
 
     fun getFriendlyDate(context: Context, date: Date): String {
@@ -25,7 +25,7 @@ object DateLocalizationUtil {
         }
     }
 
-    fun formatDay(date: Date?): String {
+    fun dateStr(date: Date?): String {
         if(date==null){
             return ""
         }

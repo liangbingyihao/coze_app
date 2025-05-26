@@ -180,6 +180,57 @@ public class GWApiManager {
     }
 
 
+    public Single<Boolean> setSummary(String msgId, String summary) {
+
+        return Single.create(emitter -> {
+            Map<String, String> params = new HashMap<String, String>();
+            params.put("summary", summary);
+            RequestBody body = RequestBody.create(
+                    new JSONObject(params).toString(),
+                    MediaType.parse("application/json; charset=utf-8")
+            );
+
+            Request request = new Request.Builder()
+                    .url(URL_MESSAGE + "/" + msgId)
+//                    .header("Authorization", accessToken)
+                    .post(body)
+                    .build();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException error) {
+                    emitter.onError(new Exception("send msg error"));
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    try {
+                        String responseBody = response.body() != null ? response.body().string() : "";
+                        if (!response.isSuccessful()) {
+                            emitter.onError(new IOException("HTTP error: " + response.code() + "," + responseBody));
+                            return;
+                        }
+                        JsonObject resp = gson.fromJson(responseBody, JsonObject.class);
+                        try {
+                            if (resp != null && !resp.get("success").getAsBoolean()) {
+                                throw new Exception("login failed:" + resp.get("message").getAsString());
+                            }
+                            emitter.onSuccess(Boolean.TRUE);
+                        } catch (Exception e) {
+                            emitter.onError(e);
+                        }
+                    } catch (Exception e) {
+                        emitter.onError(e);
+                    } finally {
+                        response.close(); // 关闭 Response
+                    }
+
+                }
+            });
+
+        });
+    }
+
     public Single<JsonObject> askRobot(Message message) {
         return Single.create(emitter -> {
             Map<String, String> params = message.getMetaValuesAsMap();
@@ -319,7 +370,6 @@ public class GWApiManager {
             });
         });
     }
-
 
 
     protected boolean createMessageResp(Message context, JsonObject detail) {

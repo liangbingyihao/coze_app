@@ -78,6 +78,35 @@ public class GWThreadHandler extends AbstractThreadHandler {
         }).subscribeOn(RX.db());
     }
 
+    public Single<Boolean> setSummary(String msgId, String summary) {
+        if (summary == null || summary.isEmpty() || summary.length() > 8) {
+            return Single.just(Boolean.FALSE);
+        }
+        if (msgId == null || msgId.isEmpty()) {
+            return Single.error(new IllegalArgumentException("Message ID cannot be null or empty"));
+        }
+
+        return GWApiManager.shared().setSummary(msgId, summary)
+                .subscribeOn(RX.io())
+                .flatMap(isSuccess -> {
+                    if (!isSuccess) {
+                        return Single.just(false);
+                    }
+                    return Single.fromCallable(() -> {
+
+                        Message message = ChatSDK.db().fetchMessageWithEntityID(msgId);
+                        if (message != null) {
+                            message.setMetaValue("summary", summary);
+                            ChatSDK.db().update(message, false);
+                            ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
+                            return true;
+                        }
+                        return false;
+                    }).subscribeOn(RX.db()).map(updateResult -> true);
+                }).onErrorReturnItem(false);
+    }
+
+
     public Single<List<Message>> loadMessagesEarlier(@Nullable Long startId, boolean loadFromServer) {
         return Single.defer(() -> {
             List<Message> messages = fetchMessagesEarlier(startId);
@@ -454,7 +483,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                                         message.setType(MessageType.Text);
                                         message.setMessageStatus(MessageSendStatus.Initial, false);
                                         ChatSDK.db().insertOrReplaceEntity(message);
-                                        updateMessage(message,json);
+                                        updateMessage(message, json);
                                     },
                                     error -> {
                                     }
@@ -477,7 +506,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
 //                });
     }
 
-    private void updateMessage(Message message,JsonObject json){
+    private void updateMessage(Message message, JsonObject json) {
         int status = json.get("status").getAsInt();
         String feedbackText = json.get("feedback_text").getAsString();
         long sessionId = 0;
@@ -486,6 +515,10 @@ public class GWThreadHandler extends AbstractThreadHandler {
             sessionId = json.get("session_id").getAsLong();
             if (sessionId > 0) {
                 message.setThreadId(sessionId);
+            }
+            String summary = json.get("summary").getAsString();
+            if (summary != null) {
+                message.setMetaValue("summary", summary);
             }
             disposables.clear();
             try {
@@ -497,10 +530,6 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         message.setMetaValue("explore_" + Integer.toString(i), function);
                     }
                     sessionName = feedback.get("topic").getAsString();
-                    String summary = feedback.get("summary").getAsString();
-                    if (summary != null) {
-                        message.setMetaValue("summary", summary);
-                    }
                     String colorTag = feedback.get("color_tag").getAsString();
                     if (colorTag != null) {
                         message.setMetaValue("colorTag", colorTag);
@@ -512,7 +541,6 @@ public class GWThreadHandler extends AbstractThreadHandler {
             feedbackText = "(生成中)" + feedbackText;
         }
         message.setMetaValue("feedback", feedbackText);
-
 
         ChatSDK.db().update(message, false);
         if (sessionId > 0) {
@@ -567,49 +595,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         {
                             if (json != null) {
                                 Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
-                                updateMessage(message,json);
-//                                int status = json.get("status").getAsInt();
-//                                String feedbackText = json.get("feedback_text").getAsString();
-//                                Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
-//                                long sessionId = 0;
-//                                String sessionName = "";
-//                                if (status == 2) {
-//                                    sessionId = json.get("session_id").getAsLong();
-//                                    if (sessionId > 0) {
-//                                        message.setThreadId(sessionId);
-//                                    }
-//                                    disposables.clear();
-//                                    try {
-//                                        JsonObject feedback = json.getAsJsonObject("feedback");
-//                                        if (feedback != null) {
-//                                            JsonArray exploreArray = feedback.getAsJsonArray("function");
-//                                            for (int i = 0; i < exploreArray.size(); i++) {
-//                                                String function = exploreArray.get(i).getAsJsonArray().toString();
-//                                                message.setMetaValue("explore_" + Integer.toString(i), function);
-//                                            }
-//                                            sessionName = feedback.get("topic").getAsString();
-//                                            String summary = feedback.get("summary").getAsString();
-//                                            if (summary != null) {
-//                                                message.setMetaValue("summary", summary);
-//                                            }
-//                                        }
-//                                    } catch (Exception ignored) {
-//                                    }
-//                                } else if (status == 1) {
-//                                    feedbackText = "(生成中)" + feedbackText;
-//                                }
-//                                message.setMetaValue("feedback", feedbackText);
-//
-//
-//                                ChatSDK.db().update(message, false);
-//                                if (sessionId > 0) {
-//                                    GWThreadHandler threadHandler = (GWThreadHandler) ChatSDK.thread();
-//                                    threadHandler.updateThread(Long.toString(sessionId), sessionName, new Date());
-//                                    ChatSDK.events().source().accept(NetworkEvent.threadsUpdated());
-//                                }
-//                                ChatSDK.events().source().accept(NetworkEvent.threadMessagesUpdated(message.getThread()));
-
-
+                                updateMessage(message, json);
                                 return Completable.complete();
                             } else {
                                 return Completable.error(new Throwable());

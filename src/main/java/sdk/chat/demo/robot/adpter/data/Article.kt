@@ -1,9 +1,11 @@
 package sdk.chat.demo.robot.adpter.data
 
 data class Article(
-    val id: Long,
+    val id: String,
+    val day: String,
     val time: String,      // 时间轴显示的文字（如 "08:30"）
-    val title: String,     // 5字左右的标题
+    var title: String,     // 5字左右的标题
     val content: String,    // 正文文本
-    val colorTag: Int    // 正文文本
+    val colorTag: Int,    // 背景颜色
+    val showDay: Boolean    // 是否显示时间
 )

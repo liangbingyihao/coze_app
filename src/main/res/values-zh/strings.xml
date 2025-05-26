@@ -11,4 +11,5 @@
     <string name="this_year_format">MM-dd</string>
     <string name="default_format">yyyy-MM-dd</string>
     <string name="anonymous_login">游客登录</string>
+    <string name="confirm">确认</string>
 </resources>
