@@ -29,6 +29,7 @@ import sdk.guru.common.RX;
 
 public class CustomChatView extends ChatView {
     private boolean isAllContent = true;
+    private String activeExploreItem;
 
     public CustomChatView(Context context) {
         super(context);
@@ -79,6 +80,7 @@ public class CustomChatView extends ChatView {
         if (!messageHolders.isEmpty()) {
             startId = messageHolders.get(messageHolders.size() - 1).getMessage().getId();
         }
+        Logger.warn("onLoadMore:"+startId);
         GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
         dm.add(
                 // Changed this from before to after because it makes more sense...
@@ -136,17 +138,6 @@ public class CustomChatView extends ChatView {
                 }));
 
 
-//        dm.add(ChatSDK.events().sourceOnMain()
-//                .filter(NetworkEvent.filterType(
-//                        EventType.UserPresenceUpdated,
-//                        EventType.UserMetaUpdated))
-//                .filter(NetworkEvent.filterThreadContainsUser(delegate.getThread()))
-//                .subscribe(networkEvent -> {
-//                    messagesList.post(() -> {
-//                        synchronize(null, true);
-//                    });
-//                }));
-
         dm.add(ChatSDK.events().sourceOnSingle()
                 .filter(NetworkEvent.filterType(EventType.MessageAdded))
 //                .filter(NetworkEvent.filterThreadEntityID(delegate.getThread().getEntityID()))
@@ -183,6 +174,31 @@ public class CustomChatView extends ChatView {
                         removeMessage(networkEvent.getMessage());
                     });
                 }));
+    }
+
+    protected void addMessageHoldersToEnd(List<MessageHolder> holders, boolean notify) {
+
+        // Add to current holders at zero index
+        // Newest first
+        List<MessageHolder> toAdd = new ArrayList<>();
+        for (MessageHolder holder: holders) {
+            if (!messageHolders.contains(holder)) {
+                messageHolders.add(holder);
+                toAdd.add(holder);
+//                if(activeExploreItem==null){
+//                    GWMessageHolder h = (GWMessageHolder) holder;
+//                    if(h.isExploreItem()){
+//                        h.setIsLast(true);
+//                        activeExploreItem = h.message.getEntityID();
+//                    }
+//                }
+            } else {
+                Logger.error("We have a duplicate");
+            }
+        }
+
+        // Reverse order because we are adding to end
+        messagesListAdapter.addToEnd(toAdd, false, notify);
     }
 
 }

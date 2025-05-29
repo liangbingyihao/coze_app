@@ -28,8 +28,7 @@ class ArticleDiffCallback : DiffUtil.ItemCallback<Article>() {
 class ArticleAdapter(
     private val onItemClick: (Article) -> Unit,
     private val onEditClick: (Article) -> Unit,
-    private val onLongClick: (Article) -> Boolean,
-    private var articles: List<Article> = emptyList()
+    private val onLongClick: (View,Article) -> Boolean,
 ) : ListAdapter<Article, RecyclerView.ViewHolder>(ArticleDiffCallback()) {
 
     private var _selectId: String? = null;
@@ -48,7 +47,7 @@ class ArticleAdapter(
 
     override fun getItemCount(): Int = currentList.size + 1
 
-    fun updateSummaryId(id: String?, newSummary: String): Boolean {
+    fun updateSummaryById(id: String?, newSummary: String): Boolean {
 
         if (id == null) return false
 
@@ -75,6 +74,15 @@ class ArticleAdapter(
         return true
     }
 
+    fun deleteById(id: String?): Boolean {
+
+        if (id == null) return false
+        val newList = currentList.toMutableList()
+        newList.removeAll { it.id == id }
+        submitList(newList)
+        return true
+    }
+
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvCardView: View = itemView.findViewById(R.id.cardView)
         val editTitle: View = itemView.findViewById(R.id.editTitle)
@@ -91,7 +99,7 @@ class ArticleAdapter(
             tvContent.text = article.content
             tvCardView.setBackgroundColor(article.colorTag)
             itemView.setOnClickListener { onItemClick(article) }
-            itemView.setOnLongClickListener { _selectId = article.id;onLongClick(article) }
+            itemView.setOnLongClickListener {v-> _selectId = article.id;onLongClick(v,article) }
             editTitle.setOnClickListener { _selectId = article.id;onEditClick(article) }
 
             if (!article.showDay) {

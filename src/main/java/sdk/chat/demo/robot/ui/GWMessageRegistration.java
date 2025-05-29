@@ -7,17 +7,22 @@ import com.stfalcon.chatkit.messages.MessageHolders;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.types.MessageType;
 import sdk.chat.core.types.ReadStatus;
+import sdk.chat.demo.examples.message.IncomingSnapMessageViewHolder;
+import sdk.chat.demo.examples.message.OutcomingSnapMessageViewHolder;
 import sdk.chat.demo.pre.R;
+import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.chat.model.MessageHolder;
 import sdk.chat.ui.custom.TextMessageRegistration;
 
 public class GWMessageRegistration extends TextMessageRegistration {
+
     @Override
     public void onBindMessageHolders(Context context, MessageHolders holders) {
 //        holders.setIncomingTextConfig(GW.IncomingMessageViewHolder.class, R.layout.item_incoming_text)
 //                .setOutcomingTextConfig(GW.OutcomingMessageViewHolder.class, sdk.chat.ui.R.layout.view_holder_outcoming_text_message);
         holders.setIncomingTextConfig(GW.IncomingMessageViewHolder.class, R.layout.item_incoming_text)
                 .setOutcomingTextConfig(GW.OutgoingMessageViewHolder.class, R.layout.item_outgoing_text);
+
     }
 
     @Override

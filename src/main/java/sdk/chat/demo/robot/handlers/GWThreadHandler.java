@@ -1,6 +1,7 @@
 package sdk.chat.demo.robot.handlers;
 
 import android.annotation.SuppressLint;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -39,14 +41,23 @@ import sdk.chat.core.rigs.MessageSendRig;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.MessageSendStatus;
 import sdk.chat.core.types.MessageType;
+import sdk.chat.demo.robot.adpter.data.AIExplore;
 import sdk.chat.demo.robot.api.GWApiManager;
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil;
+import sdk.chat.demo.robot.ui.GWMessageHolder;
+import sdk.chat.ui.ChatSDKUI;
 import sdk.guru.common.RX;
 
 public class GWThreadHandler extends AbstractThreadHandler {
     private final AtomicBoolean hasSyncedWithNetwork = new AtomicBoolean(false);
     private List<Thread> sessionCache;
     private Message welcome;
+
+    private AIExplore aiExplore;
+
+    public AIExplore getAiExplore() {
+        return aiExplore;
+    }
 
     private List<Message> fetchMessagesEarlier(Long startId) {
         // Logger.debug(java.lang.Thread.currentThread().getName());
@@ -106,16 +117,79 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 }).onErrorReturnItem(false);
     }
 
+    public Single<Long> setSession(String msgId, Long sessionId) {
+        if (sessionId == null) {
+            return Single.error(new IllegalArgumentException("SessionId ID cannot be null or empty"));
+        }
+        if (msgId == null || msgId.isEmpty()) {
+            return Single.error(new IllegalArgumentException("Message ID cannot be null or empty"));
+        }
+
+        return GWApiManager.shared().setSession(msgId, sessionId, null)
+                .subscribeOn(RX.io())
+                .flatMap(newSessionId -> {
+                    if (newSessionId == null) {
+                        return Single.just(0L);
+                    }
+                    return Single.fromCallable(() -> {
+
+                        Message message = ChatSDK.db().fetchMessageWithEntityID(msgId);
+                        if (message != null) {
+                            message.setThreadId(newSessionId);
+                            ChatSDK.db().update(message, false);
+                            ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
+                            return newSessionId;
+                        }
+                        return 0L;
+                    }).subscribeOn(RX.db()).map(updateResult -> updateResult);
+                }).onErrorReturnItem(0L);
+    }
+
+    public Single<Long> newSession(String msgId, String sessionName) {
+        if (sessionName == null) {
+            return Single.error(new IllegalArgumentException("SessionId ID cannot be null or empty"));
+        }
+        if (msgId == null || msgId.isEmpty()) {
+            return Single.error(new IllegalArgumentException("Message ID cannot be null or empty"));
+        }
+
+        return GWApiManager.shared().setSession(msgId, 0L, sessionName)
+                .subscribeOn(RX.io())
+                .flatMap(newSessionId -> {
+                    if (newSessionId == null) {
+                        return Single.just(0L);
+                    }
+                    return Single.fromCallable(() -> {
+                        if (newSessionId > 0) {
+                            updateThread(newSessionId.toString(), sessionName, new Date());
+                        }
+                        Message message = ChatSDK.db().fetchMessageWithEntityID(msgId);
+                        if (message != null) {
+                            message.setThreadId(newSessionId);
+                            ChatSDK.db().update(message, false);
+                            ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
+                            return newSessionId;
+                        }
+                        return 0L;
+                    }).subscribeOn(RX.db()).map(updateResult -> updateResult);
+                }).onErrorReturnItem(0L);
+    }
 
     public Single<List<Message>> loadMessagesEarlier(@Nullable Long startId, boolean loadFromServer) {
         return Single.defer(() -> {
             List<Message> messages = fetchMessagesEarlier(startId);
-            if (messages.isEmpty()) {
-
+            int i = 0;
+            while (aiExplore == null&&i < messages.size()){
+                Message tmp = messages.get(i);
+                if (tmp.stringForKey("explore_0") != null) {
+                    aiExplore = AIExplore.loads(tmp);
+                }
+                ++i;
             }
             return Single.just(messages);
         }).subscribeOn(RX.db());
     }
+
 
     @Override
     public Single<List<Message>> loadMoreMessagesBefore(Thread thread, @Nullable Date before) {
@@ -150,10 +224,14 @@ public class GWThreadHandler extends AbstractThreadHandler {
         return true;
     }
 
-    public Completable sendExploreMessage(final String text, final String contextId, final Thread thread) {
+    public Completable sendExploreMessage(final String text, final String contextId, final Thread thread, int action, String params) {
         return new MessageSendRig(new MessageType(MessageType.Text), thread, message -> {
             message.setText(text);
             message.setMetaValue("context_id", contextId);
+            message.setMetaValue("action", action);
+            if (action == 3) {
+                message.setMetaValue("feedback", params);
+            }
         }).run();
     }
 
@@ -164,15 +242,18 @@ public class GWThreadHandler extends AbstractThreadHandler {
      * The uploading to the server part can bee seen her {@see FirebaseCoreAdapter#PushMessageWithComplition}.
      */
     public Completable sendMessage(final Message message) {
+        if ("3".equals(message.stringForKey("action"))) {
+            return Completable.complete();
+        }
         return GWApiManager.shared().askRobot(message)
                 .subscribeOn(RX.io()).flatMap(data -> {
-                    startPolling(data.get("id").getAsString());
                     message.setEntityID(data.get("id").getAsString());
+                    ChatSDK.db().update(message);
+                    startPolling(data.get("id").getAsString());
 //                    message.setMessageStatus(MessageSendStatus.Uploading,true);
 //                    ChatSDK.events().source().accept(NetworkEvent.messageProgressUpdated(message, new Progress(10,100)));
-                    ChatSDK.db().update(message);
                     pushForMessage(message);
-                    ChatSDK.events().source().accept(NetworkEvent.threadMessagesUpdated(message.getThread()));
+//                    ChatSDK.events().source().accept(NetworkEvent.threadMessagesUpdated(message.getThread()));
 //                    message.setMessageStatus(MessageSendStatus.Uploading,true);
 //                    ChatSDK.events().source().accept(NetworkEvent.messageProgressUpdated(message, new Progress(10,100)));
                     return Single.just(message);
@@ -319,6 +400,19 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 });
     }
 
+    public String getSessionName(Long sessionId) {
+        if (sessionId != null && sessionId > 0 && sessionCache != null && !sessionCache.isEmpty()) {
+            String strId = sessionId.toString();
+            for (Thread session : sessionCache) {
+                if (session.getEntityID().equals(strId)) {
+                    return session.getName();
+                }
+
+            }
+        }
+        return null;
+    }
+
     public Single<List<Thread>> listSessions() {
         // 1. 检查内存缓存
         if (sessionCache != null && !sessionCache.isEmpty()) {
@@ -405,6 +499,14 @@ public class GWThreadHandler extends AbstractThreadHandler {
     }
 
     public Thread createChatSessions() {
+        DaoCore daoCore = ChatSDK.db().getDaoCore();
+        QueryBuilder<Message> qb = daoCore.getDaoSession().queryBuilder(Message.class);
+        qb.where(MessageDao.Properties.Type.eq(MessageType.Audio));
+        List<Message> data = qb.list();
+        for (Message d : data) {
+            daoCore.deleteEntity(d);
+        }
+
         String entityID = "0";
         Thread thread = ChatSDK.db().fetchThreadWithEntityID(entityID);
         if (thread != null) {
@@ -439,6 +541,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
         if (modified) {
             ChatSDK.db().update(entity);
             sessionCache = null;
+            ChatSDK.events().source().accept(NetworkEvent.threadsUpdated());
         }
         return modified;
     }
@@ -483,6 +586,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                                         message.setType(MessageType.Text);
                                         message.setMessageStatus(MessageSendStatus.Initial, false);
                                         ChatSDK.db().insertOrReplaceEntity(message);
+                                        ChatSDK.events().source().accept(NetworkEvent.messageAdded(message));
                                         updateMessage(message, json);
                                     },
                                     error -> {
@@ -512,30 +616,48 @@ public class GWThreadHandler extends AbstractThreadHandler {
         long sessionId = 0;
         String sessionName = "";
         if (status == 2) {
-            sessionId = json.get("session_id").getAsLong();
-            if (sessionId > 0) {
-                message.setThreadId(sessionId);
-            }
-            String summary = json.get("summary").getAsString();
-            if (summary != null) {
-                message.setMetaValue("summary", summary);
-            }
-            disposables.clear();
             try {
+                disposables.clear();
+                sessionId = json.get("session_id").getAsLong();
+                if (sessionId > 0) {
+                    message.setThreadId(sessionId);
+                }
+                JsonElement summary = json.get("summary");
+                try {
+                    if (summary != null) {
+                        message.setMetaValue("summary", summary.getAsString());
+                    }
+                } catch (UnsupportedOperationException e) {
+                    // 备选方案：使用JSON字符串形式
+                    message.setMetaValue("summary", summary.toString());
+                }
                 JsonObject feedback = json.getAsJsonObject("feedback");
                 if (feedback != null) {
                     JsonArray exploreArray = feedback.getAsJsonArray("function");
                     for (int i = 0; i < exploreArray.size(); i++) {
                         String function = exploreArray.get(i).getAsJsonArray().toString();
-                        message.setMetaValue("explore_" + Integer.toString(i), function);
+                        message.setMetaValue("explore_" + i, function);
                     }
-                    sessionName = feedback.get("topic").getAsString();
-                    String colorTag = feedback.get("color_tag").getAsString();
-                    if (colorTag != null) {
-                        message.setMetaValue("colorTag", colorTag);
+                    if (feedback.has("topic")) {
+                        sessionName = feedback.get("topic").getAsString();
+                    }
+                    if (feedback.has("color_tag")) {
+                        String colorTag = feedback.get("color_tag").getAsString();
+                        if (colorTag != null) {
+                            message.setMetaValue("colorTag", colorTag);
+                        }
+                    }
+
+                    AIExplore newAIExplore = AIExplore.loads(message);
+                    if (newAIExplore != null) {
+                        Message oldMsg = aiExplore != null ? aiExplore.getMessage() : null;
+                        aiExplore = newAIExplore;
+                        if (oldMsg != null) {
+                            ChatSDK.events().source().accept(NetworkEvent.messageUpdated(oldMsg));
+                        }
                     }
                 }
-            } catch (Exception ignored) {
+            } catch (Exception e) {
             }
         } else if (status == 1) {
             feedbackText = "(生成中)" + feedbackText;
@@ -544,12 +666,9 @@ public class GWThreadHandler extends AbstractThreadHandler {
 
         ChatSDK.db().update(message, false);
         if (sessionId > 0) {
-            GWThreadHandler threadHandler = (GWThreadHandler) ChatSDK.thread();
-            threadHandler.updateThread(Long.toString(sessionId), sessionName, new Date());
-            ChatSDK.events().source().accept(NetworkEvent.threadsUpdated());
+            updateThread(Long.toString(sessionId), sessionName, new Date());
         }
-        ChatSDK.events().source().accept(NetworkEvent.threadMessagesUpdated(message.getThread()));
-
+        ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
 
     }
 

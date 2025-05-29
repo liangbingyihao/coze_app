@@ -49,6 +49,7 @@ import sdk.chat.core.utils.StringChecker;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
 import sdk.chat.demo.robot.ui.CustomChatView;
+import sdk.chat.demo.robot.ui.GWChatView;
 import sdk.chat.demo.robot.ui.KeyboardOverlayHelper;
 import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.activities.preview.ChatPreviewActivity;
@@ -74,7 +75,7 @@ public class GWChatFragment extends AbstractChatFragment implements ChatView.Del
     // this should be set to no
     protected boolean removeUserFromChatOnExit = true;
     protected static boolean enableTrace = false;
-    protected CustomChatView chatView;
+    protected GWChatView chatView;
     protected View divider;
     protected ReplyView replyView;
     protected MessageInput input;
@@ -495,7 +496,7 @@ public class GWChatFragment extends AbstractChatFragment implements ChatView.Del
 
     public void switchContent() {
         if(chatView!=null){
-            chatView.switchContent();
+//            chatView.switchContent();
         }
     }
 

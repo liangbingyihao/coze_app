@@ -60,7 +60,7 @@ public class MainApp extends Application implements Configuration.Provider{
             ChatSDKCoze.quickStartWithEmail(this, "pre_998", "AIzaSyCwwtZrlY9Rl8paM0R6iDNBEit_iexQ1aE",
                     drawerEnabled,
                     "",
-                    AudioMessageModule.shared(),
+//                    AudioMessageModule.shared(),
 //                    FirebaseBlockingModule.shared(),
 //                    FirebaseReadReceiptsModule.shared(),
 //                    FirebaseLastOnlineModule.shared(),

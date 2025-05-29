@@ -2,17 +2,22 @@ package sdk.chat.demo.robot.activities
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.view.WindowInsets
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.graphics.toColorInt
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Single
 import io.reactivex.SingleSource
 import io.reactivex.functions.Function
 import sdk.chat.core.dao.Message
+import sdk.chat.core.dao.Thread
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.ArticleAdapter
@@ -22,19 +27,22 @@ import sdk.chat.demo.robot.adpter.data.Article
 import sdk.chat.demo.robot.adpter.data.ArticleSession
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil
 import sdk.chat.demo.robot.handlers.GWThreadHandler
+import sdk.chat.demo.robot.ui.PopupMenuHelper
 import sdk.chat.ui.activities.BaseActivity
 import sdk.guru.common.RX
-import androidx.core.graphics.toColorInt
 
 
 class ArticleListActivity : BaseActivity(), View.OnClickListener {
     private val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
-    private var articleAdapter: ArticleAdapter? = null;
+    private lateinit var articleAdapter: ArticleAdapter;
     private lateinit var menuPopup: GenericMenuPopupWindow<ArticleSession, SessionPopupAdapter.SessionItemViewHolder>
     private var sessionId: String = ""
     private lateinit var tvTitle: TextView
     private lateinit var vEdSummaryContainer: View
     private lateinit var vEdSummary: EditText
+    private lateinit var vEmptyContainer: View
+    private lateinit var vLineDash: View
+    private var isEditingSummary = false
 
     companion object {
         private const val EXTRA_INITIAL_DATA = "initial_data"
@@ -68,15 +76,16 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
             },
             onEditClick = { article ->
                 // 处理编辑点击
-                Toast.makeText(this, "编辑: ${article.title}", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(this, "编辑: ${article.title}", Toast.LENGTH_SHORT).show()
+                isEditingSummary = true
                 vEdSummary.setText(article.title)
                 vEdSummaryContainer.visibility = View.VISIBLE
-                showKeyboard()
-                vEdSummary.requestFocus()
+                showKeyboard(vEdSummary)
             },
-            onLongClick = { article ->
+            onLongClick = { v, article ->
                 // 处理长按
-                Toast.makeText(this, "长按: ${article.title}", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(this, "长按: ${article.title}", Toast.LENGTH_SHORT).show()
+                showPopupMenu(v, article)
                 true
             })
         recyclerView.adapter = articleAdapter
@@ -87,6 +96,19 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         findViewById<View>(R.id.edSummaryExit).setOnClickListener(this)
         findViewById<View>(R.id.edSummaryConfirm).setOnClickListener(this)
 
+        vEmptyContainer = findViewById<View>(R.id.empty_container)
+        vLineDash = findViewById<View>(R.id.dash_line)
+
+    }
+
+    private fun setEmptyRecord(isEmpty: Boolean){
+        if(isEmpty){
+            vEmptyContainer.visibility = View.VISIBLE
+            vLineDash.visibility = View.INVISIBLE
+        }else{
+            vEmptyContainer.visibility = View.INVISIBLE
+            vLineDash.visibility = View.VISIBLE
+        }
     }
 
     private fun initMenuPopup(items: List<ArticleSession>) {
@@ -101,10 +123,21 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
             anchor = findViewById(R.id.home),
             adapter = menuPopupAdapter,
             onItemSelected = { item, position ->
-                tvTitle.text = item.title
-                sessionId = item.id
-                menuPopup.setTitle(item.title)
-                loadArticles()
+                if (item != null) {
+                    if (menuPopup.isEditModel) {
+                        changeTopic(item.id.toLong())
+                    }else{
+                        tvTitle.text = item.title
+                        sessionId = item.id
+                        menuPopup.setTitle(item.title)
+                        loadArticles()
+                    }
+                } else {
+                    isEditingSummary = false
+                    vEdSummary.setText("")
+                    vEdSummaryContainer.visibility = View.VISIBLE
+                    showKeyboard(vEdSummary)
+                }
             }
         )
         menuPopup.setTitle(title)
@@ -117,15 +150,15 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
     fun loadSessions() {
         dm.add(
             threadHandler.listSessions()
-                .flatMap(Function { sessopms: MutableList<sdk.chat.core.dao.Thread> ->
-                    val articleSessions = sessopms?.map { session ->
+                .flatMap(Function { sessions: MutableList<Thread> ->
+                    val articleSessions = sessions.map { session ->
                         ArticleSession(
                             id = session.entityID,
                             title = session.name,
                         )
                     }
                     Single.just(articleSessions)
-                } as Function<in MutableList<sdk.chat.core.dao.Thread>, SingleSource<List<ArticleSession>>>)
+                } as Function<in MutableList<Thread>, SingleSource<List<ArticleSession>>>)
                 .observeOn(RX.main())
                 .subscribe(
                     { articleSessions ->
@@ -162,7 +195,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                         lastDay = thisDay
                         Article(
                             id = message.entityID,
-                            content = message.text + message.entityID,
+                            content = message.text,
                             day = thisDay,
                             time = thisTime,
                             title = message.stringForKey("summary"),
@@ -178,7 +211,12 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                 .observeOn(RX.main())
                 .subscribe(
                     { messages ->
-                        articleAdapter?.submitList(messages)
+                        articleAdapter.submitList(messages)
+                        if(messages!=null&&!messages.isEmpty()){
+                            setEmptyRecord(false)
+                        }else{
+                            setEmptyRecord(true)
+                        }
                     },
                     { error -> // onError
                         Toast.makeText(
@@ -197,7 +235,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
             }
 
             R.id.title -> {
-                menuPopup.show()
+                menuPopup.show(false)
             }
 
             R.id.edSummaryExit -> {
@@ -207,34 +245,138 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
             }
 
             R.id.edSummaryConfirm -> {
-                val newSummary = vEdSummary.text.toString()
-                val msgId= articleAdapter?.selectId
-                dm.add(
-                    threadHandler.setSummary(msgId, newSummary)
-                        .observeOn(RX.main())
-                        .subscribe(
-                            { result ->
-                                if (result) {
-                                    articleAdapter?.updateSummaryId(msgId, newSummary)
-                                }
-                                vEdSummary.requestFocus()
-                                hideKeyboard()
-                                vEdSummaryContainer.visibility = View.GONE
-                            },
-                            { error -> // onError
-                                vEdSummary.requestFocus()
-                                hideKeyboard()
-                                vEdSummaryContainer.visibility = View.GONE
-                                Toast.makeText(
-                                    this@ArticleListActivity,
-                                    "修改失败: ${error.message}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            })
-                )
+                if(isEditingSummary){
+                    editSummary()
+                }else{
+                    newTopic()
+                }
             }
 
         }
     }
 
+    // 在Activity/Fragment中使用
+    fun showPopupMenu(anchorView: View, selectedArticle: Article) {
+        // 根据选中项目动态创建菜单项
+        PopupMenuHelper(
+            context = this,
+            anchorView = anchorView,
+            onItemSelected = { v ->
+                when (v.id) {
+                    R.id.delArticle -> {
+                        changeTopic(-1)
+                    }
+
+                    R.id.changeTopic -> {
+                        menuPopup.show(true)
+                    }
+                }
+            },
+        ).show()
+    }
+
+    fun changeTopic(topicId: Long) {
+        val msgId = articleAdapter.selectId
+        if (msgId == null) {
+            return
+        }
+        dm.add(
+            threadHandler.setSession(msgId, topicId)
+                .observeOn(RX.main())
+                .subscribe(
+                    { result ->
+                        if (topicId<=0) {
+                            articleAdapter.deleteById(msgId)
+                        }else{
+                            sessionId = topicId.toString()
+                            loadSessions()
+                        }
+                    },
+                    { error -> // onError
+                        Toast.makeText(
+                            this@ArticleListActivity,
+                            "修改失败: ${error.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    })
+        )
+    }
+
+    fun editSummary(){
+        val newSummary = vEdSummary.text.toString()
+        val msgId = articleAdapter.selectId
+        dm.add(
+            threadHandler.setSummary(msgId, newSummary)
+                .observeOn(RX.main())
+                .subscribe(
+                    { result ->
+                        if (result) {
+                            articleAdapter.updateSummaryById(msgId, newSummary)
+                        }
+                        vEdSummary.requestFocus()
+                        hideKeyboard()
+                        vEdSummaryContainer.visibility = View.GONE
+                    },
+                    { error -> // onError
+                        vEdSummary.requestFocus()
+                        hideKeyboard()
+                        vEdSummaryContainer.visibility = View.GONE
+                        Toast.makeText(
+                            this@ArticleListActivity,
+                            "修改失败: ${error.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    })
+        )
+    }
+
+
+    fun newTopic(){
+        val newSummary = vEdSummary.text.toString()
+        val msgId = articleAdapter.selectId
+        dm.add(
+            threadHandler.newSession(msgId, newSummary)
+                .observeOn(RX.main())
+                .subscribe(
+                    { result ->
+                        if (result>0) {
+                            sessionId = result.toString()
+                            loadSessions()
+                        }
+                        vEdSummary.requestFocus()
+                        hideKeyboard()
+                        vEdSummaryContainer.visibility = View.GONE
+                    },
+                    { error -> // onError
+                        vEdSummary.requestFocus()
+                        hideKeyboard()
+                        vEdSummaryContainer.visibility = View.GONE
+                        Toast.makeText(
+                            this@ArticleListActivity,
+                            "修改失败: ${error.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    })
+        )
+    }
+
+    fun showKeyboard(view: View?) {
+        if (view == null) return
+
+        val context = view.getContext()
+        view.requestFocus()
+
+        view.post(Runnable {
+            val imm = context.getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager?
+            if (imm != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    // Android 11+推荐方式
+                    view.getWindowInsetsController()!!.show(WindowInsets.Type.ime())
+                } else {
+                    // 传统方式
+                    imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+                }
+            }
+        })
+    }
 }

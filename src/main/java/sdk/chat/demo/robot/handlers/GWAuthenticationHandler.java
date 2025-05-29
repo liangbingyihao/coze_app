@@ -22,8 +22,8 @@ import sdk.guru.common.RX;
  * Created by benjaminsmiley-andrews on 01/07/2017.
  */
 
-public class CozeAuthenticationHandler extends AbstractAuthenticationHandler {
-    public CozeAuthenticationHandler() {
+public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
+    public GWAuthenticationHandler() {
     }
 
     @Override

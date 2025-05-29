@@ -231,6 +231,60 @@ public class GWApiManager {
         });
     }
 
+
+    public Single<Long> setSession(String msgId, Long sessionId, String sessionName) {
+
+        return Single.create(emitter -> {
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            params.put("session_id", sessionId);
+            params.put("session_name", sessionName);
+            RequestBody body = RequestBody.create(
+                    new JSONObject(params).toString(),
+                    MediaType.parse("application/json; charset=utf-8")
+            );
+
+            Request request = new Request.Builder()
+                    .url(URL_MESSAGE + "/" + msgId)
+//                    .header("Authorization", accessToken)
+                    .post(body)
+                    .build();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException error) {
+                    emitter.onError(new Exception("send msg error"));
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    try {
+                        String responseBody = response.body() != null ? response.body().string() : "";
+                        if (!response.isSuccessful()) {
+                            emitter.onError(new IOException("HTTP error: " + response.code() + "," + responseBody));
+                            return;
+                        }
+                        JsonObject resp = gson.fromJson(responseBody, JsonObject.class);
+                        try {
+                            if (resp == null || !resp.get("success").getAsBoolean()) {
+                                throw new Exception("setSession failed:" + responseBody);
+                            }
+                            JsonObject data = resp.getAsJsonObject("data");
+                            emitter.onSuccess(data.get("session_id").getAsLong());
+                        } catch (Exception e) {
+                            emitter.onError(e);
+                        }
+                    } catch (Exception e) {
+                        emitter.onError(e);
+                    } finally {
+                        response.close(); // 关闭 Response
+                    }
+
+                }
+            });
+
+        });
+    }
+
     public Single<JsonObject> askRobot(Message message) {
         return Single.create(emitter -> {
             Map<String, String> params = message.getMetaValuesAsMap();

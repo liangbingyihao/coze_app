@@ -17,24 +17,49 @@ class GenericMenuPopupWindow<T, VH : GenericMenuAdapter.ViewHolder<T>>(
     private val context: Context,
     private val anchor: View,
     private val adapter: GenericMenuAdapter<T, VH>,
-    private val onItemSelected: (T, Int) -> Unit
+    private val onItemSelected: (T?, Int) -> Unit
 ) {
     private var popupWindow: PopupWindow? = null
     private var listView: ListView? = null
     private var tvTitle: TextView? = null
+    private lateinit var menuNew: TextView
     private var menuTitle: String? = null
     private var anchorLocation: IntArray? = null
+    private lateinit var blankTop: View
+    private lateinit var blankBottom: View
+    public var isEditModel=false
 
-    fun show() {
+    fun editModel() {
+        menuNew.visibility = View.VISIBLE
+        blankTop.visibility = View.VISIBLE
+        tvTitle?.visibility = View.GONE
+        blankBottom.visibility = View.GONE
+        isEditModel = true
+    }
+
+    fun viewModel() {
+        menuNew.visibility = View.GONE
+        blankTop.visibility = View.GONE
+        tvTitle?.visibility = View.VISIBLE
+        blankBottom.visibility = View.VISIBLE
+        isEditModel = false
+    }
+
+    fun show(editModel: Boolean) {
         if (popupWindow?.isShowing == true) {
             dismiss()
             return
         }
-        if(popupWindow==null){
+        if (popupWindow == null) {
             initPopupWindow()
         }
+        if (editModel) {
+            editModel()
+        } else {
+            viewModel()
+        }
         // 3. 获取anchor在屏幕中的位置
-        if(anchorLocation==null){
+        if (anchorLocation == null) {
             anchorLocation = IntArray(2)
             anchor.getLocationOnScreen(anchorLocation)
         }
@@ -68,16 +93,25 @@ class GenericMenuPopupWindow<T, VH : GenericMenuAdapter.ViewHolder<T>>(
         val popupView = inflater.inflate(R.layout.popup_window_layout, null)
         listView = popupView.findViewById(R.id.menu_listview)
         tvTitle = popupView.findViewById(R.id.menu_title)
-        tvTitle?.setText(menuTitle)
+        menuNew = popupView.findViewById(R.id.menu_new)
+        blankTop = popupView.findViewById(R.id.blank_room_top)
+        blankBottom = popupView.findViewById(R.id.blank_room_bottom)
+        tvTitle?.text = menuTitle
 
         listView?.adapter = adapter
         listView?.setOnItemClickListener { _, _, position, _ ->
-            adapter.updateSelectedPosition(position)
+            if(!isEditModel){
+                adapter.updateSelectedPosition(position)
+            }
             onItemSelected(adapter.getItem(position), position)
             dismiss()
         }
-        var b:View = popupView.findViewById(R.id.popup_container)
-        b.setOnClickListener { v->dismiss() }
+        var b: View = popupView.findViewById(R.id.popup_container)
+        b.setOnClickListener { v -> dismiss() }
+        menuNew.setOnClickListener {
+            onItemSelected(null, -1);
+            dismiss()
+        }
 
         popupWindow = PopupWindow(
             popupView,

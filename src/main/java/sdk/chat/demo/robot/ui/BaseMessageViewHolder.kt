@@ -1,6 +1,7 @@
 package sdk.chat.demo.robot.ui
 
 import android.text.util.Linkify
+import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +14,7 @@ import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessagesListAdapter
 import com.stfalcon.chatkit.messages.MessagesListStyle
 import io.reactivex.functions.Consumer
+import io.reactivex.functions.Predicate
 import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.manager.DownloadablePayload
@@ -65,6 +67,8 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
 
     open var resendTextView: TextView? = itemView.findViewById(R.id.resendTextView)
     open var resendContainer: ConstraintLayout? = itemView.findViewById(R.id.resendContainer)
+    open var sessionContainer: View? =
+        itemView.findViewById(sdk.chat.demo.pre.R.id.session_container)
     open var sessionName: TextView? = itemView.findViewById(sdk.chat.demo.pre.R.id.session_name)
 
     open val btnFavorite: IconicsImageView? =
@@ -80,9 +84,9 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
 //    open var explore2: View? = itemView.findViewById(sdk.chat.demo.pre.R.id.explore2)
 //    open var explore3: View? = itemView.findViewById(sdk.chat.demo.pre.R.id.explore3)
     val exploreView: Map<String, TextView> = mapOf(
-        "explore1" to itemView.findViewById<TextView>(sdk.chat.demo.pre.R.id.explore1),
-        "explore2" to itemView.findViewById<TextView>(sdk.chat.demo.pre.R.id.explore2),
-        "explore3" to itemView.findViewById<TextView>(sdk.chat.demo.pre.R.id.explore3)
+        "explore0" to itemView.findViewById<TextView>(sdk.chat.demo.pre.R.id.explore1),
+        "explore1" to itemView.findViewById<TextView>(sdk.chat.demo.pre.R.id.explore2),
+        "explore2" to itemView.findViewById<TextView>(sdk.chat.demo.pre.R.id.explore3)
     )
 
 //    open var userClickListener: MessagesListAdapter.UserClickListener? = null
@@ -100,7 +104,7 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
     }
 
     open fun bind(t: T) {
-
+        Log.e("bindMsg",t.message.id.toString())
         progressView?.actionButton?.setOnClickListener(View.OnClickListener {
             actionButtonPressed(t)
         })
@@ -142,34 +146,44 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
         setFavorite(t.message.integerForKey(keyIsGood))
 
 
+        val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
         var i = 0
+        var aiExplore = threadHandler.aiExplore
         while (i < 3) {
-            var exploreStr = t.message.stringForKey("explore_$i")
-            ++i
-            var v = exploreView.getValue("explore$i")
-            if(exploreStr!=null && exploreStr.isNotEmpty()){
-                v.text = exploreStr
-                v.paint.isUnderlineText = true
+            var v: TextView = exploreView.getValue("explore$i")
+            if (aiExplore != null && t.message.id.equals(aiExplore.message.id) && i < aiExplore.itemList.size) {
+                var data = aiExplore.itemList[i]
                 v.visibility = View.VISIBLE
+                v.text = data.text
                 v.setOnClickListener { view ->
                     // 可以使用view参数
                     view as TextView // 安全转换
-                    val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
-                    threadHandler.sendExploreMessage(view.text.toString().trim(),t.message.entityID, t.message.thread).subscribe();
+                    threadHandler.sendExploreMessage(
+                        view.text.toString().trim(),
+                        t.message.entityID,
+                        t.message.thread,
+                        data.action,
+                        data.params
+                    ).subscribe();
                 }
-            }else{
+            } else {
                 v.visibility = View.GONE
             }
+            ++i
         }
 
 //        t.message.metaValuesAsMap
         feedback?.let {
             it.text = t.message.stringForKey("feedback");
         }
-        sessionName?.let {
-            if(t.message.threadId!=null){
-                it.text = t.message.threadId.toString();
+        var topic = threadHandler.getSessionName(t.message.threadId)
+        if (topic != null) {
+            sessionContainer?.visibility = View.VISIBLE
+            sessionName?.let {
+                it.text = topic
             }
+        } else {
+            sessionContainer?.visibility = View.GONE
         }
     }
 
@@ -183,15 +197,20 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
     }
 
     open fun setText(value: String, linkify: Boolean) {
-        text?.let {
-            if (linkify) {
-                it.autoLinkMask = Linkify.ALL
-            } else {
-                it.autoLinkMask = 0
+        if (!value.isEmpty()) {
+            bubble?.visibility = View.VISIBLE
+            text?.let {
+                if (linkify) {
+                    it.autoLinkMask = Linkify.ALL
+                } else {
+                    it.autoLinkMask = 0
+                }
+                it.text = value
             }
-            it.text = value
+            text?.setTextIsSelectable(true);
+        } else {
+            bubble?.visibility = View.GONE
         }
-        text?.setTextIsSelectable(true);
     }
 
     open fun bindReadStatus(t: T) {
@@ -201,7 +220,8 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
     }
 
     open fun bindSendStatus(holder: T): Boolean {
-        val showOverlay = progressView?.bindSendStatus(holder.sendStatus, holder.payload) ?: false
+        val showOverlay =
+            progressView?.bindSendStatus(holder.sendStatus, holder.payload) ?: false
         bubbleOverlay?.visibility = if (showOverlay) View.VISIBLE else View.INVISIBLE
 
         // If we are showing overlay, hide icon
@@ -266,13 +286,25 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
         dm.add(
             ChatSDK.events().sourceOnSingle()
                 .filter(NetworkEvent.filterType(EventType.MessageUpdated))
-                .filter(NetworkEvent.filterMessageEntityID(t.id))
+                .filter(filterById(t.message.id))
                 .doOnError(this)
                 .subscribe {
                     RX.main().scheduleDirect {
                         bind(t)
                     }
                 })
+    }
+
+    //    public Predicate<NetworkEvent> filter() {
+    //        return new Predicate<NetworkEvent>() {
+    //            @Override
+    //            public boolean test(NetworkEvent networkEvent) throws Exception {
+    //                return networkEvent.type == type;
+    //            }
+    //        };
+    //    }
+    fun filterById(id: Long?): Predicate<NetworkEvent?> {
+        return Predicate { networkEvent: NetworkEvent? -> networkEvent?.message?.id == id }
     }
 
     override fun applyStyle(style: MessagesListStyle) {

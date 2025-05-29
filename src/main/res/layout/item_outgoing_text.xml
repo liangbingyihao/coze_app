@@ -17,12 +17,11 @@
         android:id="@id/bubble"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingLeft="22dp"
-        android:paddingRight="22dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp"
         android:background="@drawable/shape_outgoing_message"
-        >
+        android:paddingLeft="22dp"
+        android:paddingTop="12dp"
+        android:paddingRight="22dp"
+        android:paddingBottom="12dp">
         <!-- 聊天文本 -->
         <TextView
             android:id="@+id/messageText"
@@ -38,6 +37,7 @@
     <com.google.android.flexbox.FlexboxLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:visibility="gone"
         app:alignItems="center"
         app:flexDirection="row"
         app:justifyContent="flex_start">
@@ -71,73 +71,117 @@
             tools:text="10:20" />
     </com.google.android.flexbox.FlexboxLayout>
 
-    <TextView
-        android:id="@+id/session_name"
-        app:layout_alignSelf="flex_start"
+    <LinearLayout
+        android:id="@+id/session_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@color/gray"
-        android:textSize="14sp"
-        tools:text="111这是机器人回复的文本" />
+        android:layout_marginTop="14dp"
+        app:layout_alignSelf="center"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="已帮你收录进时间轴"
+            android:textColor="#B1B1B1"
+            android:textSize="14sp"
+            tools:text="session_name" />
+
+        <TextView
+            android:id="@+id/session_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/item_text_selected"
+            android:textSize="14sp"
+            tools:text="session_name" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/feedback"
-        app:layout_alignSelf="flex_start"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
         android:textColor="@color/gray"
         android:textSize="14sp"
+        app:layout_alignSelf="flex_start"
         tools:text="111这是机器人回复的文本" />
 
     <!-- 底部行（时间 + 操作菜单） -->
     <com.google.android.flexbox.FlexboxLayout
-        app:layout_alignSelf="flex_start"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         app:alignItems="center"
         app:flexDirection="row"
-        android:layout_marginTop="8dp"
-        app:justifyContent="flex_start">
+        app:justifyContent="flex_start"
+        app:layout_alignSelf="flex_start">
 
         <ImageView
             android:id="@+id/btn_copy"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/icon_copy"
-            android:layout_marginStart="12dp"/>
+            android:layout_marginStart="12dp"
+            android:src="@drawable/icon_copy" />
 
         <ImageView
             android:id="@+id/btn_play"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/icon_pause"
-            android:layout_marginStart="14dp"/>
+            android:layout_marginStart="14dp"
+            android:src="@drawable/icon_pause" />
     </com.google.android.flexbox.FlexboxLayout>
-    <TextView
+
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/explore1"
-        android:padding="16dp"
-        app:layout_alignSelf="flex_start"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@color/black"
-        android:visibility="gone"
-        android:textSize="16sp" />
-    <TextView
+        android:layout_marginTop="16dp"
+        android:gravity="start"
+        app:cornerRadius="10dp"
+        app:elevation="0dp"
+        android:textSize="14sp"
+        app:strokeColor="#E7E7E7"
+        app:strokeWidth="1dp"
+        android:padding="8dp"
+        app:backgroundTint="@color/white"
+        android:stateListAnimator="@null"
+        android:textColor="@color/item_text_normal"
+        app:layout_alignSelf="flex_start" />
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/explore2"
-        android:padding="16dp"
-        app:layout_alignSelf="flex_start"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@color/black"
-        android:visibility="gone"
-        android:textSize="16sp" />
-    <TextView
+        android:layout_marginTop="8dp"
+        app:cornerRadius="10dp"
+        android:gravity="start"
+        app:elevation="0dp"
+        android:textSize="14sp"
+        app:strokeColor="#E7E7E7"
+        app:strokeWidth="1dp"
+        android:padding="8dp"
+        app:backgroundTint="@color/white"
+        android:stateListAnimator="@null"
+        android:textColor="@color/item_text_normal"
+        app:layout_alignSelf="flex_start" />
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/explore3"
-        android:padding="16dp"
-        app:layout_alignSelf="flex_start"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@color/black"
-        android:visibility="gone"
-        android:textSize="16sp" />
+        android:layout_marginTop="8dp"
+        android:text="@string/go_to_record"
+        android:gravity="start"
+        app:cornerRadius="10dp"
+        app:elevation="0dp"
+        android:textSize="14sp"
+        app:strokeColor="#E7E7E7"
+        app:strokeWidth="1dp"
+        android:padding="8dp"
+        app:backgroundTint="@color/white"
+        android:stateListAnimator="@null"
+        android:textColor="@color/item_text_normal"
+        app:layout_alignSelf="flex_start" />
+
 </com.google.android.flexbox.FlexboxLayout>

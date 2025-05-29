@@ -9,6 +9,8 @@ import sdk.chat.core.module.Module;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.utils.QuickStart;
 import sdk.chat.demo.examples.helper.CustomPrivateThreadsFragment;
+import sdk.chat.demo.examples.message.DefaultTextMessageRegistration;
+import sdk.chat.demo.examples.message.ExampleSnapMessageRegistration;
 import sdk.chat.demo.robot.module.GWExtrasModule;
 import sdk.chat.demo.robot.module.CozeModule;
 import sdk.chat.demo.robot.ui.GWMessageRegistration;
@@ -73,6 +75,9 @@ public class ChatSDKCoze  extends QuickStart {
                 .activate(context, identifier);
         ChatSDKUI.setPrivateThreadsFragment(new CustomPrivateThreadsFragment());
         ChatSDKUI.shared().getMessageRegistrationManager().addMessageRegistration(new GWMessageRegistration());
+
+//        ChatSDKUI.shared().getMessageRegistrationManager().addMessageRegistration(new DefaultTextMessageRegistration());
+//        ChatSDKUI.shared().getMessageRegistrationManager().addMessageRegistration(new ExampleSnapMessageRegistration());
 
     }
 
