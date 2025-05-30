@@ -5,17 +5,15 @@ import android.content.Context;
 import java.util.Arrays;
 import java.util.List;
 
+import sdk.chat.core.module.ImageMessageModule;
 import sdk.chat.core.module.Module;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.utils.QuickStart;
-import sdk.chat.demo.examples.helper.CustomPrivateThreadsFragment;
-import sdk.chat.demo.examples.message.DefaultTextMessageRegistration;
-import sdk.chat.demo.examples.message.ExampleSnapMessageRegistration;
-import sdk.chat.demo.robot.module.GWExtrasModule;
 import sdk.chat.demo.robot.module.CozeModule;
-import sdk.chat.demo.robot.ui.GWMessageRegistration;
+import sdk.chat.demo.robot.module.GWExtrasModule;
+import sdk.chat.demo.robot.holder.ImageRegistration;
+import sdk.chat.demo.robot.holder.TextRegistration;
 import sdk.chat.firebase.push.FirebasePushModule;
-//import sdk.chat.firebase.upload.FirebaseUploadModule;
 import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.module.UIModule;
 
@@ -49,7 +47,7 @@ public class ChatSDKCoze  extends QuickStart {
 //                FirebaseUploadModule.shared(),
 
 //                LocationMessageModule.shared(),
-//                ImageMessageModule.shared(),
+                ImageMessageModule.shared(),
 
                 FirebasePushModule.shared(),
 
@@ -67,16 +65,15 @@ public class ChatSDKCoze  extends QuickStart {
                 .setAnonymousLoginEnabled(false)
                 .setRemoteConfigEnabled(false)
 //                .setPublicChatRoomLifetimeMinutes(TimeUnit.HOURS.toMinutes(24))
-                .setSendSystemMessageWhenRoleChanges(true)
+                .setSendSystemMessageWhenRoleChanges(false)
                 .build()
                 .addModules(deduplicate(newModules, modules))
                 // Activate
                 .build()
                 .activate(context, identifier);
-        ChatSDKUI.setPrivateThreadsFragment(new CustomPrivateThreadsFragment());
-        ChatSDKUI.shared().getMessageRegistrationManager().addMessageRegistration(new GWMessageRegistration());
-
-//        ChatSDKUI.shared().getMessageRegistrationManager().addMessageRegistration(new DefaultTextMessageRegistration());
+//        ChatSDKUI.setPrivateThreadsFragment(new CustomPrivateThreadsFragment());
+        ChatSDKUI.shared().getMessageRegistrationManager().addMessageRegistration(new TextRegistration());
+        ChatSDKUI.shared().getMessageRegistrationManager().addMessageRegistration(new ImageRegistration());
 //        ChatSDKUI.shared().getMessageRegistrationManager().addMessageRegistration(new ExampleSnapMessageRegistration());
 
     }

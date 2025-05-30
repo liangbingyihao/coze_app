@@ -250,8 +250,15 @@ public class GWThreadHandler extends AbstractThreadHandler {
             message.setText(text);
             message.setMetaValue("context_id", contextId);
             message.setMetaValue("action", action);
+//    action_daily_ai = 0
+//    action_bible_pic = 1
+//    action_daily_gw = 2
+//    action_direct_msg = 3
+//    action_daily_pray = 4
             if (action == 3) {
                 message.setMetaValue("feedback", params);
+            }else if(action==1){
+                message.setType(MessageType.Image);
             }
         }).run();
     }

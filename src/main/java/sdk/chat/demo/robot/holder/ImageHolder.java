@@ -1,27 +1,26 @@
-package sdk.chat.demo.robot.ui;
+package sdk.chat.demo.robot.holder;
 
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonParser;
 import com.stfalcon.chatkit.commons.models.MessageContentType;
 
 import org.pmw.tinylog.Logger;
 
 import java.text.DateFormat;
-import java.util.ArrayList;
-import java.util.List;
 
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.session.ChatSDK;
-import sdk.chat.demo.robot.adpter.data.ExploreDetail;
+import sdk.chat.ui.chat.model.ImageMessageHolder;
 import sdk.chat.ui.chat.model.MessageHolder;
 import sdk.chat.ui.module.UIModule;
 
-public class GWMessageHolder extends MessageHolder implements MessageContentType {
-    public GWMessageHolder(Message message) {
+public class ImageHolder extends ImageMessageHolder {
+    public ImageHolder(Message message) {
         super(message);
     }
 
+    public String getText() {
+        return message.getText();
+    }
 
     public void updateNextAndPreviousMessages() {
         this.isLast = false;

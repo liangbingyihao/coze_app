@@ -28,7 +28,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/black"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            tools:text="111这是聊天气泡的文本内容1" />
     </FrameLayout>
 
 
@@ -70,40 +71,17 @@
             tools:text="10:20" />
     </com.google.android.flexbox.FlexboxLayout>
 
-    <LinearLayout
-        android:id="@+id/session_container"
+
+    <siyamed.shapeimageview.PorterShapeImageView
+        android:id="@id/image"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        app:layout_alignSelf="center"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="已帮你收录进时间轴"
-            android:textColor="#B1B1B1"
-            android:textSize="14sp"
-            tools:text="session_name" />
-
-        <TextView
-            android:id="@+id/session_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/item_text_selected"
-            android:textSize="14sp"
-            tools:text="session_name" />
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/feedback"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        android:textColor="@color/gray"
-        android:textSize="14sp"
+        android:layout_marginStart="20dp"
+        android:adjustViewBounds="true"
+        android:scaleType="centerCrop"
         app:layout_alignSelf="flex_start"
-        tools:text="111这是机器人回复的文本" />
+        app:siShape="?outcomingBubbleDrawable"
+        app:siSquare="false" />
 
     <!-- 底部行（时间 + 操作菜单） -->
     <com.google.android.flexbox.FlexboxLayout

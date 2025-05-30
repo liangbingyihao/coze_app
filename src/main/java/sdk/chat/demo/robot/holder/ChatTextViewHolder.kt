@@ -1,4 +1,4 @@
-package sdk.chat.demo.robot.ui
+package sdk.chat.demo.robot.holder
 
 import android.text.util.Linkify
 import android.util.Log
@@ -30,17 +30,9 @@ import sdk.chat.ui.views.ProgressView
 import sdk.guru.common.DisposableMap
 import sdk.guru.common.RX
 import java.text.DateFormat
+import kotlin.math.abs
 
-open class GW {
-    open class IncomingMessageViewHolder(itemView: View) :
-        BaseMessageViewHolder<MessageHolder>(itemView, MessageDirection.Incoming)
-
-    open class OutgoingMessageViewHolder(itemView: View) :
-        BaseMessageViewHolder<MessageHolder>(itemView, MessageDirection.Outcoming)
-}
-
-
-open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: MessageDirection) :
+open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: MessageDirection) :
     MessageHolders.BaseMessageViewHolder<T>(itemView, null),
     MessageHolders.DefaultMessageViewHolder,
     Consumer<Throwable> {
@@ -134,7 +126,7 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
                 it.animate().scaleX(1f).scaleY(1f).duration = 100
                 t.message.setMetaValue(
                     keyIsGood,
-                    kotlin.math.abs(t.message.integerForKey(keyIsGood) - 1)
+                    abs(t.message.integerForKey(keyIsGood) - 1)
                 )
                 setFavorite(t.message.integerForKey(keyIsGood))
             }
@@ -174,7 +166,7 @@ open class BaseMessageViewHolder<T : MessageHolder>(itemView: View, direction: M
 
 //        t.message.metaValuesAsMap
         feedback?.let {
-            it.text = t.message.stringForKey("feedback");
+            it.text = t.message.stringForKey("feedback")+t.message.id+t.message.type;
         }
         var topic = threadHandler.getSessionName(t.message.threadId)
         if (topic != null) {

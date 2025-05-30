@@ -1,6 +1,5 @@
 package sdk.chat.demo.robot.ui;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Parcelable;
@@ -23,7 +22,6 @@ import org.pmw.tinylog.Logger;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import io.reactivex.Single;
@@ -40,6 +38,7 @@ import sdk.chat.core.types.Progress;
 import sdk.chat.core.utils.CurrentLocale;
 import sdk.chat.core.utils.TimeLog;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
+import sdk.chat.demo.robot.holder.TextHolder;
 import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.chat.model.MessageHolder;
 import sdk.chat.ui.module.UIModule;
@@ -181,15 +180,15 @@ public class GWChatView extends LinearLayout implements MessagesListAdapter.OnLo
 //                    });
 //                }));
 
-        dm.add(
-                ChatSDK.events().sourceOnSingle()
-                        .filter(NetworkEvent.filterType(EventType.MessageUpdated))
-                        .subscribe(networkEvent -> {
-                            messagesList.post(() -> {
-                                updateMessage(networkEvent.getMessage());
-                            });
-                        })
-        );
+//        dm.add(
+//                ChatSDK.events().sourceOnSingle()
+//                        .filter(NetworkEvent.filterType(EventType.MessageUpdated))
+//                        .subscribe(networkEvent -> {
+//                            messagesList.post(() -> {
+//                                updateMessage(networkEvent.getMessage());
+//                            });
+//                        })
+//        );
 
         dm.add(ChatSDK.events().sourceOnSingle()
                 .filter(NetworkEvent.filterType(EventType.MessageAdded))
@@ -358,7 +357,7 @@ public class GWChatView extends LinearLayout implements MessagesListAdapter.OnLo
     }
 
     protected void updateMessage(Message message) {
-        GWMessageHolder holder = (GWMessageHolder) ChatSDKUI.provider().holderProvider().getMessageHolder(message);
+//        TextHolder holder = (TextHolder) ChatSDKUI.provider().holderProvider().getMessageHolder(message);
 //        if (holder.isExploreItem()) {
 //
 //        }

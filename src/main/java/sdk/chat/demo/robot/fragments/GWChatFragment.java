@@ -65,7 +65,7 @@ import sdk.guru.common.DisposableMap;
 import sdk.guru.common.RX;
 
 public class GWChatFragment extends AbstractChatFragment implements ChatView.Delegate, TextInputDelegate, ChatOptionsDelegate, KeyboardOverlayHandler {
-    private DataCallback dataCallback;
+
     protected View rootView;
 
     protected Thread thread;
@@ -103,7 +103,6 @@ public class GWChatFragment extends AbstractChatFragment implements ChatView.Del
     @Override
     public void onDetach() {
         super.onDetach();
-        dataCallback = null;
     }
 
     public void reloadData() {

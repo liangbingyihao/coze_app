@@ -1,4 +1,4 @@
-package sdk.chat.demo.robot.ui;
+package sdk.chat.demo.robot.holder;
 
 import android.view.View;
 
