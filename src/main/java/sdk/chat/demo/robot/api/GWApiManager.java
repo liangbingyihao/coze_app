@@ -285,10 +285,12 @@ public class GWApiManager {
         });
     }
 
-    public Single<JsonObject> askRobot(Message message) {
+    public Single<JsonObject> askRobot(Message message,String prompt) {
         return Single.create(emitter -> {
             Map<String, String> params = message.getMetaValuesAsMap();
-//            params.put("session_id", message.getThread().getEntityID());
+            if(prompt!=null&&!prompt.isEmpty()){
+                params.put("prompt", prompt);
+            }
             RequestBody body = RequestBody.create(
                     new JSONObject(params).toString(),
                     MediaType.parse("application/json; charset=utf-8")

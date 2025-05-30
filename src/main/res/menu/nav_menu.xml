@@ -8,8 +8,8 @@
         app:showAsAction="never"/>
 
     <item
-        android:id="@+id/action_filter"
-        android:title="切换内容"
+        android:id="@+id/action_prompt"
+        android:title="自定义提示语"
         app:showAsAction="never"/>
 
     <item

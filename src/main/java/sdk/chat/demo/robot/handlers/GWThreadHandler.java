@@ -1,6 +1,7 @@
 package sdk.chat.demo.robot.handlers;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -17,7 +18,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -41,22 +41,43 @@ import sdk.chat.core.rigs.MessageSendRig;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.MessageSendStatus;
 import sdk.chat.core.types.MessageType;
+import sdk.chat.demo.MainApp;
 import sdk.chat.demo.robot.adpter.data.AIExplore;
 import sdk.chat.demo.robot.api.GWApiManager;
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil;
-import sdk.chat.demo.robot.ui.GWMessageHolder;
-import sdk.chat.ui.ChatSDKUI;
 import sdk.guru.common.RX;
 
 public class GWThreadHandler extends AbstractThreadHandler {
     private final AtomicBoolean hasSyncedWithNetwork = new AtomicBoolean(false);
     private List<Thread> sessionCache;
     private Message welcome;
-
     private AIExplore aiExplore;
+    private Boolean isCustomPrompt = null;
 
     public AIExplore getAiExplore() {
         return aiExplore;
+    }
+
+    public boolean isCustomPrompt() {
+        if (isCustomPrompt == null) {
+            try {
+                isCustomPrompt = MainApp.getContext().getSharedPreferences(
+                        "ai_prompt",
+                        Context.MODE_PRIVATE // 仅当前应用可访问
+                ).getBoolean("isCustomPrompt", false);
+            } catch (Exception e) {
+                isCustomPrompt = false;
+            }
+        }
+        return isCustomPrompt;
+    }
+
+    public void setCustomPrompt(boolean customPrompt) {
+        MainApp.getContext().getSharedPreferences(
+                "ai_prompt",
+                Context.MODE_PRIVATE // 仅当前应用可访问
+        ).edit().putBoolean("isCustomPrompt", customPrompt).apply();
+        isCustomPrompt = customPrompt;
     }
 
     private List<Message> fetchMessagesEarlier(Long startId) {
@@ -179,7 +200,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
         return Single.defer(() -> {
             List<Message> messages = fetchMessagesEarlier(startId);
             int i = 0;
-            while (aiExplore == null&&i < messages.size()){
+            while (aiExplore == null && i < messages.size()) {
                 Message tmp = messages.get(i);
                 if (tmp.stringForKey("explore_0") != null) {
                     aiExplore = AIExplore.loads(tmp);
@@ -242,10 +263,15 @@ public class GWThreadHandler extends AbstractThreadHandler {
      * The uploading to the server part can bee seen her {@see FirebaseCoreAdapter#PushMessageWithComplition}.
      */
     public Completable sendMessage(final Message message) {
-        if ("3".equals(message.stringForKey("action"))) {
+        String action = message.stringForKey("action");
+        if ("3".equals(action)) {
             return Completable.complete();
         }
-        return GWApiManager.shared().askRobot(message)
+        String prompt = isCustomPrompt ? MainApp.getContext().getSharedPreferences(
+                "ai_prompt",
+                Context.MODE_PRIVATE // 仅当前应用可访问
+        ).getString("ai_prompt" + action, null) : null;
+        return GWApiManager.shared().askRobot(message,prompt)
                 .subscribeOn(RX.io()).flatMap(data -> {
                     message.setEntityID(data.get("id").getAsString());
                     ChatSDK.db().update(message);

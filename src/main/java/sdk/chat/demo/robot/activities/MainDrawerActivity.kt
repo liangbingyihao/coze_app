@@ -248,10 +248,13 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
                 true
             }
 
-            R.id.action_filter -> {
-                val fragment: GWChatFragment? =
-                    supportFragmentManager.findFragmentByTag(chatTag) as? GWChatFragment;
-                fragment?.switchContent()
+            R.id.action_prompt -> {
+                startActivity(
+                    Intent(
+                        this@MainDrawerActivity,
+                        SettingPromptActivity::class.java
+                    )
+                )
                 true
             }
 
@@ -275,6 +278,15 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
         }
     }
 
+
+    override fun onResume() {
+        super.onResume()
+        if(threadHandler.isCustomPrompt){
+            toolbar?.title = "自定义提示语中"
+        }else{
+            toolbar?.title = getString(R.string.app_name)
+        }
+    }
 
     override fun getLayout(): Int {
         return R.layout.activity_main_coze_drawer;
