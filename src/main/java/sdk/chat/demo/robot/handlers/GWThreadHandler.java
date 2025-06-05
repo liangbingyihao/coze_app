@@ -6,6 +6,7 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -42,8 +43,12 @@ import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.MessageSendStatus;
 import sdk.chat.core.types.MessageType;
 import sdk.chat.demo.MainApp;
+import sdk.chat.demo.pre.BuildConfig;
 import sdk.chat.demo.robot.adpter.data.AIExplore;
 import sdk.chat.demo.robot.api.GWApiManager;
+import sdk.chat.demo.robot.api.model.ImageTagList;
+import sdk.chat.demo.robot.api.model.MessageDetail;
+import sdk.chat.demo.robot.api.model.SystemConf;
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil;
 import sdk.guru.common.RX;
 
@@ -53,9 +58,33 @@ public class GWThreadHandler extends AbstractThreadHandler {
     private Message welcome;
     private AIExplore aiExplore;
     private Boolean isCustomPrompt = null;
+    private SystemConf serverPrompt = null;
+    private final static Gson gson = new Gson();
 
     public AIExplore getAiExplore() {
         return aiExplore;
+    }
+
+    public Single<SystemConf> getServerPrompt() {
+        if (BuildConfig.DEBUG) {
+            Log.d("BuildMode", "当前是 Debug 包");
+
+            if (serverPrompt != null) {
+                return Single.just(serverPrompt);
+            }
+
+            return GWApiManager.shared().getConf()
+                    .subscribeOn(RX.io())
+                    .flatMap(conf -> {
+                        if (conf == null) {
+                            return Single.error(new NullPointerException("Configuration is null"));
+                        }
+                        serverPrompt = conf;
+                        return Single.just(serverPrompt);
+                    }).subscribeOn(RX.db());
+        } else {
+            return Single.just(serverPrompt);
+        }
     }
 
     public boolean isCustomPrompt() {
@@ -257,7 +286,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
 //    action_daily_pray = 4
             if (action == 3) {
                 message.setMetaValue("feedback", params);
-            }else if(action==1){
+            } else if (action == 1) {
                 message.setType(MessageType.Image);
             }
         }).run();
@@ -271,14 +300,14 @@ public class GWThreadHandler extends AbstractThreadHandler {
      */
     public Completable sendMessage(final Message message) {
         String action = message.stringForKey("action");
-        if ("3".equals(action)) {
+        if ("3".equals(action) || "1".equals(action)) {
             return Completable.complete();
         }
         String prompt = isCustomPrompt ? MainApp.getContext().getSharedPreferences(
                 "ai_prompt",
                 Context.MODE_PRIVATE // 仅当前应用可访问
         ).getString("ai_prompt" + action, null) : null;
-        return GWApiManager.shared().askRobot(message,prompt)
+        return GWApiManager.shared().askRobot(message, prompt)
                 .subscribeOn(RX.io()).flatMap(data -> {
                     message.setEntityID(data.get("id").getAsString());
                     ChatSDK.db().update(message);
@@ -644,6 +673,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
     }
 
     private void updateMessage(Message message, JsonObject json) {
+        MessageDetail messageDetail = gson.fromJson(json, MessageDetail.class);
         int status = json.get("status").getAsInt();
         String feedbackText = json.get("feedback_text").getAsString();
         long sessionId = 0;
@@ -680,6 +710,18 @@ public class GWThreadHandler extends AbstractThreadHandler {
                             message.setMetaValue("colorTag", colorTag);
                         }
                     }
+                    if (feedback.has("tag")) {
+                        String tag = feedback.get("tag").getAsString();
+                        if (tag != null) {
+                            message.setMetaValue("tag", tag);
+                        }
+                    }
+                    if (feedback.has("bible")) {
+                        String bible = feedback.get("bible").getAsString();
+                        if (bible != null) {
+                            message.setMetaValue("bible", bible);
+                        }
+                    }
 
                     AIExplore newAIExplore = AIExplore.loads(message);
                     if (newAIExplore != null) {
@@ -693,7 +735,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
             } catch (Exception e) {
             }
         } else if (status == 1) {
-            feedbackText = "(生成中)" + feedbackText;
+            feedbackText = "(生成中)\n" + feedbackText;
         }
         message.setMetaValue("feedback", feedbackText);
 

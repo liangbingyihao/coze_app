@@ -4,11 +4,23 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <CheckBox
-        android:id="@+id/customPrompt"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="自定义提示词" />
+        android:orientation="horizontal">
+        <CheckBox
+            android:id="@+id/customPrompt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="自定义提示词" />
+
+        <Button
+            android:id="@+id/loadServer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="加载服务端(会覆盖本地！)" />
+    </LinearLayout>
 
     <!-- EditText 1 -->
     <!-- TabLayout 作为标签指示器 -->

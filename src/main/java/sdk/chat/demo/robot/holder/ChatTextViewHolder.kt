@@ -7,18 +7,21 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
 import com.mikepenz.iconics.view.IconicsImageView
 import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessagesListAdapter
 import com.stfalcon.chatkit.messages.MessagesListStyle
+import io.noties.markwon.Markwon
 import io.reactivex.functions.Consumer
 import io.reactivex.functions.Predicate
 import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.manager.DownloadablePayload
 import sdk.chat.core.session.ChatSDK
+import sdk.chat.demo.MainApp
 import sdk.chat.demo.robot.IconUtils
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.ui.R
@@ -96,7 +99,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
     }
 
     open fun bind(t: T) {
-        Log.e("bindMsg",t.message.id.toString())
+        Log.e("bindMsg", t.message.id.toString())
         progressView?.actionButton?.setOnClickListener(View.OnClickListener {
             actionButtonPressed(t)
         })
@@ -149,14 +152,37 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
                 v.text = data.text
                 v.setOnClickListener { view ->
                     // 可以使用view参数
-                    view as TextView // 安全转换
-                    threadHandler.sendExploreMessage(
-                        view.text.toString().trim(),
-                        t.message.entityID,
-                        t.message.thread,
-                        data.action,
-                        data.params
-                    ).subscribe();
+                    if (data.action == 1) {
+                        CardGenerator.getInstance()
+                            .generateCardFromUrl(
+                                context = MainApp.getContext(),
+                                imageUrl = "https://oss.tikvpn.in/img/7aa7fc3ff50646a9a8c6a426102b2659.jpg",
+                                text = "带缓存的卡片"
+                            ) { result ->
+                                result.onSuccess { bitmap ->
+                                    view as TextView // 安全转换
+                                    threadHandler.sendExploreMessage(
+                                        view.text.toString().trim(),
+                                        t.message.entityID,
+                                        t.message.thread,
+                                        data.action,
+                                        data.params
+                                    ).subscribe();
+                                }.onFailure {
+                                    Toast.makeText(view.context, "生成失败", Toast.LENGTH_SHORT)
+                                        .show()
+                                }
+                            }
+                    } else {
+                        view as TextView // 安全转换
+                        threadHandler.sendExploreMessage(
+                            view.text.toString().trim(),
+                            t.message.entityID,
+                            t.message.thread,
+                            data.action,
+                            data.params
+                        ).subscribe();
+                    }
                 }
             } else {
                 v.visibility = View.GONE
@@ -166,8 +192,11 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
 
 //        t.message.metaValuesAsMap
         feedback?.let {
-            it.text = t.message.stringForKey("feedback")+t.message.id+t.message.type;
+//            it.text = t.message.stringForKey("feedback")+t.message.id+t.message.type;
+//            val markdown = "**Hello** _Markdown_"
+            Markwon.create(it.context).setMarkdown(it, t.message.stringForKey("feedback"))
         }
+
         var topic = threadHandler.getSessionName(t.message.threadId)
         if (topic != null) {
             sessionContainer?.visibility = View.VISIBLE
@@ -199,6 +228,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
                 }
                 it.text = value
             }
+
             text?.setTextIsSelectable(true);
         } else {
             bubble?.visibility = View.GONE

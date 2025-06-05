@@ -5,9 +5,9 @@
     android:id="@id/root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginLeft="16dp"
+    android:layout_marginLeft="26dp"
     android:layout_marginTop="8dp"
-    android:layout_marginRight="16dp"
+    android:layout_marginRight="26dp"
     android:layout_marginBottom="8dp"
     app:alignItems="flex_end"
     app:flexDirection="column"
@@ -102,6 +102,7 @@
         android:layout_marginTop="14dp"
         android:textColor="@color/gray"
         android:textSize="14sp"
+        android:lineSpacingMultiplier="1.2"
         app:layout_alignSelf="flex_start"
         tools:text="111这是机器人回复的文本" />
 

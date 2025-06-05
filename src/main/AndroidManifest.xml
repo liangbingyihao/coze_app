@@ -54,13 +54,21 @@
 
         <activity
             android:name="sdk.chat.demo.robot.activities.SpeechToTextActivity"
-            android:exported="true">
-        </activity>
+            android:exported="true"></activity>
 
-        <activity android:name="sdk.chat.demo.robot.activities.SettingPromptActivity"/>
+        <activity android:name="sdk.chat.demo.robot.activities.SettingPromptActivity" />
 
         <activity android:name="sdk.chat.demo.robot.activities.ArticleListActivity" />
 
+<!--        <provider-->
+<!--            android:name="androidx.core.content.FileProvider"-->
+<!--            android:authorities="${applicationId}.provider"-->
+<!--            android:exported="false"-->
+<!--            android:grantUriPermissions="true">-->
+<!--            <meta-data-->
+<!--                android:name="android.support.FILE_PROVIDER_PATHS"-->
+<!--                android:resource="@xml/file_paths" />  &lt;!&ndash; 确保此文件存在 &ndash;&gt;-->
+<!--        </provider>-->
     </application>
 
 </manifest>

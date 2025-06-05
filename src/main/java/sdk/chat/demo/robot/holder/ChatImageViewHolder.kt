@@ -1,5 +1,7 @@
 package sdk.chat.demo.robot.holder
 
+import CardGenerator
+import android.net.Uri
 import android.text.util.Linkify
 import android.util.Log
 import android.util.TypedValue
@@ -9,6 +11,9 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
+import com.bumptech.glide.Glide
+import com.bumptech.glide.RequestBuilder
+import com.bumptech.glide.RequestManager
 import com.mikepenz.iconics.view.IconicsImageView
 import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessagesListAdapter
@@ -20,8 +25,6 @@ import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.manager.DownloadablePayload
 import sdk.chat.core.session.ChatSDK
-import sdk.chat.core.utils.Dimen
-import sdk.chat.core.utils.Size
 import sdk.chat.demo.MainApp
 import sdk.chat.demo.robot.IconUtils
 import sdk.chat.demo.robot.handlers.GWThreadHandler
@@ -36,8 +39,12 @@ import sdk.guru.common.DisposableMap
 import sdk.guru.common.RX
 import java.text.DateFormat
 import kotlin.math.abs
+import androidx.core.net.toUri
 
-open class ChatImageViewHolder<T : ImageMessageHolder>(itemView: View, direction: MessageDirection) :
+open class ChatImageViewHolder<T : ImageMessageHolder>(
+    itemView: View,
+    direction: MessageDirection
+) :
     MessageHolders.BaseMessageViewHolder<T>(itemView, null),
     MessageHolders.DefaultMessageViewHolder,
     Consumer<Throwable> {
@@ -109,7 +116,7 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(itemView: View, direction
     }
 
     open fun bind(t: T) {
-        Log.e("bindImage",t.message.id.toString())
+        Log.e("bindImage", t.message.id.toString())
         loadImage(t)
         progressView?.actionButton?.setOnClickListener(View.OnClickListener {
             actionButtonPressed(t)
@@ -440,6 +447,55 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(itemView: View, direction
 
     open fun loadImage(holder: T) {
         Logger.debug("ImageSize: " + holder.size.width + ", " + holder.size.height)
-        ChatSDKUI.provider().imageLoader().load(image, "https://oss.tikvpn.in/img/3cc44c02a7cc466b972a7d63bcb6dd1f.jpg", holder.placeholder(), holder.size)
+
+        val cachedImage = CardGenerator.getInstance().getCacheBitmap(
+            "https://oss.tikvpn.in/img/7aa7fc3ff50646a9a8c6a426102b2659.jpg",
+            "带缓存的卡片"
+        )
+//        image?.let {
+//            Glide.with(MainApp.getContext()).load(cachedImage)
+//                .override(holder.size.widthInt(), holder.size.heightInt())
+//                .centerCrop().into(it)
+//        }
+
+//        ChatSDKUI.provider().imageLoader().load(
+//            image,
+//            "https://oss.tikvpn.in/img/3cc44c02a7cc466b972a7d63bcb6dd1f.jpg",
+//            holder.placeholder(),
+//            holder.size
+//        )
+//                image?.let {
+            Glide.with(image!!)
+                .asDrawable()
+                .dontAnimate()
+                .dontTransform()
+                .load(cachedImage)
+//                .placeholder(holder.placeholder())
+                .override(holder.size.widthInt(), holder.size.heightInt())
+                .centerCrop().into(image!!)
+//        }
+
+//
+//        val url = "https://oss.tikvpn.in/img/3cc44c02a7cc466b972a7d63bcb6dd1f.jpg"
+//        val request: RequestManager = Glide.with(image!!)
+//        var builder: RequestBuilder<*>?
+//        builder = request.asDrawable().dontAnimate()
+//
+//
+//        // If this is a local image
+//        val uri = url.toUri()
+//        if (uri != null && uri.getScheme() != null && uri.getScheme() == "android.resource") {
+//            builder = builder.load(uri)
+//        } else {
+//            builder = builder.load(url)
+//        }
+//
+//        if (holder.placeholder() != null) {
+//            builder = builder.placeholder(holder.placeholder())
+//        }
+//
+//        builder!!.override(holder.size.widthInt(), holder.size.heightInt())
+//            .centerCrop()
+//            .into(image!!)
     }
 }

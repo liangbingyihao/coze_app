@@ -14,6 +14,7 @@ import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.AccountDetails;
 import sdk.chat.core.utils.KeyStorage;
 import sdk.chat.demo.robot.api.GWApiManager;
+import sdk.chat.demo.robot.api.ImageApi;
 import sdk.chat.demo.robot.extensions.DeviceIdHelper;
 import sdk.guru.common.RX;
 
@@ -81,6 +82,8 @@ public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
             GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
             handler.getWelcomeMsg().subscribe();
             handler.createChatSessions();
+
+            ImageApi.listImageTags(0,0).subscribeOn(RX.io()).subscribe();
 
             if (ChatSDK.hook() != null) {
                 HashMap<String, Object> data = new HashMap<>();

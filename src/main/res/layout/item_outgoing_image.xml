@@ -74,9 +74,10 @@
 
     <siyamed.shapeimageview.PorterShapeImageView
         android:id="@id/image"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="162dp"
+        android:layout_height="188dp"
         android:layout_marginStart="20dp"
+        android:layout_marginTop="14dp"
         android:adjustViewBounds="true"
         android:scaleType="centerCrop"
         app:layout_alignSelf="flex_start"

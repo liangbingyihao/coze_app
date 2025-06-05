@@ -33,6 +33,8 @@ import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.AccountDetails;
 import sdk.chat.core.types.MessageSendStatus;
 import sdk.chat.core.types.MessageType;
+import sdk.chat.demo.robot.api.model.ImageTagList;
+import sdk.chat.demo.robot.api.model.SystemConf;
 import sdk.chat.demo.robot.push.UpdateTokenWorker;
 import sdk.guru.common.RX;
 
@@ -51,6 +53,7 @@ public class GWApiManager {
     private final static String URL_LOGIN = URL + "auth/login";
     private final static String URL_SESSION = URL + "session";
     private final static String URL_MESSAGE = URL + "message";
+    private final static String URL_CONF = URL + "system/conf";
 
     private final static GWApiManager instance = new GWApiManager();
 
@@ -69,6 +72,10 @@ public class GWApiManager {
                 .writeTimeout(30, TimeUnit.SECONDS)
                 .addInterceptor(new TokenRefreshInterceptor())
                 .build();
+    }
+
+    public OkHttpClient getClient() {
+        return client;
     }
 
     public String getAccessToken() {
@@ -428,80 +435,44 @@ public class GWApiManager {
     }
 
 
-    protected boolean createMessageResp(Message context, JsonObject detail) {
-        Message message = ChatSDK.db().fetchMessageWithEntityID(detail.get("id").getAsString());
-        int action = detail.get("action").getAsInt();
-        if (message == null) {
-            message = new Message();
-            message.setDate(new Date());
-            List<User> users = context.getThread().getUsers();
-            message.setSender(users.get(0));
-            message.setEntityID(detail.get("id").getAsString());
-            if (action != 0) {
-                message.setType(MessageType.System);
-            } else {
-                message.setType(MessageType.Text);
-            }
-            message.setMessageStatus(MessageSendStatus.Initial, false);
-            message.setIsRead(false);
-            ChatSDK.db().insertOrReplaceEntity(message);
-            context.getThread().addMessage(message, true, true, false);
-        }
-        message.setText(detail.get("content").getAsString());
-        message.setMetaValue("action", detail.get("action").getAsInt());
-//        message.setReply("action:"+detail.get("action").getAsString());
-        ChatSDK.db().update(message, false);
-        ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
-//        Message resp = ChatSDK.thread().newMessage(MessageType.Text, context.getThread(), true);
-////        if (messageDidCreateUpdateAction != null) {
-////            messageDidCreateUpdateAction.update(message);
-////        }
-//        ChatSDK.db().update(resp, false);
-//        context.getThread().addMessage(resp, true);
-////        if (ChatSDK.push() != null && resp.getThread().typeIs(ThreadType.Private)) {
-////            Map<String, Object> data = ChatSDK.push().pushDataForMessage(resp);
-////            ChatSDK.push().sendPushNotification(data);
-////        }
+    public  Single<SystemConf> getConf() {
+        return Single.create(emitter -> {
+            HttpUrl url = Objects.requireNonNull(HttpUrl.parse(URL_CONF))
+                    .newBuilder()
+                    .build();
 
-//        ChatSDK.events().source().accept(NetworkEvent.messageAdded(resp));
-////        if (message.getPreviousMessage() != null) {
-////            ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message.getPreviousMessage()));
-////        }
-//
-//        ChatSDK.hook().executeHook(HookEvent.MessageReceived, new HashMap<String, Object>() {{
-//            put(HookEvent.Message,resp);
-//            put(HookEvent.Thread, context.getThread());
-//            put(HookEvent.IsNew_Boolean, true);
-//        }}).doOnComplete(() -> {
-////                        message.markAsReceived().subscribe(ChatSDK.events());
-//            context.getThread().addMessage(resp, true);
-//        }).subscribe(ChatSDK.events());
-//        return resp;
-        return detail.get("status").getAsInt() != 2;
+            Request request = new Request.Builder()
+                    .url(url)
+//                    .header("Authorization", accessToken)
+                    .build();
 
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    emitter.onError(e); // 请求失败
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    try {
+                        if (!response.isSuccessful()) {
+                            emitter.onError(new IOException("HTTP error: " + response.code()));
+                            return;
+                        }
+                        String responseBody = response.body() != null ? response.body().string() : "";
+                        JsonObject data = gson.fromJson(responseBody, JsonObject.class).getAsJsonObject("data");
+                        SystemConf tagList = gson.fromJson(data, SystemConf.class);
+                        emitter.onSuccess(tagList); // 请求成功
+                    } catch (Exception e) {
+                        emitter.onError(e);
+                    } finally {
+                        response.close(); // 关闭 Response
+                    }
+                }
+            });
+        });
     }
 
-//    // 创建指数退避重试处理器
-//    private Function<? super Observable<Throwable>, ? extends ObservableSource<?>> createRetryHandler() {
-//        return attempts -> attempts
-//                .flatMap((Throwable throwable) -> {
-//                    int currentRetry = retryCount.incrementAndGet();
-//                    if (currentRetry > MAX_RETRIES) {
-//                        Logger.warn("currentRetry > MAX_RETRIES");
-//                        return Observable.error(throwable); // 超过最大重试次数
-//                    }
-//
-//                    // 计算延迟时间 (指数退避: 2, 4, 8秒)
-//                    long delaySec = (long) Math.pow(2, currentRetry);
-//                    Logger.warn("第" + currentRetry + "次重试，等待" + delaySec + "秒");
-//
-//                    return Observable.timer(delaySec, TimeUnit.SECONDS);
-//                });
-//    }
-
-//    public synchronized void stopPolling() {
-//        disposables.clear();
-//        isPolling = false;
-//    }
 
 }
