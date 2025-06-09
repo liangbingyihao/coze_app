@@ -53,7 +53,6 @@ class EditTextFragment : Fragment() {
         private const val ARG_SERVER_PROMPT = "serverPrompt"
         private var sharedPref: SharedPreferences? = null
         val actions = listOf("", "0", "4")
-        val hints = listOf(R.string.prompt_record, R.string.prompt_explore, R.string.prompt_pray)
 
         fun newInstance(position: Int, prompt: String?): EditTextFragment {
             val args = Bundle().apply {

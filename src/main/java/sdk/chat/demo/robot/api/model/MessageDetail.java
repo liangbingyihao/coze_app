@@ -5,8 +5,8 @@ import com.google.gson.annotations.SerializedName;
 public class MessageDetail {
     private int status;
     private String summary;
-    @SerializedName("color_tag")
-    private Long SessionId;
+    @SerializedName("session_id")
+    private Long sessionId;
 
     @SerializedName("feedback_text")
     private String feedbackText;
@@ -30,11 +30,11 @@ public class MessageDetail {
     }
 
     public Long getSessionId() {
-        return SessionId;
+        return sessionId;
     }
 
     public void setSessionId(Long sessionId) {
-        SessionId = sessionId;
+        this.sessionId = sessionId;
     }
 
     public String getFeedbackText() {

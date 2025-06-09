@@ -10,6 +10,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 
 import org.greenrobot.greendao.query.QueryBuilder;
 import org.pmw.tinylog.Logger;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,6 +33,7 @@ import io.reactivex.disposables.Disposable;
 import sdk.chat.core.base.AbstractThreadHandler;
 import sdk.chat.core.dao.CachedFile;
 import sdk.chat.core.dao.DaoCore;
+import sdk.chat.core.dao.Keys;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.dao.MessageDao;
 import sdk.chat.core.dao.Thread;
@@ -46,20 +49,28 @@ import sdk.chat.demo.MainApp;
 import sdk.chat.demo.pre.BuildConfig;
 import sdk.chat.demo.robot.adpter.data.AIExplore;
 import sdk.chat.demo.robot.api.GWApiManager;
+import sdk.chat.demo.robot.api.ImageApi;
+import sdk.chat.demo.robot.api.model.ImageItem;
+import sdk.chat.demo.robot.api.model.ImageTag;
 import sdk.chat.demo.robot.api.model.ImageTagList;
 import sdk.chat.demo.robot.api.model.MessageDetail;
 import sdk.chat.demo.robot.api.model.SystemConf;
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil;
+import sdk.chat.demo.robot.holder.AIFeedbackType;
+import sdk.chat.ui.ChatSDKUI;
+import sdk.chat.ui.chat.model.MessageHolder;
 import sdk.guru.common.RX;
 
 public class GWThreadHandler extends AbstractThreadHandler {
     private final AtomicBoolean hasSyncedWithNetwork = new AtomicBoolean(false);
     private List<Thread> sessionCache;
     private Message welcome;
+    private ImageTagList imageTagCache;
     private AIExplore aiExplore;
     private Boolean isCustomPrompt = null;
     private SystemConf serverPrompt = null;
     private final static Gson gson = new Gson();
+    public final static String KEY_AI_FEEDBACK = "ai_feedback";
 
     public AIExplore getAiExplore() {
         return aiExplore;
@@ -231,8 +242,9 @@ public class GWThreadHandler extends AbstractThreadHandler {
             int i = 0;
             while (aiExplore == null && i < messages.size()) {
                 Message tmp = messages.get(i);
-                if (tmp.stringForKey("explore_0") != null) {
-                    aiExplore = AIExplore.loads(tmp);
+                MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(tmp);
+                if (aiFeedback != null && aiFeedback.getFeedback() != null) {
+                    aiExplore = AIExplore.loads(tmp, aiFeedback.getFeedback().getFunction());
                 }
                 ++i;
             }
@@ -288,6 +300,22 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 message.setMetaValue("feedback", params);
             } else if (action == 1) {
                 message.setType(MessageType.Image);
+                message.setMetaValue(Keys.ImageUrl, params);
+                if (aiExplore != null) {
+                    try {
+                        Message oldMsg = aiExplore.getMessage();
+                        if (oldMsg != null) {
+                            JsonObject data = gson.fromJson(oldMsg.stringForKey(KEY_AI_FEEDBACK), JsonObject.class);
+                            updateMessage(message, data);
+                            if (message.getEntityID().equals(aiExplore.getMessage().getEntityID())) {
+                                //临时方案....生成图片没经过AI，探索内容也沿用久的，但要跟着生成图片的气泡
+                                aiExplore.setContextId(contextId);
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+                }
             }
         }).run();
     }
@@ -624,6 +652,32 @@ public class GWThreadHandler extends AbstractThreadHandler {
         return message;
     }
 
+
+    public Single<ImageTagList> listImageTags() {
+        return imageTagCache != null
+                ? Single.just(imageTagCache)
+                : ImageApi.listImageTags(0, 0)
+                .doOnSuccess(tagList -> imageTagCache = tagList);
+    }
+
+    public String getRandomImageByTag(String tag) {
+        if (imageTagCache == null) {
+            return null;
+        }
+        Random random = new Random();
+        List<ImageTag> tags = imageTagCache.getTags();
+        for (ImageTag imageTag : tags) {
+            if (imageTag.getName().equals(tag)) {
+                List<ImageItem> items = imageTag.getImages();
+                ImageItem image = items.get(random.nextInt(items.size()));
+                return image.getUrl();
+            }
+        }
+
+        List<ImageItem> items = tags.get(random.nextInt(tags.size())).getImages();
+        return items.get(random.nextInt(items.size())).getUrl();
+    }
+
     @SuppressLint("CheckResult")
     public Single<Message> getWelcomeMsg() {
         if (welcome != null) {
@@ -672,58 +726,31 @@ public class GWThreadHandler extends AbstractThreadHandler {
 //                });
     }
 
-    private void updateMessage(Message message, JsonObject json) {
-        MessageDetail messageDetail = gson.fromJson(json, MessageDetail.class);
-        int status = json.get("status").getAsInt();
-        String feedbackText = json.get("feedback_text").getAsString();
-        long sessionId = 0;
-        String sessionName = "";
-        if (status == 2) {
-            try {
-                disposables.clear();
-                sessionId = json.get("session_id").getAsLong();
-                if (sessionId > 0) {
-                    message.setThreadId(sessionId);
-                }
-                JsonElement summary = json.get("summary");
-                try {
-                    if (summary != null) {
-                        message.setMetaValue("summary", summary.getAsString());
-                    }
-                } catch (UnsupportedOperationException e) {
-                    // 备选方案：使用JSON字符串形式
-                    message.setMetaValue("summary", summary.toString());
-                }
-                JsonObject feedback = json.getAsJsonObject("feedback");
-                if (feedback != null) {
-                    JsonArray exploreArray = feedback.getAsJsonArray("function");
-                    for (int i = 0; i < exploreArray.size(); i++) {
-                        String function = exploreArray.get(i).getAsJsonArray().toString();
-                        message.setMetaValue("explore_" + i, function);
-                    }
-                    if (feedback.has("topic")) {
-                        sessionName = feedback.get("topic").getAsString();
-                    }
-                    if (feedback.has("color_tag")) {
-                        String colorTag = feedback.get("color_tag").getAsString();
-                        if (colorTag != null) {
-                            message.setMetaValue("colorTag", colorTag);
-                        }
-                    }
-                    if (feedback.has("tag")) {
-                        String tag = feedback.get("tag").getAsString();
-                        if (tag != null) {
-                            message.setMetaValue("tag", tag);
-                        }
-                    }
-                    if (feedback.has("bible")) {
-                        String bible = feedback.get("bible").getAsString();
-                        if (bible != null) {
-                            message.setMetaValue("bible", bible);
-                        }
-                    }
+    private void updateMessage(Message message, String jsonStr) {
 
-                    AIExplore newAIExplore = AIExplore.loads(message);
+    }
+
+    private void updateMessage(Message message, JsonObject json) {
+        if (json == null || message == null) {
+            return;
+        }
+        try {
+            MessageDetail messageDetail = gson.fromJson(json, MessageDetail.class);
+            if (messageDetail == null) {
+                return;
+            }
+            String jsonStr = json.toString();
+            message.setMetaValue(KEY_AI_FEEDBACK, jsonStr);
+            MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(message);
+
+            if (messageDetail.getStatus() == 2) {
+                disposables.clear();
+                if (messageDetail.getSessionId() > 0) {
+                    message.setThreadId(messageDetail.getSessionId());
+                    updateThread(Long.toString(messageDetail.getSessionId()), messageDetail.getFeedback().getTopic(), new Date());
+                }
+                if (aiFeedback != null && aiFeedback.getFeedback() != null) {
+                    AIExplore newAIExplore = AIExplore.loads(message, aiFeedback.getFeedback().getFunction());
                     if (newAIExplore != null) {
                         Message oldMsg = aiExplore != null ? aiExplore.getMessage() : null;
                         aiExplore = newAIExplore;
@@ -732,21 +759,24 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         }
                     }
                 }
-            } catch (Exception e) {
+            } else if (messageDetail.getStatus() == 1 && aiFeedback != null) {
+                aiFeedback.setFeedbackText("(生成中)\n" + aiFeedback.getFeedbackText());
             }
-        } else if (status == 1) {
-            feedbackText = "(生成中)\n" + feedbackText;
-        }
-        message.setMetaValue("feedback", feedbackText);
 
-        ChatSDK.db().update(message, false);
-        if (sessionId > 0) {
-            updateThread(Long.toString(sessionId), sessionName, new Date());
+            MessageHolder holder = ChatSDKUI.provider().holderProvider().getExitsMessageHolder(message);
+            if (holder instanceof AIFeedbackType) {
+                AIFeedbackType aiHolder = (AIFeedbackType) holder;
+                //需要刷新
+                aiHolder.setAiFeedback(aiFeedback);
+            }
+
+            ChatSDK.db().update(message, false);
+            ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
+        } catch (Exception e) {
+            Logger.warn(e.getMessage());
         }
-        ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
 
     }
-
 
     private final CompositeDisposable disposables = new CompositeDisposable();
     private final AtomicInteger retryCount = new AtomicInteger(0);    // 配置参数

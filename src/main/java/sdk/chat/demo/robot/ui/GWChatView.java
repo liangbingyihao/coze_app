@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.annotation.LayoutRes;
 import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.ConcatAdapter;
 import androidx.recyclerview.widget.DiffUtil;
 
 import com.stfalcon.chatkit.messages.MessageHolders;
@@ -37,6 +38,7 @@ import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.Progress;
 import sdk.chat.core.utils.CurrentLocale;
 import sdk.chat.core.utils.TimeLog;
+import sdk.chat.demo.robot.adpter.FooterAdapter;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
 import sdk.chat.demo.robot.holder.TextHolder;
 import sdk.chat.ui.ChatSDKUI;
@@ -140,6 +142,19 @@ public class GWChatView extends LinearLayout implements MessagesListAdapter.OnLo
         messagesListAdapter.setOnMessageLongClickListener(holder -> {
             delegate.onLongClick(holder.getMessage());
         });
+
+
+        FooterAdapter footerAdapter = new FooterAdapter();
+        ConcatAdapter concatAdapter = new ConcatAdapter(
+                new ConcatAdapter.Config.Builder()
+                        .setIsolateViewTypes(false) // 允许共享 ViewType
+                        .build(),
+                messagesListAdapter,
+                footerAdapter
+        );
+
+
+//        messagesList.setAdapter(concatAdapter);
         messagesList.setAdapter(messagesListAdapter);
 
         messagesListAdapter.setUserClickListener(userID -> {

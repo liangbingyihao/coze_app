@@ -9,6 +9,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.graphics.toColorInt
 import androidx.core.view.ViewCompat
 import com.mikepenz.iconics.view.IconicsImageView
 import com.stfalcon.chatkit.messages.MessageHolders
@@ -23,6 +24,8 @@ import sdk.chat.core.manager.DownloadablePayload
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.MainApp
 import sdk.chat.demo.robot.IconUtils
+import sdk.chat.demo.robot.api.model.MessageDetail
+import sdk.chat.demo.robot.handlers.CardGenerator
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.ui.R
 import sdk.chat.ui.chat.model.MessageHolder
@@ -99,7 +102,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
     }
 
     open fun bind(t: T) {
-        Log.e("bindMsg", t.message.id.toString())
+//        Log.e("bindMsg", t.message.id.toString())
         progressView?.actionButton?.setOnClickListener(View.OnClickListener {
             actionButtonPressed(t)
         })
@@ -120,9 +123,9 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
             UIModule.shared().iconBinder.bind(it, t)
         }
 
-        bindReadStatus(t)
-        bindSendStatus(t)
-        bindProgress(t)
+//        bindReadStatus(t)
+//        bindSendStatus(t)
+//        bindProgress(t)
 
         btnFavorite?.setOnClickListener {
             it.animate().scaleX(0.8f).scaleY(0.8f).setDuration(100).withEndAction {
@@ -142,6 +145,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
 
 
         val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
+        var aiFeedback: MessageDetail? = (t as TextHolder).getAiFeedback();
         var i = 0
         var aiExplore = threadHandler.aiExplore
         while (i < 3) {
@@ -150,30 +154,47 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
                 var data = aiExplore.itemList[i]
                 v.visibility = View.VISIBLE
                 v.text = data.text
-                v.setOnClickListener { view ->
-                    // 可以使用view参数
-                    if (data.action == 1) {
-                        CardGenerator.getInstance()
-                            .generateCardFromUrl(
-                                context = MainApp.getContext(),
-                                imageUrl = "https://oss.tikvpn.in/img/7aa7fc3ff50646a9a8c6a426102b2659.jpg",
-                                text = "带缓存的卡片"
-                            ) { result ->
-                                result.onSuccess { bitmap ->
-                                    view as TextView // 安全转换
-                                    threadHandler.sendExploreMessage(
-                                        view.text.toString().trim(),
-                                        t.message.entityID,
-                                        t.message.thread,
-                                        data.action,
-                                        data.params
-                                    ).subscribe();
-                                }.onFailure {
-                                    Toast.makeText(view.context, "生成失败", Toast.LENGTH_SHORT)
-                                        .show()
+                if (data.action == 1) {
+                    var bible = aiFeedback?.feedback?.bible ?: ""
+                    v.setOnClickListener { view ->
+                        // 可以使用view参数
+                        if (aiFeedback != null && !bible.isEmpty()) {
+                            var imageUrl =
+                                runCatching { threadHandler.getRandomImageByTag(aiFeedback.feedback.tag) }
+                                    .getOrElse { exception ->
+                                        "https://oss.tikvpn.in/img/40078ecc166348889dca302d8acd947e.jpg"
+                                    }
+                            CardGenerator.getInstance()
+                                .generateCardFromUrl(
+                                    context = MainApp.getContext(),
+                                    imageUrl = imageUrl,
+                                    text = bible
+                                ) { result ->
+                                    result.onSuccess { (key, bitmap) ->
+                                        view as TextView // 安全转换
+                                        threadHandler.sendExploreMessage(
+                                            view.text.toString().trim(),
+                                            t.message.entityID,
+                                            t.message.thread,
+                                            data.action,
+                                            key
+                                        ).subscribe();
+                                    }.onFailure {
+                                        Toast.makeText(
+                                            view.context,
+                                            "生成失败",
+                                            Toast.LENGTH_SHORT
+                                        )
+                                            .show()
+                                    }
                                 }
-                            }
-                    } else {
+                        } else {
+                            Toast.makeText(v.context, "没有经文...", Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                    }
+                } else {
+                    v.setOnClickListener { view ->
                         view as TextView // 安全转换
                         threadHandler.sendExploreMessage(
                             view.text.toString().trim(),
@@ -188,13 +209,51 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
                 v.visibility = View.GONE
             }
             ++i
+//                v.setOnClickListener { view ->
+//                    // 可以使用view参数
+//                    if (data.action == 1) {
+//                        CardGenerator.getInstance()
+//                            .generateCardFromUrl(
+//                                context = MainApp.getContext(),
+//                                imageUrl = "https://oss.tikvpn.in/img/7aa7fc3ff50646a9a8c6a426102b2659.jpg",
+//                                text = bible
+//                            ) { result ->
+//                                result.onSuccess { (key, bitmap) ->
+//                                    view as TextView // 安全转换
+//                                    threadHandler.sendExploreMessage(
+//                                        view.text.toString().trim(),
+//                                        t.message.entityID,
+//                                        t.message.thread,
+//                                        data.action,
+//                                        key
+//                                    ).subscribe();
+//                                }.onFailure {
+//                                    Toast.makeText(view.context, "生成失败", Toast.LENGTH_SHORT)
+//                                        .show()
+//                                }
+//                            }
+//                    } else {
+//                        view as TextView // 安全转换
+//                        threadHandler.sendExploreMessage(
+//                            view.text.toString().trim(),
+//                            t.message.entityID,
+//                            t.message.thread,
+//                            data.action,
+//                            data.params
+//                        ).subscribe();
+//                    }
+//                }
+//            } else {
+//                v.visibility = View.GONE
+//            }
         }
 
 //        t.message.metaValuesAsMap
         feedback?.let {
 //            it.text = t.message.stringForKey("feedback")+t.message.id+t.message.type;
 //            val markdown = "**Hello** _Markdown_"
-            Markwon.create(it.context).setMarkdown(it, t.message.stringForKey("feedback"))
+            Markwon.create(it.context)
+                .setMarkdown(it, aiFeedback?.feedbackText ?: t.message.stringForKey("feedback"))
         }
 
         var topic = threadHandler.getSessionName(t.message.threadId)

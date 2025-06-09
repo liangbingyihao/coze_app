@@ -71,6 +71,7 @@ public class GWApiManager {
                 .readTimeout(30, TimeUnit.SECONDS)
                 .writeTimeout(30, TimeUnit.SECONDS)
                 .addInterceptor(new TokenRefreshInterceptor())
+//                .addNetworkInterceptor(new SelectiveDiskCacheInterceptor())
                 .build();
     }
 

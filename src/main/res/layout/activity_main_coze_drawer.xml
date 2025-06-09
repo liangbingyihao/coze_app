@@ -34,23 +34,32 @@
         </LinearLayout>
 
         <LinearLayout
-            android:layout_width="280dp"
+            android:layout_width="288dp"
             android:layout_height="match_parent"
             android:layout_gravity="start"
             android:orientation="vertical"
-            android:background="?attr/colorSurface">
+            android:padding="20dp"
+            android:background="#FAFAFA">
 
             <include layout="@layout/nav_header"/>
 
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#6A6A6A"
+                android:background="#FFFFFF"
+                app:cardPreventCornerOverlap="false">
             <!-- 动态菜单 (RecyclerView) -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/nav_recycler"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
+                android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"/>
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- 底部 -->
             <LinearLayout

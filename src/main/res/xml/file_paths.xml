@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
     <!-- 适配所有存储位置 -->
-    <external-path name="external_files" path="." />
-    <external-files-path name="external_files_path" path="." />
-    <external-media-path name="external_media_path" path="." />
+<!--    <external-path name="external_files" path="." />-->
+<!--    <external-files-path name="external_files_path" path="." />-->
+<!--    <external-media-path name="external_media_path" path="." />-->
+    <cache-path name="card_cache" path="card_cache/" />
 </paths>

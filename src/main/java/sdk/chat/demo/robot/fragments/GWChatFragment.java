@@ -284,6 +284,7 @@ public class GWChatFragment extends AbstractChatFragment implements ChatView.Del
         } else {
             input.setInputListener(input -> {
                 sendMessage(String.valueOf(input));
+                hideKeyboard();
                 return true;
             });
         }

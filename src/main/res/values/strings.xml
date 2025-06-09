@@ -16,7 +16,10 @@
     <string name="new_topic">New</string>
     <string name="hint_no_record">No records found. Start by adding from the chat.</string>
     <string name="go_to_record">Start Record</string>
-    <string name="prompt_record"><![CDATA[你要帮助基督徒用户记录的感恩小事，圣灵感动，亮光发现等信息进行以下反馈:\n                    1.bible:返回一段基督教新教的圣经中的相关经文进行鼓励\n                    2.view:并针对该经文予一段100字左右的内容拓展\n                    3.topic1:为输入内容从${event}里选出一个主题分类,无法选取则为""\n                    3.topic2:无法选出topic1时，新增一个6个字以内的主题分类\n                    4.tag:对用户输入的内容返回的圣经经文打标签，标签只能从"信靠，盼望，刚强，光明，慈爱，喜乐，安慰，永恒，平安，恩典"选择最接近的一个。\n                    5.summary:给出8个字以内的重点小结\n                    6.explore:给出1个和用户输入内容密切相关的，引导基督教新教教义范围内进一步展开讨论的话题，话题的形式可以是问题或者指令。\n                    7.严格按json格式返回。{"bible":<bible>,"view":<view>,"explore":<explore>,"topic1":<topic1>,"topic2":<topic2>,"tag":<tag>,"summary":<summary>}\n                    8.对于跟信仰，圣经无关任何输入，如吃喝玩乐推荐、或者毫无意义的文本，只需要回复""。\n                    9.严格按照用户输入的语言返回。\n                    以下是用户的输入内容：\n]]></string>
-    <string name="prompt_explore"><![CDATA[你要在基督教正统教义范围内对下面输入进行以下反馈:\n                    1.bible:返回一段基督教新教的圣经中的相关经文进行鼓励\n                    2.view:并针对该经文予一段100字左右的内容拓展\n                    3.explore:给出1个和用户输入内容密切相关的，引导基督教新教教义范围内进一步展开讨论的话题，话题的形式可以是问题或者指令。\n                    4.严格按json格式返回。{"bible":<bible>,"view":<view>,"explore":<explore>}\n                    5.对于跟信仰，圣经无关任何输入，如吃喝玩乐推荐、或者毫无意义的文本，只需要回复""。\n                    6.严格按照用户输入的语言返回。\n                     用户问题:\n]]></string>
-    <string name="prompt_pray"><![CDATA[你要在基督教正统教义范围内对下面输入提供祷告和默想建议:\n                    1.bible:返回一段基督教新教的圣经中的相关经文进行鼓励\n                    2.view:针对用户输入提供祷告和默想建议\n                    3.explore:给出1个和用户输入内容密切相关的，引导基督教新教教义范围内进一步展开讨论的话题，话题的形式可以是问题或者指令。\n                    4.严格按json格式返回。{"bible":<bible>,"view":<view>,"explore":<explore>}\n                    5.对于跟信仰，圣经无关任何输入，如吃喝玩乐推荐、或者毫无意义的文本，只需要回复""。\n                    6.严格按照用户输入的语言返回。\n                    以下是用户的输入内容：\n]]></string>
-</resources>
+    <string name="download">Download</string>
+    <string name="share">Share</string>
+    <string name="favorites">My Favorites</string>
+    <string name="daily_gw">Daily Grace Word</string>
+    <string name="search">Search</string>
+    <string name="timeline">Timeline</string>
+  </resources>

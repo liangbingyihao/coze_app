@@ -42,6 +42,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
     private lateinit var vEdSummary: EditText
     private lateinit var vEmptyContainer: View
     private lateinit var vLineDash: View
+    private lateinit var recyclerView:RecyclerView
     private var isEditingSummary = false
 
     companion object {
@@ -67,7 +68,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         vEdSummary = findViewById(R.id.edSummary)
 
         // 设置RecyclerView
-        val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
+        recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
         articleAdapter = ArticleAdapter(
             onItemClick = { article ->
@@ -217,6 +218,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                         }else{
                             setEmptyRecord(true)
                         }
+                        recyclerView.scrollToPosition(0);
                     },
                     { error -> // onError
                         Toast.makeText(

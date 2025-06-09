@@ -1,7 +1,4 @@
 package sdk.chat.demo.robot.holder
-
-import CardGenerator
-import android.net.Uri
 import android.text.util.Linkify
 import android.util.Log
 import android.util.TypedValue
@@ -12,8 +9,6 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
 import com.bumptech.glide.Glide
-import com.bumptech.glide.RequestBuilder
-import com.bumptech.glide.RequestManager
 import com.mikepenz.iconics.view.IconicsImageView
 import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessagesListAdapter
@@ -21,25 +16,25 @@ import com.stfalcon.chatkit.messages.MessagesListStyle
 import io.reactivex.functions.Consumer
 import io.reactivex.functions.Predicate
 import org.pmw.tinylog.Logger
+import sdk.chat.core.dao.Keys
 import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.manager.DownloadablePayload
 import sdk.chat.core.session.ChatSDK
-import sdk.chat.demo.MainApp
 import sdk.chat.demo.robot.IconUtils
+import sdk.chat.demo.robot.handlers.CardGenerator
 import sdk.chat.demo.robot.handlers.GWThreadHandler
-import sdk.chat.ui.ChatSDKUI
 import sdk.chat.ui.R
 import sdk.chat.ui.chat.model.ImageMessageHolder
 import sdk.chat.ui.module.UIModule
 import sdk.chat.ui.utils.DrawableUtil
+import sdk.chat.ui.utils.ToastHelper
 import sdk.chat.ui.view_holders.v2.MessageDirection
 import sdk.chat.ui.views.ProgressView
 import sdk.guru.common.DisposableMap
 import sdk.guru.common.RX
 import java.text.DateFormat
 import kotlin.math.abs
-import androidx.core.net.toUri
 
 open class ChatImageViewHolder<T : ImageMessageHolder>(
     itemView: View,
@@ -87,6 +82,9 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
     open val btnDelete: IconicsImageView? = itemView.findViewById(sdk.chat.demo.pre.R.id.btn_delete)
 
     open var format: DateFormat? = null
+
+    open val btnCopy: ImageView? =
+        itemView.findViewById(sdk.chat.demo.pre.R.id.btn_copy)
 
     open val dm = DisposableMap()
     open val direction: MessageDirection = direction
@@ -138,9 +136,9 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
             UIModule.shared().iconBinder.bind(it, t)
         }
 
-        bindReadStatus(t)
-        bindSendStatus(t)
-        bindProgress(t)
+//        bindReadStatus(t)
+//        bindSendStatus(t)
+//        bindProgress(t)
 
         btnFavorite?.setOnClickListener {
             it.animate().scaleX(0.8f).scaleY(0.8f).setDuration(100).withEndAction {
@@ -156,6 +154,9 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
             val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
             threadHandler.deleteMessage(t.message).subscribe();
         }
+        btnCopy?.setOnClickListener {
+            ToastHelper.show(it.context, "copy....");
+        }
         setFavorite(t.message.integerForKey(keyIsGood))
 
 
@@ -166,18 +167,23 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
             var v: TextView = exploreView.getValue("explore$i")
             if (aiExplore != null && t.message.id.equals(aiExplore.message.id) && i < aiExplore.itemList.size) {
                 var data = aiExplore.itemList[i]
-                v.visibility = View.VISIBLE
-                v.text = data.text
-                v.setOnClickListener { view ->
-                    // 可以使用view参数
-                    view as TextView // 安全转换
-                    threadHandler.sendExploreMessage(
-                        view.text.toString().trim(),
-                        t.message.entityID,
-                        t.message.thread,
-                        data.action,
-                        data.params
-                    ).subscribe();
+                if (data.action == 1){
+                    //图片下方没有再生成图片了...
+                    v.visibility = View.GONE
+                }else{
+                    v.visibility = View.VISIBLE
+                    v.text = data.text
+                    v.setOnClickListener { view ->
+                        // 可以使用view参数
+                        view as TextView // 安全转换
+                        threadHandler.sendExploreMessage(
+                            view.text.toString().trim(),
+                            aiExplore.contextId?:t.message.entityID,
+                            t.message.thread,
+                            data.action,
+                            data.params
+                        ).subscribe();
+                    }
                 }
             } else {
                 v.visibility = View.GONE
@@ -447,11 +453,8 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
 
     open fun loadImage(holder: T) {
         Logger.debug("ImageSize: " + holder.size.width + ", " + holder.size.height)
-
-        val cachedImage = CardGenerator.getInstance().getCacheBitmap(
-            "https://oss.tikvpn.in/img/7aa7fc3ff50646a9a8c6a426102b2659.jpg",
-            "带缓存的卡片"
-        )
+        var cacheKey: String = holder.message.stringForKey(Keys.ImageUrl)
+        val cachedImage = CardGenerator.getInstance().getCacheBitmap(cacheKey)
 //        image?.let {
 //            Glide.with(MainApp.getContext()).load(cachedImage)
 //                .override(holder.size.widthInt(), holder.size.heightInt())
@@ -465,14 +468,16 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
 //            holder.size
 //        )
 //                image?.let {
-            Glide.with(image!!)
-                .asDrawable()
-                .dontAnimate()
-                .dontTransform()
-                .load(cachedImage)
-//                .placeholder(holder.placeholder())
-                .override(holder.size.widthInt(), holder.size.heightInt())
-                .centerCrop().into(image!!)
+        image!!.scaleType = ImageView.ScaleType.FIT_START
+        Glide.with(image!!)
+            .asDrawable()
+            .dontAnimate()
+            .dontTransform()
+            .load(cachedImage)
+            .placeholder(holder.placeholder())
+            .override(holder.size.widthInt(), holder.size.heightInt())
+//            .override(image!!.width, SIZE_ORIGINAL)
+            .centerCrop().into(image!!)
 //        }
 
 //

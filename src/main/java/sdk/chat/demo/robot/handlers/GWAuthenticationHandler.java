@@ -82,8 +82,7 @@ public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
             GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
             handler.getWelcomeMsg().subscribe();
             handler.createChatSessions();
-
-            ImageApi.listImageTags(0,0).subscribeOn(RX.io()).subscribe();
+            handler.listImageTags().subscribe();
 
             if (ChatSDK.hook() != null) {
                 HashMap<String, Object> data = new HashMap<>();

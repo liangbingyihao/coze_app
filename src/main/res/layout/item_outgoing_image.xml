@@ -28,7 +28,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/black"
-            android:textSize="14sp"
+            android:textSize="17sp"
+            android:lineSpacingExtra="8dp"
             tools:text="111这是聊天气泡的文本内容1" />
     </FrameLayout>
 
@@ -79,7 +80,7 @@
         android:layout_marginStart="20dp"
         android:layout_marginTop="14dp"
         android:adjustViewBounds="true"
-        android:scaleType="centerCrop"
+        android:scaleType="fitStart"
         app:layout_alignSelf="flex_start"
         app:siShape="?outcomingBubbleDrawable"
         app:siSquare="false" />
@@ -118,7 +119,8 @@
         android:gravity="start"
         app:cornerRadius="10dp"
         app:elevation="0dp"
-        android:textSize="14sp"
+        android:lineSpacingExtra="8dp"
+        android:textSize="17sp"
         app:strokeColor="#E7E7E7"
         app:strokeWidth="1dp"
         android:padding="8dp"
@@ -135,7 +137,8 @@
         app:cornerRadius="10dp"
         android:gravity="start"
         app:elevation="0dp"
-        android:textSize="14sp"
+        android:lineSpacingExtra="8dp"
+        android:textSize="17sp"
         app:strokeColor="#E7E7E7"
         app:strokeWidth="1dp"
         android:padding="8dp"
@@ -153,7 +156,8 @@
         android:gravity="start"
         app:cornerRadius="10dp"
         app:elevation="0dp"
-        android:textSize="14sp"
+        android:lineSpacingExtra="8dp"
+        android:textSize="17sp"
         app:strokeColor="#E7E7E7"
         app:strokeWidth="1dp"
         android:padding="8dp"

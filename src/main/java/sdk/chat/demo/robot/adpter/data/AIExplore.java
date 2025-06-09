@@ -12,9 +12,12 @@ public class AIExplore {
     private Message message;
     private List<ExploreItem> itemList;
 
+    private String contextId;
+
     public AIExplore(Message message, List<ExploreItem> itemList) {
         this.message = message;
         this.itemList = itemList;
+        this.contextId = null;
     }
 
     public Message getMessage() {
@@ -31,6 +34,14 @@ public class AIExplore {
 
     public void setItemList(List<ExploreItem> itemList) {
         this.itemList = itemList;
+    }
+
+    public String getContextId() {
+        return contextId;
+    }
+
+    public void setContextId(String contextId) {
+        this.contextId = contextId;
     }
 
     public static class ExploreItem {
@@ -62,19 +73,18 @@ public class AIExplore {
             this.params = params;
         }
 
-        public static ExploreItem loads(String exploreStr) {
+        public static ExploreItem loads(List<String> func) {
             try {
                 ExploreItem data = new ExploreItem();
-                JsonArray items = JsonParser.parseString(exploreStr).getAsJsonArray();
-                int len = items.size();
+                int len = func.size();
                 if (len > 0) {
-                    data.setText(items.get(0).getAsString());
+                    data.setText(func.get(0));
                 }
                 if (len > 1) {
-                    data.setAction(items.get(1).getAsInt());
+                    data.setAction(Integer.parseInt(func.get(1)));
                 }
                 if (len > 2) {
-                    data.setParams(items.get(2).getAsString());
+                    data.setParams(func.get(2));
                 }
                 return data;
             } catch (Exception ignored) {
@@ -83,15 +93,12 @@ public class AIExplore {
         }
     }
 
-    public static AIExplore loads(Message message) {
+    public static AIExplore loads(Message message, List<List<String>> functions) {
         List<ExploreItem> itemList = new ArrayList<>();
-        for (int i = 0; i < 3; ++i) {
-            String exploreStr = message.stringForKey("explore_" + i);
-            if (exploreStr != null) {
-                ExploreItem d = ExploreItem.loads(exploreStr);
-                if (d != null) {
-                    itemList.add(d);
-                }
+        for (List<String> func : functions) {
+            ExploreItem d = ExploreItem.loads(func);
+            if (d != null) {
+                itemList.add(d);
             }
         }
         if (itemList.isEmpty()) {

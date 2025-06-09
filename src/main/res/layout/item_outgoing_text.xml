@@ -28,7 +28,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/black"
-            android:textSize="14sp" />
+            android:lineSpacingMultiplier="1"
+            android:lineSpacingExtra="8dp"
+            android:textSize="17sp" />
     </FrameLayout>
 
 
@@ -101,8 +103,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="14dp"
         android:textColor="@color/gray"
-        android:textSize="14sp"
-        android:lineSpacingMultiplier="1.2"
+        android:textSize="17sp"
+        android:lineSpacingExtra="8dp"
+        android:lineSpacingMultiplier="1"
         app:layout_alignSelf="flex_start"
         tools:text="111这是机器人回复的文本" />
 
@@ -140,7 +143,8 @@
         android:gravity="start"
         app:cornerRadius="10dp"
         app:elevation="0dp"
-        android:textSize="14sp"
+        android:lineSpacingExtra="8dp"
+        android:textSize="17sp"
         app:strokeColor="#E7E7E7"
         app:strokeWidth="1dp"
         android:padding="8dp"
@@ -157,7 +161,8 @@
         app:cornerRadius="10dp"
         android:gravity="start"
         app:elevation="0dp"
-        android:textSize="14sp"
+        android:lineSpacingExtra="8dp"
+        android:textSize="17sp"
         app:strokeColor="#E7E7E7"
         app:strokeWidth="1dp"
         android:padding="8dp"
@@ -175,7 +180,8 @@
         android:gravity="start"
         app:cornerRadius="10dp"
         app:elevation="0dp"
-        android:textSize="14sp"
+        android:lineSpacingExtra="8dp"
+        android:textSize="17sp"
         app:strokeColor="#E7E7E7"
         app:strokeWidth="1dp"
         android:padding="8dp"
