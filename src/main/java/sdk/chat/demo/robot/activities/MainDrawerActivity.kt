@@ -65,6 +65,7 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
         drawerLayout = findViewById(R.id.root)
 //        searchView = findViewById(R.id.btn_search)
         findViewById<View>(R.id.menu_favorites).setOnClickListener(this)
+        findViewById<View>(R.id.menu_gw_daily).setOnClickListener(this)
         findViewById<View>(R.id.settings).setOnClickListener(this)
 
 //        KeyboardDrawerHelper.setup(drawerLayout)
@@ -358,14 +359,22 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
 
             R.id.menu_favorites -> {
                 Toast.makeText(this, "menu_favorites", Toast.LENGTH_SHORT).show()
+//                startActivity(
+//                    Intent(
+//                        this@MainDrawerActivity,
+//                        CollectionListActivity::class.java
+//                    )
+//                )
+            }
+
+            R.id.menu_gw_daily -> {
                 startActivity(
                     Intent(
                         this@MainDrawerActivity,
-                        CollectionListActivity::class.java
+                        ImageViewerActivity::class.java
                     )
                 )
             }
-
 
             R.id.settings -> {
 //                ChatSDK.ui().startProfileActivity(this@MainDrawerActivity, ChatSDK.currentUserID())
