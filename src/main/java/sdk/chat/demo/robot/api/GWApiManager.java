@@ -277,7 +277,11 @@ public class GWApiManager {
                                 throw new Exception("setSession failed:" + responseBody);
                             }
                             JsonObject data = resp.getAsJsonObject("data");
-                            emitter.onSuccess(data.get("session_id").getAsLong());
+                            if(sessionId==-1){
+                                emitter.onSuccess(-1L);
+                            }else{
+                                emitter.onSuccess(data.get("session_id").getAsLong());
+                            }
                         } catch (Exception e) {
                             emitter.onError(e);
                         }

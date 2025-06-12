@@ -2,7 +2,9 @@ package sdk.chat.demo.robot.handlers;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.util.Log;
+import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
@@ -10,7 +12,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
+
+import sdk.chat.core.dao.Keys;
 
 import org.greenrobot.greendao.query.QueryBuilder;
 import org.pmw.tinylog.Logger;
@@ -30,10 +33,10 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import kotlin.Unit;
 import sdk.chat.core.base.AbstractThreadHandler;
 import sdk.chat.core.dao.CachedFile;
 import sdk.chat.core.dao.DaoCore;
-import sdk.chat.core.dao.Keys;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.dao.MessageDao;
 import sdk.chat.core.dao.Thread;
@@ -300,22 +303,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 message.setMetaValue("feedback", params);
             } else if (action == 1) {
                 message.setType(MessageType.Image);
-                message.setMetaValue(Keys.ImageUrl, params);
-                if (aiExplore != null) {
-                    try {
-                        Message oldMsg = aiExplore.getMessage();
-                        if (oldMsg != null) {
-                            JsonObject data = gson.fromJson(oldMsg.stringForKey(KEY_AI_FEEDBACK), JsonObject.class);
-                            updateMessage(message, data);
-                            if (message.getEntityID().equals(aiExplore.getMessage().getEntityID())) {
-                                //临时方案....生成图片没经过AI，探索内容也沿用久的，但要跟着生成图片的气泡
-                                aiExplore.setContextId(contextId);
-                            }
-                        }
-                    } catch (Exception ignored) {
-
-                    }
-                }
+                message.setMetaValue("action_params", params);
             }
         }).run();
     }
@@ -328,8 +316,60 @@ public class GWThreadHandler extends AbstractThreadHandler {
      */
     public Completable sendMessage(final Message message) {
         String action = message.stringForKey("action");
-        if ("3".equals(action) || "1".equals(action)) {
+        if ("3".equals(action)) {
             return Completable.complete();
+        }
+        if ("1".equals(action)) {
+            // 生成经文图片
+            CardGenerator cardGenerator = CardGenerator.Companion.getInstance();
+
+            return Completable.create(emitter -> {
+                // 按 | 分割字符串
+                String params = message.stringForKey("action_params");
+                String[] parts = params.split("\\|"); // 需要转义 |
+                String tag, bible;
+                if (parts.length == 2) {
+                    tag = parts[0];    // 第一部分是 tag
+                    bible = parts[1];  // 第二部分是 bible
+                    String imageUrl = getRandomImageByTag(tag);
+                    cardGenerator.generateCardFromUrl(
+                            MainApp.getContext(),
+                            imageUrl,
+                            bible,
+                            // onSuccess 回调
+                            cardData -> {
+                                message.setMetaValue(Keys.ImageUrl, cardData.getFirst());
+                                if (aiExplore != null) {
+                                    try {
+                                        Message oldMsg = aiExplore.getMessage();
+                                        if (oldMsg != null) {
+                                            JsonObject data = gson.fromJson(oldMsg.stringForKey(KEY_AI_FEEDBACK), JsonObject.class);
+                                            if(data.has("session_id")){
+                                                data.addProperty("session_id", 0);
+                                            }
+                                            updateMessage(message, data);
+                                            if (message.getEntityID().equals(aiExplore.getMessage().getEntityID())) {
+                                                //临时方案....生成图片没经过AI，探索内容也沿用久的，但要跟着生成图片的气泡
+                                                aiExplore.setContextId(oldMsg.getEntityID());
+                                            }
+                                        }
+                                    } catch (Exception ignored) {
+
+                                    }
+                                }
+                                emitter.onComplete();
+                                return Unit.INSTANCE;
+                            },
+                            // onFailure 回调
+                            error -> {
+                                emitter.onError(error);
+                                return Unit.INSTANCE;
+                            }
+                    );
+                } else {
+                    emitter.onError(new Throwable("no bible verse..."));
+                }
+            });
         }
         String prompt = isCustomPrompt ? MainApp.getContext().getSharedPreferences(
                 "ai_prompt",

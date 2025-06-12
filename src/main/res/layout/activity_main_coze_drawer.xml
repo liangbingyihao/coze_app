@@ -3,7 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:animateLayoutChanges="true"
-    android:background="@drawable/gradient_primary"
     android:fitsSystemWindows="true">
     <androidx.drawerlayout.widget.DrawerLayout
         android:id="@+id/root"

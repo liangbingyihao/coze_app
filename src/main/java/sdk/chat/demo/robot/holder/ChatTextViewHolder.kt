@@ -159,35 +159,14 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
                     v.setOnClickListener { view ->
                         // 可以使用view参数
                         if (aiFeedback != null && !bible.isEmpty()) {
-                            var imageUrl =
-                                runCatching { threadHandler.getRandomImageByTag(aiFeedback.feedback.tag) }
-                                    .getOrElse { exception ->
-                                        "https://oss.tikvpn.in/img/40078ecc166348889dca302d8acd947e.jpg"
-                                    }
-                            CardGenerator.getInstance()
-                                .generateCardFromUrl(
-                                    context = MainApp.getContext(),
-                                    imageUrl = imageUrl,
-                                    text = bible
-                                ) { result ->
-                                    result.onSuccess { (key, bitmap) ->
-                                        view as TextView // 安全转换
-                                        threadHandler.sendExploreMessage(
-                                            view.text.toString().trim(),
-                                            t.message.entityID,
-                                            t.message.thread,
-                                            data.action,
-                                            key
-                                        ).subscribe();
-                                    }.onFailure {
-                                        Toast.makeText(
-                                            view.context,
-                                            "生成失败",
-                                            Toast.LENGTH_SHORT
-                                        )
-                                            .show()
-                                    }
-                                }
+                            view as TextView
+                            threadHandler.sendExploreMessage(
+                                view.text.toString().trim(),
+                                t.message.entityID,
+                                t.message.thread,
+                                data.action,
+                                "${aiFeedback.feedback.tag}|${bible}"
+                            ).subscribe();
                         } else {
                             Toast.makeText(v.context, "没有经文...", Toast.LENGTH_SHORT)
                                 .show()

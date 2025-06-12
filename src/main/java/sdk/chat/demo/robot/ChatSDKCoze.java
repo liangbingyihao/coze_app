@@ -18,8 +18,8 @@ import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.module.UIModule;
 
 public class ChatSDKCoze  extends QuickStart {
-    public static void quickStartWithEmail(Context context, String rootPath, String googleMapsKey, boolean drawerEnabled, String email, Module... modules) throws Exception {
-        quickStart(context, rootPath, googleMapsKey, drawerEnabled, email(email), modules);
+    public static void quickStartWithEmail(Context context,  boolean drawerEnabled, String email, Module... modules) throws Exception {
+        quickStart(context,  drawerEnabled, email(email), modules);
     }
 
 
@@ -31,7 +31,7 @@ public class ChatSDKCoze  extends QuickStart {
      * @param modules Optional modules
      * @throws Exception
      */
-    public static void quickStart(Context context, String rootPath, String googleMapsKey, boolean drawerEnabled, String identifier, Module... modules) throws Exception {
+    public static void quickStart(Context context,  boolean drawerEnabled, String identifier, Module... modules) throws Exception {
 
         List<Module> newModules = Arrays.asList(
                 CozeModule.builder()

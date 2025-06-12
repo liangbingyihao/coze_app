@@ -25,7 +25,9 @@ import sdk.chat.demo.robot.adpter.GenericMenuPopupWindow
 import sdk.chat.demo.robot.adpter.SessionPopupAdapter
 import sdk.chat.demo.robot.adpter.data.Article
 import sdk.chat.demo.robot.adpter.data.ArticleSession
+import sdk.chat.demo.robot.api.model.MessageDetail
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil
+import sdk.chat.demo.robot.handlers.GWMsgHandler
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.demo.robot.ui.PopupMenuHelper
 import sdk.chat.ui.activities.BaseActivity
@@ -42,7 +44,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
     private lateinit var vEdSummary: EditText
     private lateinit var vEmptyContainer: View
     private lateinit var vLineDash: View
-    private lateinit var recyclerView:RecyclerView
+    private lateinit var recyclerView: RecyclerView
     private var isEditingSummary = false
 
     companion object {
@@ -102,11 +104,11 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
 
     }
 
-    private fun setEmptyRecord(isEmpty: Boolean){
-        if(isEmpty){
+    private fun setEmptyRecord(isEmpty: Boolean) {
+        if (isEmpty) {
             vEmptyContainer.visibility = View.VISIBLE
             vLineDash.visibility = View.INVISIBLE
-        }else{
+        } else {
             vEmptyContainer.visibility = View.INVISIBLE
             vLineDash.visibility = View.VISIBLE
         }
@@ -127,7 +129,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                 if (item != null) {
                     if (menuPopup.isEditModel) {
                         changeTopic(item.id.toLong())
-                    }else{
+                    } else {
                         tvTitle.text = item.title
                         sessionId = item.id
                         menuPopup.setTitle(item.title)
@@ -194,13 +196,17 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
 
                         var showDay = thisDay != lastDay
                         lastDay = thisDay
+                        val aiFeedback: MessageDetail? = GWMsgHandler.getAiFeedback(message)
                         Article(
                             id = message.entityID,
                             content = message.text,
                             day = thisDay,
                             time = thisTime,
-                            title = message.stringForKey("summary"),
-                            colorTag = runCatching { message.stringForKey("colorTag").toColorInt() }
+                            title = aiFeedback?.summary ?: message.stringForKey("summary"),
+                            colorTag = runCatching {
+                                aiFeedback?.feedback?.colorTag?.toColorInt()
+                                    ?: message.stringForKey("colorTag").toColorInt()
+                            }
                                 .getOrElse { exception ->
                                     "#FFFBE8".toColorInt()
                                 },
@@ -213,9 +219,9 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                 .subscribe(
                     { messages ->
                         articleAdapter.submitList(messages)
-                        if(messages!=null&&!messages.isEmpty()){
+                        if (messages != null && !messages.isEmpty()) {
                             setEmptyRecord(false)
-                        }else{
+                        } else {
                             setEmptyRecord(true)
                         }
                         recyclerView.scrollToPosition(0);
@@ -247,9 +253,9 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
             }
 
             R.id.edSummaryConfirm -> {
-                if(isEditingSummary){
+                if (isEditingSummary) {
                     editSummary()
-                }else{
+                } else {
                     newTopic()
                 }
             }
@@ -287,9 +293,12 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                 .observeOn(RX.main())
                 .subscribe(
                     { result ->
-                        if (topicId<=0) {
+                        if (topicId <= 0) {
+                            if (articleAdapter.itemCount == 2) {
+                                setEmptyRecord(true)
+                            }
                             articleAdapter.deleteById(msgId)
-                        }else{
+                        } else {
                             sessionId = topicId.toString()
                             loadSessions()
                         }
@@ -304,7 +313,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         )
     }
 
-    fun editSummary(){
+    fun editSummary() {
         val newSummary = vEdSummary.text.toString()
         val msgId = articleAdapter.selectId
         dm.add(
@@ -333,7 +342,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
     }
 
 
-    fun newTopic(){
+    fun newTopic() {
         val newSummary = vEdSummary.text.toString()
         val msgId = articleAdapter.selectId
         dm.add(
@@ -341,7 +350,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                 .observeOn(RX.main())
                 .subscribe(
                     { result ->
-                        if (result>0) {
+                        if (result > 0) {
                             sessionId = result.toString()
                             loadSessions()
                         }

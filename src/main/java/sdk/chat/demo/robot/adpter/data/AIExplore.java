@@ -94,6 +94,9 @@ public class AIExplore {
     }
 
     public static AIExplore loads(Message message, List<List<String>> functions) {
+        if(functions==null||functions.isEmpty()){
+            return null;
+        }
         List<ExploreItem> itemList = new ArrayList<>();
         for (List<String> func : functions) {
             ExploreItem d = ExploreItem.loads(func);

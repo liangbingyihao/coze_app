@@ -4,6 +4,8 @@ import android.text.format.DateUtils
 import sdk.chat.demo.pre.R
 import java.text.ParseException
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -77,4 +79,13 @@ object DateLocalizationUtil {
     private fun formatDate(date: Date, pattern: String): String {
         return SimpleDateFormat(pattern, Locale.getDefault()).format(date)
     }
+
+
+    public fun formatDayAgo(dateAgo: Int): String {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_YEAR, -1*dateAgo) // 减去一个月
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        return dateFormat.format(calendar.time)
+    }
+
 }

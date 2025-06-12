@@ -17,7 +17,7 @@ import androidx.work.WorkManager;
 
 import java.util.concurrent.TimeUnit;
 
-public class MainApp extends Application implements Configuration.Provider{
+public class MainApp extends Application implements Configuration.Provider {
     private static Context context;
 
     public static Context getContext() {
@@ -57,8 +57,7 @@ public class MainApp extends Application implements Configuration.Provider{
         try {
             // Setup Chat SDK
             boolean drawerEnabled = !Device.honor();
-            ChatSDKCoze.quickStartWithEmail(this, "pre_998", "AIzaSyCwwtZrlY9Rl8paM0R6iDNBEit_iexQ1aE",
-                    drawerEnabled,
+            ChatSDKCoze.quickStartWithEmail(this, drawerEnabled,
                     "",
 //                    AudioMessageModule.shared(),
 //                    FirebaseBlockingModule.shared(),
@@ -85,7 +84,7 @@ public class MainApp extends Application implements Configuration.Provider{
 
         } catch (Exception e) {
             e.printStackTrace();
-            assert(false);
+            assert (false);
         }
     }
 }

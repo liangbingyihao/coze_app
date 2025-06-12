@@ -125,6 +125,7 @@
         app:strokeWidth="1dp"
         android:padding="8dp"
         app:backgroundTint="@color/white"
+        app:rippleColor="#20000000"
         android:stateListAnimator="@null"
         android:textColor="@color/item_text_normal"
         app:layout_alignSelf="flex_start" />
@@ -143,6 +144,7 @@
         app:strokeWidth="1dp"
         android:padding="8dp"
         app:backgroundTint="@color/white"
+        app:rippleColor="#20000000"
         android:stateListAnimator="@null"
         android:textColor="@color/item_text_normal"
         app:layout_alignSelf="flex_start" />
@@ -152,7 +154,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="@string/go_to_record"
         android:gravity="start"
         app:cornerRadius="10dp"
         app:elevation="0dp"
@@ -162,6 +163,7 @@
         app:strokeWidth="1dp"
         android:padding="8dp"
         app:backgroundTint="@color/white"
+        app:rippleColor="#20000000"
         android:stateListAnimator="@null"
         android:textColor="@color/item_text_normal"
         app:layout_alignSelf="flex_start" />

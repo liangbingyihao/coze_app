@@ -386,12 +386,13 @@ class CardGenerator private constructor() {
         context: Context,
         imageUrl: String,
         text: String,
-        callback: (Result<Pair<String, Bitmap>>) -> Unit
+        onSuccess: (Pair<String, Bitmap>) -> Unit,
+        onFailure: (Throwable) -> Unit
     ) {
         // 1. 检查内存缓存
         val cacheKey = "$imageUrl|$text"
         memoryCache.get(cacheKey)?.let {
-            callback(Result.success(Pair(cacheKey, it)))
+            onSuccess(Pair(cacheKey, it))
             return
         }
 
@@ -399,7 +400,7 @@ class CardGenerator private constructor() {
         getCachedCardFile(cacheKey)?.let { file ->
             BitmapFactory.decodeFile(file.absolutePath)?.let {
                 memoryCache.put(cacheKey, it)
-                callback(Result.success(Pair(cacheKey, it)))
+                onSuccess(Pair(cacheKey, it))
                 return
             }
         }
@@ -420,16 +421,16 @@ class CardGenerator private constructor() {
                             // 存入缓存
                             memoryCache.put(cacheKey, bitmap)
                             saveCardToCache(cacheKey, bitmap)
-                            callback(Result.success(Pair(cacheKey, bitmap)))
+                            onSuccess(Pair(cacheKey, bitmap))
                         }.onFailure {
-                            callback(Result.failure(it))
+                            onFailure(it)
                         }
                     }
                 }
 
                 override fun onLoadFailed(errorDrawable: Drawable?) {
                     val error = IOException("图片加载失败: $imageUrl")
-                    callback(Result.failure(error))
+                    onFailure(error)
                 }
 
                 override fun onLoadCleared(placeholder: Drawable?) {

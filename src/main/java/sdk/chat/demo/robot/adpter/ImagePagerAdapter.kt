@@ -1,5 +1,6 @@
 package sdk.chat.demo.robot.adpter
 
+import android.graphics.Matrix
 import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
@@ -25,10 +26,15 @@ class ImagePagerAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_image, parent, false)
-        return ViewHolder(view)
+        val holder = ViewHolder(view)
+        holder.photoView.setAllowParentInterceptOnEdge(true)
+        holder.photoView.isZoomable = false
+        return holder
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+
+//
         val context = holder.photoView.context
         Glide.with(context)
             .load(imageUrls[position])
@@ -53,12 +59,52 @@ class ImagePagerAdapter(
                 ): Boolean {
                     // 仅在 Lifecycle 活跃时更新 UI
                     if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
-                        holder.photoView.setImageDrawable(resource)
+//                        holder.photoView.setImageDrawable(resource)
+                        adjustImageScale(holder.photoView, resource,position)
                     }
                     return false
                 }
             })
             .into(holder.photoView)
+    }
+
+    private fun adjustImageScale(photoView: PhotoView, drawable: Drawable?, position: Int) {
+        drawable ?: return
+        with(photoView) {
+            val run = Runnable {
+                val drawableWidth = drawable.intrinsicWidth.toFloat()
+                val drawableHeight = drawable.intrinsicHeight.toFloat()
+                val viewWidth = photoView.width.toFloat()
+                val viewHeight = photoView.height.toFloat()
+                setScale(viewHeight / drawableHeight, 0f, viewHeight, true)
+//                notifyItemChanged(position)
+            }
+            post(run)
+        }
+//        photoView.post {
+//            val drawableWidth = drawable.intrinsicWidth.toFloat()
+//            val drawableHeight = drawable.intrinsicHeight.toFloat()
+//            val viewWidth = photoView.width.toFloat()
+//            val viewHeight = photoView.height.toFloat()
+//
+//            // 1. 计算缩放比例（宽度撑满）
+////            val scale = viewWidth / drawableWidth
+//            val scale = 2F
+//
+//            // 2. 设置初始缩放比例（关键改动）
+//            photoView.setScale(scale, 0f, 0f, false)
+//
+//            // 3. 计算缩放后的高度
+//            val scaledHeight = drawableHeight * scale
+//
+//            // 4. 如果图片高度不足，垂直居中
+//            if (scaledHeight < viewHeight) {
+//                val offsetY = (viewHeight - scaledHeight) / 2
+//                photoView.setDisplayMatrix(Matrix().apply {
+//                    postTranslate(0f, offsetY)
+//                })
+//            }
+//        }
     }
 
     override fun getItemCount(): Int = imageUrls.size
