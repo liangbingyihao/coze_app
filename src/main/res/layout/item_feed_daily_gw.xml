@@ -13,7 +13,7 @@
     app:flexDirection="column"
     app:flexWrap="wrap">
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="185dp"
         android:layout_height="246dp"
         android:layout_marginStart="20dp"
@@ -26,30 +26,73 @@
         <siyamed.shapeimageview.PorterShapeImageView
             android:id="@id/image"
             android:layout_width="185dp"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_height="246dp"
+            android:layout_gravity="center|start"
             android:adjustViewBounds="true"
             android:scaleType="centerCrop"
             app:siShape="@drawable/shape_image_bubble"
             app:siSquare="false" />
-        <!--        app:siShape="?outcomingBubbleDrawable"-->
-        <!--        app:siShape="@drawable/shape_incoming_image_bubble"-->
-        <!--        <siyamed.shapeimageview.PorterShapeImageView-->
 
-        <TextView
-            android:id="@+id/bible"
-            android:layout_width="185dp"
-            android:layout_height="142dp"
-            android:layout_gravity="bottom"
-            android:background="#FAFAFA"
-            android:ellipsize="end"
+        <!--        android:background="@drawable/gradient_bible_image"-->
+
+        <LinearLayout
+            android:id="@+id/content"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:background="@drawable/gradient_bible_image"
             android:gravity="start"
-            android:lineSpacingExtra="6dp"
-            android:maxLines="6"
-            android:padding="8dp"
-            android:textColor="@color/gray"
-            android:textSize="12sp" />
-    </LinearLayout>
+            android:layout_gravity="bottom"
+            android:padding="10dp"
+            android:orientation="vertical">
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="10"
+                android:textColor="@color/white"
+                android:textSize="30sp" />
+
+            <TextView
+                android:id="@+id/month"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="2025-05"
+                android:textColor="@color/white"
+                android:textSize="8sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/bible"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:fontFamily="sans-serif-medium"
+                android:text="神爱世人，甚至将他的独生子赐给他们，叫一切信他的，不至灭亡，反得永生。"
+                android:textColor="@color/white"
+                android:textSize="8sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/reference"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:layout_marginTop="1dp"
+                android:text="约翰福音 3:16"
+                android:textColor="@color/white"
+                android:textSize="8sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+    </FrameLayout>
 
     <!-- 底部行（时间 + 操作菜单） -->
     <com.google.android.flexbox.FlexboxLayout

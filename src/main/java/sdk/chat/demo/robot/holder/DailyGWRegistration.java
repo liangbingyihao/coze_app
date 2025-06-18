@@ -39,9 +39,9 @@ public class DailyGWRegistration extends ImageMessageRegistration {
 //        holders.setOutcomingImageConfig(GWView.OutgoingDailyGWViewHolder.class, R.layout.item_feed_daily_gw);
         holders.registerContentType(
                 (byte) GWMessageType,
-                GWView.OutgoingDailyGWViewHolder.class,
+                GWView.OutgoingImageViewHolder.class,
                 R.layout.item_feed_daily_gw,
-                GWView.OutgoingDailyGWViewHolder.class,
+                GWView.OutgoingImageViewHolder.class,
                 R.layout.item_feed_daily_gw,
                 ChatSDKUI.shared().getMessageRegistrationManager());
     }

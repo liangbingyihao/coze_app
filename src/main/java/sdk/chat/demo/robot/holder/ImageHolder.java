@@ -1,21 +1,62 @@
 package sdk.chat.demo.robot.holder;
 
 
+import androidx.annotation.Nullable;
+
 import com.stfalcon.chatkit.commons.models.MessageContentType;
 
 import org.pmw.tinylog.Logger;
 
 import java.text.DateFormat;
 
+import sdk.chat.core.dao.Keys;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.session.ChatSDK;
+import sdk.chat.demo.robot.api.ImageApi;
+import sdk.chat.demo.robot.api.model.ImageDaily;
+import sdk.chat.demo.robot.extensions.DateLocalizationUtil;
+import sdk.chat.demo.robot.handlers.GWThreadHandler;
 import sdk.chat.ui.chat.model.ImageMessageHolder;
 import sdk.chat.ui.chat.model.MessageHolder;
 import sdk.chat.ui.module.UIModule;
 
 public class ImageHolder extends ImageMessageHolder {
+    private String bibleDate;
+    private ImageDaily imageDaily;
+    private String bible;
+    private String imageUrl;
+    private final int action;
+
     public ImageHolder(Message message) {
         super(message);
+        action = message.integerForKey("action");
+        if (action == GWThreadHandler.action_bible_pic) {
+            bible = message.stringForKey("image-text");
+            imageUrl = message.stringForKey(Keys.ImageUrl);
+        } else if (action == GWThreadHandler.action_daily_gw) {
+            bibleDate = message.stringForKey("image-date");
+        }
+    }
+
+    public int getAction() {
+        return action;
+    }
+
+    public ImageDaily getImageDaily() {
+        if (imageDaily == null && action == GWThreadHandler.action_daily_gw) {
+            imageDaily = ImageApi.getImageDailyListCache(bibleDate);
+        }
+        return imageDaily;
+    }
+
+    public String getBible() {
+        return bible;
+    }
+
+    @Nullable
+    @Override
+    public String getImageUrl() {
+        return imageUrl;
     }
 
     public String getText() {

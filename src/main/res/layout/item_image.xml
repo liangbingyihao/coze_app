@@ -17,15 +17,15 @@
         android:layout_height="match_parent"
         android:scaleType="centerCrop" />
 
+
     <LinearLayout
         android:id="@+id/content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingLeft="34dp"
-        android:paddingRight="34dp"
         android:gravity="left"
-        android:background="@drawable/gradient_bible_image"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingLeft="34dp"
+        android:paddingRight="34dp">
 
         <View
             android:layout_width="1dp"

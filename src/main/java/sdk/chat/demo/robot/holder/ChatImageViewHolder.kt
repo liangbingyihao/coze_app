@@ -1,7 +1,5 @@
 package sdk.chat.demo.robot.holder
 
-import android.graphics.Matrix
-import com.bumptech.glide.request.RequestListener
 import android.graphics.drawable.Drawable
 import android.text.util.Linkify
 import android.util.Log
@@ -16,20 +14,21 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 import com.mikepenz.iconics.view.IconicsImageView
 import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessagesListAdapter
 import com.stfalcon.chatkit.messages.MessagesListStyle
 import io.reactivex.functions.Consumer
 import io.reactivex.functions.Predicate
-import sdk.chat.core.dao.Keys
 import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.manager.DownloadablePayload
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.robot.IconUtils
+import sdk.chat.demo.robot.api.model.ImageDaily
 import sdk.chat.demo.robot.handlers.GWThreadHandler
-import sdk.chat.demo.robot.ui.PartialRoundedCorners
 import sdk.chat.ui.R
 import sdk.chat.ui.chat.model.ImageMessageHolder
 import sdk.chat.ui.module.UIModule
@@ -41,9 +40,6 @@ import sdk.guru.common.DisposableMap
 import sdk.guru.common.RX
 import java.text.DateFormat
 import kotlin.math.abs
-import com.bumptech.glide.request.target.Target
-import sdk.chat.demo.MainApp
-import kotlin.math.min
 
 open class ChatImageViewHolder<T : ImageMessageHolder>(
     itemView: View,
@@ -86,6 +82,9 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
         itemView.findViewById(sdk.chat.demo.pre.R.id.btn_favorite)
     open val btnDelete: IconicsImageView? = itemView.findViewById(sdk.chat.demo.pre.R.id.btn_delete)
     open var bible: TextView? = itemView.findViewById(sdk.chat.demo.pre.R.id.bible)
+    open var reference: TextView? = itemView.findViewById(sdk.chat.demo.pre.R.id.reference)
+    open var month: TextView? = itemView.findViewById(sdk.chat.demo.pre.R.id.month)
+    open var day: TextView? = itemView.findViewById(sdk.chat.demo.pre.R.id.day)
 
     open var format: DateFormat? = null
 
@@ -459,10 +458,25 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
 
     open fun loadImage(holder: T) {
 //        Logger.debug("ImageSize: " + holder.size.width + ", " + holder.size.height)
-        var imageUrl: String = holder.message.stringForKey(Keys.ImageUrl)
-        var action = holder.message.integerForKey("action")
-        bible?.visibility = View.VISIBLE
-        bible?.text = holder.message.stringForKey("image-text")
+        val imageHolder: ImageHolder? = holder as? ImageHolder;
+        if (imageHolder == null) {
+            return
+        }
+        var action = imageHolder.action;
+        var imageUrl: String?=null;
+        if(action==GWThreadHandler.action_bible_pic){
+            imageUrl = imageHolder.imageUrl;
+            bible?.text = holder.message.stringForKey("image-text")
+        }else if(action==GWThreadHandler.action_daily_gw){
+            var imageDaily: ImageDaily? = imageHolder.getImageDaily()
+            if(imageDaily!=null){
+                imageUrl = imageDaily.backgroundUrl;
+                day?.text = imageDaily.date.substring(8)
+                month?.text = imageDaily.date.substring(0,7)
+                bible?.text = imageDaily.scripture
+                reference?.text = imageDaily.reference
+            }
+        }
         Glide.with(image!!)
             .load(imageUrl)
             .diskCacheStrategy(DiskCacheStrategy.ALL)
@@ -479,7 +493,12 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
                     return false
                 }
 
-                override fun onLoadFailed(e: GlideException?, model: Any, target: Target<Drawable>, isFirstResource: Boolean): Boolean {
+                override fun onLoadFailed(
+                    e: GlideException?,
+                    model: Any,
+                    target: Target<Drawable>,
+                    isFirstResource: Boolean
+                ): Boolean {
                     return false
                 }
             })

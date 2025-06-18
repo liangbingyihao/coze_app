@@ -16,14 +16,6 @@ public class TextHolder extends MessageHolder implements MessageContentType,AIFe
     @JvmField
     private MessageDetail aiFeedback;
 
-//    public void setAiFeedback(String jsonStr) {
-//        try {
-//            Gson gson = new Gson();
-//            aiFeedback = gson.fromJson(jsonStr, MessageDetail.class);
-//        } catch (JsonSyntaxException ignored) {
-//        }
-//    }
-
     public TextHolder(Message message) {
         super(message);
     }

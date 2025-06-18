@@ -30,7 +30,6 @@ import sdk.chat.demo.robot.api.model.ImageItem;
 import sdk.chat.demo.robot.api.model.ImageTag;
 import sdk.chat.demo.robot.api.model.ImageTagList;
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil;
-import sdk.guru.common.RX;
 
 public class ImageApi {
     private static ImageTagList imageTagCache;
@@ -48,6 +47,23 @@ public class ImageApi {
 //                .addInterceptor(new TokenRefreshInterceptor()) // 应用层拦截器
 //                .build();
 //    }
+
+    public static ImageDaily getImageDailyListCache(String dateStr) {
+
+        String cachedData = JsonCacheManager.INSTANCE.get(MainApp.getContext(), KEY_CACHE_IMG_DAILY);
+        ImageDailyList cachedImage = cachedData != null ? gson.fromJson(cachedData, ImageDailyList.class) : null;
+        if (cachedImage != null) {
+            if(dateStr==null||dateStr.isEmpty()){
+                return cachedImage.getImgs().get(0);
+            }
+            for (ImageDaily i : cachedImage.getImgs()) {
+                if (i.getDate().equals(dateStr)) {
+                    return i;
+                }
+            }
+        }
+        return null;
+    }
 
     public static Single<ImageTagList> listImageTags() {
         return imageTagCache != null
@@ -209,14 +225,14 @@ public class ImageApi {
             String endDate) {
 
         List<ImageDaily> result = new ArrayList<>();
-        boolean hitEnd=false;
+        boolean hitEnd = false;
         for (ImageDaily image : imageList) {
             int cmp = image.getDate().compareTo(endDate);
-            if(cmp>0){
+            if (cmp > 0) {
                 continue;
             }
-            if(cmp==0){
-                hitEnd=true;
+            if (cmp == 0) {
+                hitEnd = true;
             } else if (!hitEnd) {
                 return result;
             }
