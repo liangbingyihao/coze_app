@@ -15,7 +15,7 @@ public class TextRegistration extends TextMessageRegistration {
     @Override
     public void onBindMessageHolders(Context context, MessageHolders holders) {
         holders.setIncomingTextConfig(GWView.IncomingMessageViewHolder.class, R.layout.item_incoming_text)
-                .setOutcomingTextConfig(GWView.OutgoingMessageViewHolder.class, R.layout.item_outgoing_text);
+                .setOutcomingTextConfig(GWView.OutgoingMessageViewHolder.class, R.layout.item_feed_text);
 
     }
 

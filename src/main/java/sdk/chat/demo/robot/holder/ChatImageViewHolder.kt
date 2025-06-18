@@ -1,4 +1,8 @@
 package sdk.chat.demo.robot.holder
+
+import android.graphics.Matrix
+import com.bumptech.glide.request.RequestListener
+import android.graphics.drawable.Drawable
 import android.text.util.Linkify
 import android.util.Log
 import android.util.TypedValue
@@ -9,21 +13,23 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.engine.GlideException
 import com.mikepenz.iconics.view.IconicsImageView
 import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessagesListAdapter
 import com.stfalcon.chatkit.messages.MessagesListStyle
 import io.reactivex.functions.Consumer
 import io.reactivex.functions.Predicate
-import org.pmw.tinylog.Logger
 import sdk.chat.core.dao.Keys
 import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.manager.DownloadablePayload
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.robot.IconUtils
-import sdk.chat.demo.robot.handlers.CardGenerator
 import sdk.chat.demo.robot.handlers.GWThreadHandler
+import sdk.chat.demo.robot.ui.PartialRoundedCorners
 import sdk.chat.ui.R
 import sdk.chat.ui.chat.model.ImageMessageHolder
 import sdk.chat.ui.module.UIModule
@@ -35,6 +41,9 @@ import sdk.guru.common.DisposableMap
 import sdk.guru.common.RX
 import java.text.DateFormat
 import kotlin.math.abs
+import com.bumptech.glide.request.target.Target
+import sdk.chat.demo.MainApp
+import kotlin.math.min
 
 open class ChatImageViewHolder<T : ImageMessageHolder>(
     itemView: View,
@@ -45,9 +54,6 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
     Consumer<Throwable> {
 
     companion object {
-//        val width: Int = Dimen.from(MainApp.getContext(), R.dimen.message_image_width)
-//        val height: Int = Dimen.from(MainApp.getContext(), R.dimen.message_image_height)
-//        val imageSize = Size(width.toFloat(), height.toFloat())
     }
 
     val keyIsGood: String = "is-good"
@@ -71,7 +77,6 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
     open var progressView: ProgressView? = itemView.findViewById(R.id.progressView)
     open var bubbleOverlay: View? = itemView.findViewById(R.id.bubbleOverlay)
 
-    open var resendTextView: TextView? = itemView.findViewById(R.id.resendTextView)
     open var resendContainer: ConstraintLayout? = itemView.findViewById(R.id.resendContainer)
     open var sessionContainer: View? =
         itemView.findViewById(sdk.chat.demo.pre.R.id.session_container)
@@ -80,6 +85,7 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
     open val btnFavorite: IconicsImageView? =
         itemView.findViewById(sdk.chat.demo.pre.R.id.btn_favorite)
     open val btnDelete: IconicsImageView? = itemView.findViewById(sdk.chat.demo.pre.R.id.btn_delete)
+    open var bible: TextView? = itemView.findViewById(sdk.chat.demo.pre.R.id.bible)
 
     open var format: DateFormat? = null
 
@@ -167,10 +173,10 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
             var v: TextView = exploreView.getValue("explore$i")
             if (aiExplore != null && t.message.id.equals(aiExplore.message.id) && i < aiExplore.itemList.size) {
                 var data = aiExplore.itemList[i]
-                if (data.action == 1){
+                if (data.action == 1) {
                     //图片下方没有再生成图片了...
                     v.visibility = View.GONE
-                }else{
+                } else {
                     v.visibility = View.VISIBLE
                     v.text = data.text
                     v.setOnClickListener { view ->
@@ -178,7 +184,7 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
                         view as TextView // 安全转换
                         threadHandler.sendExploreMessage(
                             view.text.toString().trim(),
-                            aiExplore.contextId?:t.message.entityID,
+                            aiExplore.contextId ?: t.message.entityID,
                             t.message.thread,
                             data.action,
                             data.params
@@ -452,55 +458,32 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
     }
 
     open fun loadImage(holder: T) {
-        Logger.debug("ImageSize: " + holder.size.width + ", " + holder.size.height)
-        var cacheKey: String = holder.message.stringForKey(Keys.ImageUrl)
-        val cachedImage = CardGenerator.getInstance().getCacheBitmap(cacheKey)
-//        image?.let {
-//            Glide.with(MainApp.getContext()).load(cachedImage)
-//                .override(holder.size.widthInt(), holder.size.heightInt())
-//                .centerCrop().into(it)
-//        }
-
-//        ChatSDKUI.provider().imageLoader().load(
-//            image,
-//            "https://oss.tikvpn.in/img/3cc44c02a7cc466b972a7d63bcb6dd1f.jpg",
-//            holder.placeholder(),
-//            holder.size
-//        )
-//                image?.let {
-        image!!.scaleType = ImageView.ScaleType.FIT_START
+//        Logger.debug("ImageSize: " + holder.size.width + ", " + holder.size.height)
+        var imageUrl: String = holder.message.stringForKey(Keys.ImageUrl)
+        var action = holder.message.integerForKey("action")
+        bible?.visibility = View.VISIBLE
+        bible?.text = holder.message.stringForKey("image-text")
         Glide.with(image!!)
-            .asDrawable()
-            .dontAnimate()
-            .dontTransform()
-            .load(cachedImage)
-            .placeholder(holder.placeholder())
-            .override(holder.size.widthInt(), holder.size.heightInt())
-//            .override(image!!.width, SIZE_ORIGINAL)
-            .centerCrop().into(image!!)
-//        }
+            .load(imageUrl)
+            .diskCacheStrategy(DiskCacheStrategy.ALL)
+            .placeholder(sdk.chat.demo.pre.R.drawable.icn_200_image_message_placeholder) // 占位图
+            .error(sdk.chat.demo.pre.R.drawable.icn_200_image_message_error) // 错误图
+            .addListener(object : RequestListener<Drawable> {
+                override fun onResourceReady(
+                    resource: Drawable,
+                    model: Any,
+                    target: Target<Drawable>,
+                    dataSource: DataSource,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    return false
+                }
 
-//
-//        val url = "https://oss.tikvpn.in/img/3cc44c02a7cc466b972a7d63bcb6dd1f.jpg"
-//        val request: RequestManager = Glide.with(image!!)
-//        var builder: RequestBuilder<*>?
-//        builder = request.asDrawable().dontAnimate()
-//
-//
-//        // If this is a local image
-//        val uri = url.toUri()
-//        if (uri != null && uri.getScheme() != null && uri.getScheme() == "android.resource") {
-//            builder = builder.load(uri)
-//        } else {
-//            builder = builder.load(url)
-//        }
-//
-//        if (holder.placeholder() != null) {
-//            builder = builder.placeholder(holder.placeholder())
-//        }
-//
-//        builder!!.override(holder.size.widthInt(), holder.size.heightInt())
-//            .centerCrop()
-//            .into(image!!)
+                override fun onLoadFailed(e: GlideException?, model: Any, target: Target<Drawable>, isFirstResource: Boolean): Boolean {
+                    return false
+                }
+            })
+            .into(image!!)
+
     }
 }

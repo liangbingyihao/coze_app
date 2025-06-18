@@ -10,6 +10,7 @@ import sdk.chat.core.manager.TextMessagePayload;
 import sdk.chat.core.types.MessageType;
 import sdk.chat.demo.robot.adpter.data.AIExplore;
 import sdk.chat.demo.robot.api.model.MessageDetail;
+import sdk.chat.demo.robot.holder.DailyGWRegistration;
 
 public class GWMsgHandler implements MessageHandler {
 
@@ -20,7 +21,7 @@ public class GWMsgHandler implements MessageHandler {
 
     @Override
     public boolean isFor(MessageType type) {
-        return type != null && type.is(MessageType.System);
+        return type != null && type.is(MessageType.System, DailyGWRegistration.GWMessageType);
     }
 
 

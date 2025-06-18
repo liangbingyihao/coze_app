@@ -1,5 +1,8 @@
 package sdk.chat.demo.robot.holder
 
+import android.graphics.Matrix
+import com.bumptech.glide.request.RequestListener
+import android.graphics.drawable.Drawable
 import android.text.util.Linkify
 import android.util.Log
 import android.util.TypedValue
@@ -7,45 +10,59 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.graphics.toColorInt
 import androidx.core.view.ViewCompat
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.engine.GlideException
 import com.mikepenz.iconics.view.IconicsImageView
 import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessagesListAdapter
 import com.stfalcon.chatkit.messages.MessagesListStyle
-import io.noties.markwon.Markwon
 import io.reactivex.functions.Consumer
 import io.reactivex.functions.Predicate
+import sdk.chat.core.dao.Keys
 import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.manager.DownloadablePayload
 import sdk.chat.core.session.ChatSDK
-import sdk.chat.demo.MainApp
 import sdk.chat.demo.robot.IconUtils
-import sdk.chat.demo.robot.api.model.MessageDetail
-import sdk.chat.demo.robot.handlers.CardGenerator
 import sdk.chat.demo.robot.handlers.GWThreadHandler
+import sdk.chat.demo.robot.ui.PartialRoundedCorners
 import sdk.chat.ui.R
-import sdk.chat.ui.chat.model.MessageHolder
+import sdk.chat.ui.chat.model.ImageMessageHolder
 import sdk.chat.ui.module.UIModule
 import sdk.chat.ui.utils.DrawableUtil
+import sdk.chat.ui.utils.ToastHelper
 import sdk.chat.ui.view_holders.v2.MessageDirection
 import sdk.chat.ui.views.ProgressView
 import sdk.guru.common.DisposableMap
 import sdk.guru.common.RX
 import java.text.DateFormat
 import kotlin.math.abs
+import com.bumptech.glide.request.target.Target
+import sdk.chat.demo.MainApp
+import kotlin.math.min
 
-open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: MessageDirection) :
+open class DailyGWViewHolder<T : ImageMessageHolder>(
+    itemView: View,
+    direction: MessageDirection
+) :
     MessageHolders.BaseMessageViewHolder<T>(itemView, null),
     MessageHolders.DefaultMessageViewHolder,
     Consumer<Throwable> {
 
+    companion object {
+        //        val width: Int = Dimen.from(MainApp.getContext(), R.dimen.message_image_width)
+//        val height: Int = Dimen.from(MainApp.getContext(), R.dimen.message_image_height)
+//        val imageSize = Size(width.toFloat(), height.toFloat())
+    }
+
     val keyIsGood: String = "is-good"
     open var root: View? = itemView.findViewById(R.id.root)
     open var bubble: ViewGroup? = itemView.findViewById(R.id.bubble)
+    open var image: ImageView? = itemView.findViewById(R.id.image)
 
     open var messageIcon: ImageView? = itemView.findViewById(R.id.messageIcon)
 
@@ -72,11 +89,16 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
     open val btnFavorite: IconicsImageView? =
         itemView.findViewById(sdk.chat.demo.pre.R.id.btn_favorite)
     open val btnDelete: IconicsImageView? = itemView.findViewById(sdk.chat.demo.pre.R.id.btn_delete)
+    open var bible: TextView? = itemView.findViewById(sdk.chat.demo.pre.R.id.bible)
 
     open var format: DateFormat? = null
 
+    open val btnCopy: ImageView? =
+        itemView.findViewById(sdk.chat.demo.pre.R.id.btn_copy)
+
     open val dm = DisposableMap()
     open val direction: MessageDirection = direction
+
 
     //    open var explore1: View? = itemView.findViewById(sdk.chat.demo.pre.R.id.explore1)
 //    open var explore2: View? = itemView.findViewById(sdk.chat.demo.pre.R.id.explore2)
@@ -102,7 +124,8 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
     }
 
     open fun bind(t: T) {
-//        Log.e("bindMsg", t.message.id.toString())
+        Log.e("bindImage", t.message.id.toString())
+        loadImage(t)
         progressView?.actionButton?.setOnClickListener(View.OnClickListener {
             actionButtonPressed(t)
         })
@@ -141,41 +164,31 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
             val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
             threadHandler.deleteMessage(t.message).subscribe();
         }
+        btnCopy?.setOnClickListener {
+            ToastHelper.show(it.context, "copy....");
+        }
         setFavorite(t.message.integerForKey(keyIsGood))
+
+
         val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
-        var aiFeedback: MessageDetail? = (t as? TextHolder)?.getAiFeedback();
         var i = 0
         var aiExplore = threadHandler.aiExplore
         while (i < 3) {
             var v: TextView = exploreView.getValue("explore$i")
             if (aiExplore != null && t.message.id.equals(aiExplore.message.id) && i < aiExplore.itemList.size) {
                 var data = aiExplore.itemList[i]
-                v.visibility = View.VISIBLE
-                v.text = data.text
                 if (data.action == 1) {
-                    var bible = aiFeedback?.feedback?.bible ?: ""
+                    //图片下方没有再生成图片了...
+                    v.visibility = View.GONE
+                } else {
+                    v.visibility = View.VISIBLE
+                    v.text = data.text
                     v.setOnClickListener { view ->
                         // 可以使用view参数
-                        if (aiFeedback != null && !bible.isEmpty()) {
-                            view as TextView
-                            threadHandler.sendExploreMessage(
-                                view.text.toString().trim(),
-                                t.message.entityID,
-                                t.message.thread,
-                                data.action,
-                                "${aiFeedback.feedback.tag}|${bible}"
-                            ).subscribe();
-                        } else {
-                            Toast.makeText(v.context, "没有经文...", Toast.LENGTH_SHORT)
-                                .show()
-                        }
-                    }
-                } else {
-                    v.setOnClickListener { view ->
                         view as TextView // 安全转换
                         threadHandler.sendExploreMessage(
                             view.text.toString().trim(),
-                            t.message.entityID,
+                            aiExplore.contextId ?: t.message.entityID,
                             t.message.thread,
                             data.action,
                             data.params
@@ -186,53 +199,12 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
                 v.visibility = View.GONE
             }
             ++i
-//                v.setOnClickListener { view ->
-//                    // 可以使用view参数
-//                    if (data.action == 1) {
-//                        CardGenerator.getInstance()
-//                            .generateCardFromUrl(
-//                                context = MainApp.getContext(),
-//                                imageUrl = "https://oss.tikvpn.in/img/7aa7fc3ff50646a9a8c6a426102b2659.jpg",
-//                                text = bible
-//                            ) { result ->
-//                                result.onSuccess { (key, bitmap) ->
-//                                    view as TextView // 安全转换
-//                                    threadHandler.sendExploreMessage(
-//                                        view.text.toString().trim(),
-//                                        t.message.entityID,
-//                                        t.message.thread,
-//                                        data.action,
-//                                        key
-//                                    ).subscribe();
-//                                }.onFailure {
-//                                    Toast.makeText(view.context, "生成失败", Toast.LENGTH_SHORT)
-//                                        .show()
-//                                }
-//                            }
-//                    } else {
-//                        view as TextView // 安全转换
-//                        threadHandler.sendExploreMessage(
-//                            view.text.toString().trim(),
-//                            t.message.entityID,
-//                            t.message.thread,
-//                            data.action,
-//                            data.params
-//                        ).subscribe();
-//                    }
-//                }
-//            } else {
-//                v.visibility = View.GONE
-//            }
         }
 
 //        t.message.metaValuesAsMap
         feedback?.let {
-//            it.text = t.message.stringForKey("feedback")+t.message.id+t.message.type;
-//            val markdown = "**Hello** _Markdown_"
-            Markwon.create(it.context)
-                .setMarkdown(it, aiFeedback?.feedbackText ?: t.message.stringForKey("feedback"))
+            it.text = t.message.stringForKey("feedback");
         }
-
         var topic = threadHandler.getSessionName(t.message.threadId)
         if (topic != null) {
             sessionContainer?.visibility = View.VISIBLE
@@ -264,7 +236,6 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
                 }
                 it.text = value
             }
-
             text?.setTextIsSelectable(true);
         } else {
             bubble?.visibility = View.GONE
@@ -366,12 +337,12 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
     }
 
     override fun applyStyle(style: MessagesListStyle) {
-////        this.style = style
-//        if (direction == MessageDirection.Incoming) {
-//            applyIncomingStyle(style)
-//        } else {
-////            applyOutgoingStyle(style)
-//        }
+//        this.style = style
+        if (direction == MessageDirection.Incoming) {
+            applyIncomingStyle(style)
+        } else {
+//            applyOutgoingStyle(style)
+        }
     }
 
     open fun applyIncomingStyle(style: MessagesListStyle) {
@@ -488,5 +459,153 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
 
     override fun accept(t: Throwable?) {
         t?.printStackTrace()
+    }
+
+    open fun loadImage(holder: T) {
+//        Logger.debug("ImageSize: " + holder.size.width + ", " + holder.size.height)
+        var cacheKey: String = holder.message.stringForKey(Keys.ImageUrl)
+        var action = holder.message.integerForKey("action")
+        if (GWThreadHandler.action_bible_pic == action) {
+            bible?.visibility = View.VISIBLE
+            bible?.text = holder.message.stringForKey("image-text")
+        } else {
+            bible?.visibility = View.GONE
+        }
+        Glide.with(image!!)
+            .load(cacheKey)
+            .diskCacheStrategy(DiskCacheStrategy.ALL)
+            .placeholder(sdk.chat.demo.pre.R.drawable.icn_200_image_message_placeholder) // 占位图
+            .error(sdk.chat.demo.pre.R.drawable.icn_200_image_message_error) // 错误图
+            .addListener(object : RequestListener<Drawable> {
+                override fun onResourceReady(
+                    resource: Drawable,
+                    model: Any,
+                    target: Target<Drawable>,
+                    dataSource: DataSource,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    // 1. 获取 ImageView 和图片的尺寸
+                    val imageWidth = resource.intrinsicWidth
+                    val imageHeight = resource.intrinsicHeight
+                    val viewWidth = image!!.width
+                    val viewHeight = image!!.height
+
+                    // 2. 计算缩放比例（选择最小缩放比以显示完整图片）
+                    val scale = min(
+                        viewWidth.toFloat() / imageWidth,
+                        viewHeight.toFloat() / imageHeight
+                    )
+
+                    // 3. 应用缩放并居中
+                    val matrix = Matrix()
+                    matrix.setScale(scale, scale)
+                    matrix.postTranslate(
+                        (viewWidth - imageWidth * scale) / 2,
+                        (viewHeight - imageHeight * scale) / 2
+                    )
+
+                    // 4. 设置 Matrix
+                    image!!.scaleType = ImageView.ScaleType.MATRIX
+                    image!!.imageMatrix = matrix
+
+                    return false
+                }
+
+                override fun onLoadFailed(e: GlideException?, model: Any, target: Target<Drawable>, isFirstResource: Boolean): Boolean {
+                    return false
+                }
+            })
+//                .transform(corners)
+            .into(image!!)
+//        Glide.with(image!!)
+//            .load(cacheKey)
+//            .override(targetWidth, Target.SIZE_ORIGINAL)
+//            .addListener(object : RequestListener<Drawable> {
+//                override fun onResourceReady(
+//                    resource: Drawable,
+//                    model: Any?,
+//                    target: Target<Drawable>,
+//                    dataSource: DataSource,
+//                    isFirstResource: Boolean
+//                ): Boolean {
+//                    if (GWThreadHandler.action_bible_pic == action){
+////                        image!!.scaleType = ImageView.ScaleType.CENTER_CROP
+//                    }else{
+//                        // 1. 计算图片缩放后的高度（保持原始宽高比）
+//                        val scale = targetWidth.toFloat() / resource.intrinsicWidth
+//                        val scaledHeight = (resource.intrinsicHeight * scale).toInt()
+//
+//                        // 2. 使用 Matrix 裁剪顶部（关键步骤）
+//                        val matrix = Matrix()
+//                        matrix.setScale(scale, scale) // 按比例缩放图片
+//
+//                        // 3. 如果缩放后高度 > ImageView 高度，则上移图片以裁剪顶部
+//                        if (scaledHeight > targetHeight) {
+//                            val offsetY = (scaledHeight - targetHeight) / scale // 计算需要裁剪的顶部偏移量
+//                            matrix.postTranslate(0f, -offsetY) // 上移图片
+//                        }
+//
+//                        // 4. 应用变换
+//                        image!!.scaleType = ImageView.ScaleType.MATRIX
+//                        image!!.imageMatrix = matrix
+//                    }
+//
+//                    return false
+//                }
+//
+//                override fun onLoadFailed(
+//                    e: GlideException?,
+//                    model: Any?,
+//                    target: com.bumptech.glide.request.target.Target<Drawable>,
+//                    isFirstResource: Boolean
+//                ) = false
+//            })
+//            .into(image!!)
+//        if (("1" == action || "2" == action) && cacheKey.startsWith("http")) {
+//
+//            Glide.with(image!!)
+//                .load(cacheKey)
+//                .diskCacheStrategy(DiskCacheStrategy.ALL)
+//                .placeholder(sdk.chat.demo.pre.R.drawable.icn_200_image_message_placeholder) // 占位图
+//                .error(sdk.chat.demo.pre.R.drawable.icn_200_image_message_error) // 错误图
+//                .addListener(object : RequestListener<Drawable> {
+//                    override fun onLoadFailed(
+//                        e: GlideException?,
+//                        model: Any?,
+//                        target: com.bumptech.glide.request.target.Target<Drawable>,
+//                        isFirstResource: Boolean
+//                    ): Boolean {
+//                        return false
+//                    }
+//
+//                    override fun onResourceReady(
+//                        resource: Drawable,
+//                        model: Any?,
+//                        target: com.bumptech.glide.request.target.Target<Drawable>,
+//                        dataSource: DataSource,
+//                        isFirstResource: Boolean
+//                    ): Boolean {
+//                        image!!.setImageDrawable(resource)
+//                        return false
+//                    }
+//                })
+//                .into(image!!)
+//        } else {
+//
+//            val cachedImage = CardGenerator.getInstance().getCacheBitmap(cacheKey)
+////                image?.let {
+//            image!!.scaleType = ImageView.ScaleType.FIT_START
+//            Glide.with(image!!)
+//                .asDrawable()
+//                .dontAnimate()
+//                .dontTransform()
+//                .load(cachedImage)
+//                .placeholder(holder.placeholder())
+//                .override(holder.size.widthInt(), holder.size.heightInt())
+////            .override(image!!.width, SIZE_ORIGINAL)
+//                .centerCrop().into(image!!)
+//        }
+
+
     }
 }

@@ -54,24 +54,24 @@
         <item name="layout_alignSelf">flex_start</item>
     </style>
 
-    <style name="Widget.MyApp.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
-        <!-- 基础样式继承自Material3 -->
-        <!-- 文字样式 -->
-        <item name="android:textSize">16sp</item>
-        <item name="android:textColor">#333333</item>
+<!--    <style name="Widget.MyApp.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">-->
+<!--        &lt;!&ndash; 基础样式继承自Material3 &ndash;&gt;-->
+<!--        &lt;!&ndash; 文字样式 &ndash;&gt;-->
+<!--        <item name="android:textSize">16sp</item>-->
+<!--        <item name="android:textColor">#333333</item>-->
 
-        <!-- 背景控制 -->
-        <item name="backgroundTint">#FAFAFA</item> <!-- 浅灰背景 -->
-        <item name="cornerRadius">4dp</item> <!-- 微小圆角 -->
+<!--        &lt;!&ndash; 背景控制 &ndash;&gt;-->
+<!--        <item name="backgroundTint">#FAFAFA</item> &lt;!&ndash; 浅灰背景 &ndash;&gt;-->
+<!--        <item name="cornerRadius">4dp</item> &lt;!&ndash; 微小圆角 &ndash;&gt;-->
 
-        <!-- 边框控制 -->
-        <item name="strokeColor">#E0E0E0</item> <!-- 更浅的边框灰 -->
-        <item name="strokeWidth">1dp</item>
+<!--        &lt;!&ndash; 边框控制 &ndash;&gt;-->
+<!--        <item name="strokeColor">#E0E0E0</item> &lt;!&ndash; 更浅的边框灰 &ndash;&gt;-->
+<!--        <item name="strokeWidth">1dp</item>-->
 
-        <!-- 图标控制 -->
-        <item name="iconTint">#333333</item>
-        <item name="iconSize">20dp</item>
-    </style>
+<!--        &lt;!&ndash; 图标控制 &ndash;&gt;-->
+<!--        <item name="iconTint">#333333</item>-->
+<!--        <item name="iconSize">20dp</item>-->
+<!--    </style>-->
     <style name="InconspicuousClickableText">
         <item name="android:textColor">?android:attr/textColorSecondary</item>
         <item name="android:textSize">14sp</item>

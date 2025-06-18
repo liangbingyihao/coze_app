@@ -1,11 +1,17 @@
 package sdk.chat.demo.robot.handlers;
 
+import android.annotation.SuppressLint;
+
+import com.bumptech.glide.Glide;
+
 import org.pmw.tinylog.Logger;
 
 import java.util.HashMap;
 import java.util.List;
 
 import io.reactivex.Completable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import sdk.chat.core.base.AbstractAuthenticationHandler;
 import sdk.chat.core.dao.User;
 import sdk.chat.core.events.NetworkEvent;
@@ -13,8 +19,10 @@ import sdk.chat.core.hook.HookEvent;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.AccountDetails;
 import sdk.chat.core.utils.KeyStorage;
+import sdk.chat.demo.MainApp;
 import sdk.chat.demo.robot.api.GWApiManager;
 import sdk.chat.demo.robot.api.ImageApi;
+import sdk.chat.demo.robot.api.model.ImageDaily;
 import sdk.chat.demo.robot.extensions.DeviceIdHelper;
 import sdk.guru.common.RX;
 
@@ -63,12 +71,13 @@ public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
         }).doFinally(this::cancel);
     }
 
+    @SuppressLint("CheckResult")
     protected Completable loginSuccessful(AccountDetails details) {
         return Completable.defer(() -> {
 //            String userId = details.getMetaValue("userId");
             String userId = "user_" + details.getMetaValue("userId");
             ChatSDK.db().openDatabase(userId);
-            if(details.type==AccountDetails.Type.Username){
+            if (details.type == AccountDetails.Type.Username) {
                 ChatSDK.shared().getKeyStorage().save(details.username, details.password);
             }
             setCurrentUserEntityID(userId);
@@ -82,7 +91,7 @@ public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
             GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
             handler.getWelcomeMsg().subscribe();
             handler.createChatSessions();
-            handler.listImageTags().subscribe();
+            ImageApi.listImageTags().subscribe();
 
             if (ChatSDK.hook() != null) {
                 HashMap<String, Object> data = new HashMap<>();
@@ -100,16 +109,29 @@ public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
             Logger.info("Authentication complete! name = " + user.getName() + ", id = " + user.getEntityID());
 
             setAuthStateToIdle();
+
+
+            ImageApi.listImageDaily(null)
+                    .subscribeOn(Schedulers.io()) // Specify database operations on IO thread
+                    .observeOn(AndroidSchedulers.mainThread()) // Results return to main thread
+                    .subscribe(data -> {
+                        if (data != null && !data.isEmpty()) {
+                            String url = data.get(0).getUrl();
+                            Glide.with(MainApp.getContext())
+                                    .load(url)
+                                    .preload();
+                        }
+                    });
             return Completable.complete();
         });
     }
 
     public AccountDetails cachedAccountDetails() {
         AccountDetails accountDetails = AccountDetails.username(ChatSDK.shared().getKeyStorage().get(KeyStorage.UsernameKey), ChatSDK.shared().getKeyStorage().get(KeyStorage.PasswordKey));
-        if(!accountDetails.areValid()){
+        if (!accountDetails.areValid()) {
             accountDetails = AccountDetails.token(DeviceIdHelper.INSTANCE.getDeviceId(ChatSDK.ctx()));
         }
-       return accountDetails;
+        return accountDetails;
     }
 
     public Boolean cachedCredentialsAvailable() {

@@ -1,6 +1,7 @@
 package sdk.chat.demo.robot.handlers;
 
 import android.content.Context
+import android.content.res.Resources
 import android.graphics.*
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -10,18 +11,36 @@ import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.LruCache
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.core.content.FileProvider
 import java.util.concurrent.Executors
 import androidx.core.graphics.createBitmap
-import java.io.IOException
-import com.bumptech.glide.request.target.CustomTarget
-import com.bumptech.glide.request.transition.Transition
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
 import sdk.chat.demo.MainApp
 import java.io.File
 import java.io.FileOutputStream
 import androidx.core.graphics.scale
+import androidx.lifecycle.Lifecycle
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.transition.Transition
+import com.github.chrisbanes.photoview.PhotoView
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
+import kotlin.math.min
+import sdk.chat.demo.pre.R
+import com.bumptech.glide.request.target.CustomTarget
+import java.io.IOException
 
 class CardGenerator private constructor() {
 
@@ -113,7 +132,7 @@ class CardGenerator private constructor() {
         lineSpacingMultiplier: Float = 1.0f,
         lineSpacingExtra: Float = 40f,
         alignment: Layout.Alignment = Layout.Alignment.ALIGN_NORMAL,
-        textBackgroundColor: Int = 0xFFF5F4F4.toInt(),
+        textBackgroundColor: Int = 0xFFFAFAFA.toInt(),
         textBackgroundCornerRadius: Float = 0f,
         minHeight: Int = getScreenHeight(context),
         maxHeight: Int = getScreenHeight(context) * 2 // 限制最大高度为屏幕2倍
@@ -204,7 +223,12 @@ class CardGenerator private constructor() {
                     finalHeight.toFloat()
                 )
                 if (textBackgroundCornerRadius > 0) {
-                    drawRoundRect(backgroundRect, textBackgroundCornerRadius, textBackgroundCornerRadius, backgroundPaint)
+                    drawRoundRect(
+                        backgroundRect,
+                        textBackgroundCornerRadius,
+                        textBackgroundCornerRadius,
+                        backgroundPaint
+                    )
                 } else {
                     drawRect(backgroundRect, backgroundPaint)
                 }
@@ -233,6 +257,30 @@ class CardGenerator private constructor() {
     }
 
 
+    fun captureView(
+        view: View,
+        callback: (Result<Bitmap>) -> Unit
+    ) {
+        executor.execute {
+            try {
+                // 1. 创建 Bitmap
+                val bitmap = createBitmap(view.width, view.height)
+
+                // 2. 将 View 绘制到 Bitmap
+                val canvas = Canvas(bitmap)
+                view.draw(canvas)
+
+                // 切换到主线程返回结果
+                mainHandler.post {
+                    callback(Result.success(bitmap))
+                }
+            } catch (e: Exception) {
+                mainHandler.post {
+                    callback(Result.failure(e))
+                }
+            }
+        }
+    }
 
     /**
      * 生成卡片图片（异步）
@@ -263,105 +311,6 @@ class CardGenerator private constructor() {
         }
     }
 
-    /**
-     * 同步生成卡片（需自行处理线程）
-     */
-    fun generateCard(
-        context: Context,
-        imageBitmap: Bitmap,
-        text: String
-    ): Bitmap {
-        // 1. 设置文本绘制参数
-        val textPaint = TextPaint().apply {
-            color = Color.BLACK
-            textSize = 48f
-            typeface = Typeface.DEFAULT_BOLD
-            isAntiAlias = true
-        }
-
-        // 2. 计算文本高度（考虑换行）
-        val padding = 90f
-        val availableTextWidth = imageBitmap.width - 2 * padding // 左右各留padding空间
-
-        // 使用StaticLayout计算多行文本高度
-        val staticLayout = StaticLayout.Builder
-            .obtain(text, 0, text.length, textPaint, availableTextWidth.toInt())
-            .setAlignment(Layout.Alignment.ALIGN_NORMAL) // 文本居中
-            .setLineSpacing(40f, 1f) // 行间距
-            .setIncludePad(true)
-            .build()
-
-        val textHeight = staticLayout.height.toFloat()
-
-        // 3. 计算最终高度（考虑最小和最大高度限制）
-        val contentHeight = imageBitmap.height + textHeight + 2 * padding
-        val finalHeight = contentHeight
-            .coerceAtLeast(3000F) // 不低于最小高度
-            .coerceAtMost(5000F)  // 不超过最大高度
-            .toInt()
-
-        // 3. 创建输出Bitmap
-        val outputBitmap = createBitmap(
-            imageBitmap.width,
-            finalHeight
-//            (imageBitmap.height + textHeight + 2 * padding).toInt() // 上下各留padding空间
-        ).apply {
-            if (!isMutable) {
-                // 如果Bitmap不可变，创建可变副本
-                return generateCard(context, imageBitmap.copy(Bitmap.Config.ARGB_8888, true), text)
-            }
-        }
-
-        // 4. 绘制内容
-        var textBackgroundCornerRadius = 0F
-        Canvas(outputBitmap).apply {
-
-//            // 绘制图片（缩放以适应最小高度）
-//            val scale = if (finalHeight > imageBitmap.height) 1f
-//            else finalHeight.toFloat() / imageBitmap.height
-//            val scaledWidth = (imageBitmap.width * scale).toInt()
-//            val scaledHeight = (imageBitmap.height * scale).toInt()
-//            val scaledBitmap = Bitmap.createScaledBitmap(imageBitmap, scaledWidth, scaledHeight, true)
-//
-//            val imageLeft = (width - scaledWidth) / 2f // 水平居中
-//            drawBitmap(scaledBitmap, imageLeft, 0f, null)
-
-
-            // 绘制图片（上半部分）
-            drawBitmap(imageBitmap, 0f, 0f, null)
-            // 绘制文字背景（新增部分）
-            val backgroundPaint = Paint().apply {
-                color = 0xFFF5F4F4.toInt()
-                isAntiAlias = false
-            }
-
-            val backgroundRect = RectF(
-                0F,
-                imageBitmap.height.toFloat(),
-                width.toFloat(),
-                finalHeight.toFloat()
-            )
-
-            if (textBackgroundCornerRadius > 0) {
-                drawRoundRect(
-                    backgroundRect,
-                    textBackgroundCornerRadius,
-                    textBackgroundCornerRadius,
-                    backgroundPaint
-                )
-            } else {
-                drawRect(backgroundRect, backgroundPaint)
-            }
-
-            // 绘制文本（下半部分）
-            save()
-            translate(padding, imageBitmap.height + padding) // 设置文本绘制起始位置
-            staticLayout.draw(this)
-            restore()
-        }
-
-        return outputBitmap
-    }
 
     fun getCacheBitmap(cacheKey: String): Bitmap? {
         memoryCache.get(cacheKey)?.let {
@@ -405,6 +354,7 @@ class CardGenerator private constructor() {
             }
         }
 
+
         // 使用Glide加载网络图片
         Glide.with(context)
             .asBitmap()
@@ -416,16 +366,37 @@ class CardGenerator private constructor() {
                     transition: Transition<in Bitmap>?
                 ) {
                     // 生成卡片
-                    generateCardAsync(context, resource, text) { result ->
-                        result.onSuccess { bitmap ->
-                            // 存入缓存
-                            memoryCache.put(cacheKey, bitmap)
-                            saveCardToCache(cacheKey, bitmap)
-                            onSuccess(Pair(cacheKey, bitmap))
-                        }.onFailure {
-                            onFailure(it)
+
+                    CoroutineScope(Dispatchers.Main).launch {
+                        try {
+                            val bitmap = captureLayoutAsync(
+                                context,
+                                R.layout.view_bible_image,
+                                resource,
+                                text
+                            )
+                            if (bitmap != null) {
+                                memoryCache.put(cacheKey, bitmap)
+                                saveCardToCache(cacheKey, bitmap)
+                                onSuccess(Pair(cacheKey, bitmap))
+                            } else {
+                                onFailure(Throwable("生成失败"))
+                            }
+                        } catch (e: Exception) {
+                            onFailure(e)
                         }
                     }
+
+//                    generateCardAsync(context, resource, text) { result ->
+//                        result.onSuccess { bitmap ->
+//                            // 存入缓存
+//                            memoryCache.put(cacheKey, bitmap)
+//                            saveCardToCache(cacheKey, bitmap)
+//                            onSuccess(Pair(cacheKey, bitmap))
+//                        }.onFailure {
+//                            onFailure(it)
+//                        }
+//                    }
                 }
 
                 override fun onLoadFailed(errorDrawable: Drawable?) {
@@ -437,6 +408,87 @@ class CardGenerator private constructor() {
                     // 清理资源时的操作（可选）
                 }
             })
+    }
+
+    suspend fun captureLayoutAsync(
+        context: Context,
+        layoutResId: Int,
+        resource: Bitmap,
+        bible: String,
+        width: Int = 0,
+        height: Int = 0,
+        delayMs: Long = 0L
+    ): Bitmap? = withContext(Dispatchers.Main) {
+//        val cacheKey = "$imageUrl|$bible"
+//        cacheKey.let { memoryCache.get(it) }?.let { return@withContext it }
+//        cacheKey.let {
+//            getCachedCardFile(cacheKey)?.let { file ->
+//                BitmapFactory.decodeFile(file.absolutePath)?.let {
+//                    memoryCache.put(cacheKey, it)
+//                    return@withContext it
+//                }
+//            }
+//        }
+
+        val view = LayoutInflater.from(context).inflate(layoutResId, null, false).apply {
+            setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+        }
+
+        val img = view.findViewById<ImageView>(R.id.photoView)
+        img.setImageBitmap(resource)
+
+
+        try {
+            view.findViewById<TextView>(R.id.bible).apply {
+                text = bible
+            }
+
+            if (delayMs > 0) delay(delayMs)
+
+
+            val (safeWidth, safeHeight) = getSafeMeasureSpecs(view, width, height)
+            view.measure(safeWidth, safeHeight)
+            view.layout(0, 0, view.measuredWidth, view.measuredHeight)
+
+            createBitmap(
+                view.measuredWidth.coerceAtLeast(1),
+                view.measuredHeight.coerceAtLeast(1),
+                Bitmap.Config.RGB_565
+            ).apply {
+                Canvas(this).run { view.draw(this) }
+            }.compressToSafeSize()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun getSafeMeasureSpecs(view: View, width: Int, height: Int): Pair<Int, Int> {
+        val maxWidth = min(width.takeIf { it > 0 } ?: Int.MAX_VALUE,
+            Resources.getSystem().displayMetrics.widthPixels)
+        val maxHeight = min(height.takeIf { it > 0 } ?: Int.MAX_VALUE,
+            Resources.getSystem().displayMetrics.heightPixels)
+
+        val measureWidth = when {
+            width > 0 -> View.MeasureSpec.makeMeasureSpec(maxWidth, View.MeasureSpec.EXACTLY)
+            else -> View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        }
+
+        val measureHeight = when {
+            height > 0 -> View.MeasureSpec.makeMeasureSpec(maxHeight, View.MeasureSpec.EXACTLY)
+            else -> View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        }
+        return Pair(measureWidth, measureHeight)
+    }
+
+    private fun Bitmap.compressToSafeSize(maxSizeKB: Int = 500): Bitmap {
+        if (this.allocationByteCount / 1024 <= maxSizeKB) return this
+        return try {
+            val outputStream = ByteArrayOutputStream()
+            compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
+            BitmapFactory.decodeByteArray(outputStream.toByteArray(), 0, outputStream.size())
+        } catch (e: Exception) {
+            this
+        }
     }
 
     /**

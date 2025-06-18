@@ -1,11 +1,12 @@
 package sdk.chat.demo.robot.adpter
-
-import android.graphics.Matrix
 import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.lifecycle.Lifecycle
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
@@ -13,31 +14,54 @@ import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.github.chrisbanes.photoview.PhotoView
 import sdk.chat.demo.pre.R
+import androidx.recyclerview.widget.DiffUtil
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import sdk.chat.demo.robot.api.model.ImageDaily
 
 class ImagePagerAdapter(
-    private val imageUrls: List<String>,
     private val lifecycle: Lifecycle
-) : RecyclerView.Adapter<ImagePagerAdapter.ViewHolder>() {
+) : ListAdapter<ImageDaily, ImagePagerAdapter.ViewHolder>(DiffCallback()) {
+
+    private class DiffCallback : DiffUtil.ItemCallback<ImageDaily>() {
+        override fun areItemsTheSame(oldItem: ImageDaily, newItem: ImageDaily): Boolean {
+            return oldItem.date == newItem.date // 根据实际业务逻辑调整（例如比较URL或ID）
+        }
+
+        override fun areContentsTheSame(oldItem: ImageDaily, newItem: ImageDaily): Boolean {
+            return oldItem.date == newItem.date // 默认直接比较内容
+        }
+    }
+
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val photoView: PhotoView = view.findViewById(R.id.photoView)
+        val photoView: ImageView = view.findViewById<ImageView>(R.id.photoView).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+        }
+        val content: View = view.findViewById<View>(R.id.content);
+        val day: TextView = view.findViewById<TextView>(R.id.day);
+        val month: TextView = view.findViewById<TextView>(R.id.month);
+        val bible: TextView = view.findViewById<TextView>(R.id.bible);
+        val reference: TextView = view.findViewById<TextView>(R.id.reference);
+        val footer: View = view.findViewById<View>(R.id.footer);
+//        val photoView: PhotoView = view.findViewById<PhotoView>(R.id.photoView)
     }
+
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_image, parent, false)
-        val holder = ViewHolder(view)
-        holder.photoView.setAllowParentInterceptOnEdge(true)
-        holder.photoView.isZoomable = false
-        return holder
+        return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-
-//
         val context = holder.photoView.context
+        holder.content.visibility= View.INVISIBLE
+        holder.footer.visibility= View.INVISIBLE
+        val item:ImageDaily  = getItem(position)
+        var url = item.backgroundUrl
         Glide.with(context)
-            .load(imageUrls[position])
+            .load(url)
+            .diskCacheStrategy(DiskCacheStrategy.ALL)
             .placeholder(R.drawable.icn_200_image_message_placeholder) // 占位图
             .error(R.drawable.icn_200_image_message_error) // 错误图
             .addListener(object : RequestListener<Drawable> {
@@ -51,7 +75,7 @@ class ImagePagerAdapter(
                 }
 
                 override fun onResourceReady(
-                    resource: Drawable?,
+                    resource: Drawable,
                     model: Any?,
                     target: com.bumptech.glide.request.target.Target<Drawable>,
                     dataSource: DataSource,
@@ -59,8 +83,13 @@ class ImagePagerAdapter(
                 ): Boolean {
                     // 仅在 Lifecycle 活跃时更新 UI
                     if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
-//                        holder.photoView.setImageDrawable(resource)
-                        adjustImageScale(holder.photoView, resource,position)
+                        holder.content.visibility= View.VISIBLE
+                        holder.day.text = item.date.substring(8)
+                        holder.month.text = item.date.substring(0,7)
+                        holder.bible.text = item.scripture
+                        holder.reference.text = item.reference
+                        holder.photoView.setImageDrawable(resource)
+                        return false
                     }
                     return false
                 }
@@ -107,5 +136,18 @@ class ImagePagerAdapter(
 //        }
     }
 
-    override fun getItemCount(): Int = imageUrls.size
+    // 在列表头部插入数据
+    public fun prependData(newData: List<ImageDaily>) {
+        val newList = newData + currentList // 新数据在前
+        submitList(newList) // 自动触发DiffUtil
+    }
+
+    public fun replaceData(newData: List<ImageDaily>) {
+        submitList(newData)
+    }
+
+    fun getUrlAt(position: Int): ImageDaily? {
+        return if (position in 0 until itemCount) getItem(position) else null
+    }
+
 }

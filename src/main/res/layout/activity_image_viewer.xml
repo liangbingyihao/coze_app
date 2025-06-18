@@ -50,4 +50,16 @@
         android:padding="20dp"
         android:src="@mipmap/ic_share_white" />
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/conversations"
+        android:layout_width="316dp"
+        android:layout_height="42dp"
+        android:backgroundTint="@android:color/transparent"
+        app:strokeColor="#FFFFFF"
+        app:strokeWidth="2dp"
+        app:cornerRadius="21dp"
+        android:textSize="14sp"
+        android:layout_marginBottom="64dp"
+        android:layout_gravity="center|bottom"
+        android:text="@string/conversations" />
 </FrameLayout>

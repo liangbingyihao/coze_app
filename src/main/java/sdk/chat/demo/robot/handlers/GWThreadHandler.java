@@ -2,9 +2,7 @@ package sdk.chat.demo.robot.handlers;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.util.Log;
-import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
@@ -12,8 +10,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
-import sdk.chat.core.dao.Keys;
 
 import org.greenrobot.greendao.query.QueryBuilder;
 import org.pmw.tinylog.Logger;
@@ -23,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -33,10 +28,10 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-import kotlin.Unit;
 import sdk.chat.core.base.AbstractThreadHandler;
 import sdk.chat.core.dao.CachedFile;
 import sdk.chat.core.dao.DaoCore;
+import sdk.chat.core.dao.Keys;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.dao.MessageDao;
 import sdk.chat.core.dao.Thread;
@@ -53,13 +48,12 @@ import sdk.chat.demo.pre.BuildConfig;
 import sdk.chat.demo.robot.adpter.data.AIExplore;
 import sdk.chat.demo.robot.api.GWApiManager;
 import sdk.chat.demo.robot.api.ImageApi;
-import sdk.chat.demo.robot.api.model.ImageItem;
-import sdk.chat.demo.robot.api.model.ImageTag;
-import sdk.chat.demo.robot.api.model.ImageTagList;
+import sdk.chat.demo.robot.api.model.ImageDaily;
 import sdk.chat.demo.robot.api.model.MessageDetail;
 import sdk.chat.demo.robot.api.model.SystemConf;
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil;
 import sdk.chat.demo.robot.holder.AIFeedbackType;
+import sdk.chat.demo.robot.holder.DailyGWRegistration;
 import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.chat.model.MessageHolder;
 import sdk.guru.common.RX;
@@ -68,12 +62,19 @@ public class GWThreadHandler extends AbstractThreadHandler {
     private final AtomicBoolean hasSyncedWithNetwork = new AtomicBoolean(false);
     private List<Thread> sessionCache;
     private Message welcome;
-    private ImageTagList imageTagCache;
     private AIExplore aiExplore;
     private Boolean isCustomPrompt = null;
     private SystemConf serverPrompt = null;
     private final static Gson gson = new Gson();
     public final static String KEY_AI_FEEDBACK = "ai_feedback";
+    //    action_daily_ai = 0
+//    action_bible_pic = 1
+//    action_daily_gw = 2
+//    action_direct_msg = 3
+//    action_daily_pray = 4
+    public final static int action_bible_pic = 1;
+    public final static int action_daily_gw = 2;
+    public final static int action_direct_msg = 3;
 
     public AIExplore getAiExplore() {
         return aiExplore;
@@ -299,13 +300,47 @@ public class GWThreadHandler extends AbstractThreadHandler {
 //    action_daily_gw = 2
 //    action_direct_msg = 3
 //    action_daily_pray = 4
-            if (action == 3) {
+            if (action == action_direct_msg) {
                 message.setMetaValue("feedback", params);
-            } else if (action == 1) {
+            } else if (action == action_bible_pic) {
                 message.setType(MessageType.Image);
-                message.setMetaValue("action_params", params);
+                String[] parts = params.split("\\|"); // 需要转义 |
+                String tag, bible;
+                if (parts.length == 2) {
+                    tag = parts[0];    // 第一部分是 tag
+                    bible = parts[1];  // 第二部分是 bible
+                    String imageUrl = ImageApi.getRandomImageByTag(tag);
+                    message.setMetaValue(Keys.ImageUrl, imageUrl);
+                    message.setMetaValue("image-text", bible);
+                    inheritExplore(message);
+                }
+            } else if (action == action_daily_gw) {
+                message.setType(DailyGWRegistration.GWMessageType);
+                message.setMetaValue("image-date", params);
             }
         }).run();
+    }
+
+    private void inheritExplore(Message message) {
+
+        if (aiExplore != null) {
+            try {
+                Message oldMsg = aiExplore.getMessage();
+                if (oldMsg != null) {
+                    JsonObject data = gson.fromJson(oldMsg.stringForKey(KEY_AI_FEEDBACK), JsonObject.class);
+                    if (data.has("session_id")) {
+                        data.addProperty("session_id", 0);
+                    }
+                    updateMessage(message, data);
+                    if (message.getEntityID().equals(aiExplore.getMessage().getEntityID())) {
+                        //临时方案....生成图片没经过AI，探索内容也沿用久的，但要跟着生成图片的气泡
+                        aiExplore.setContextId(oldMsg.getEntityID());
+                    }
+                }
+            } catch (Exception ignored) {
+
+            }
+        }
     }
 
     /**
@@ -315,61 +350,29 @@ public class GWThreadHandler extends AbstractThreadHandler {
      * The uploading to the server part can bee seen her {@see FirebaseCoreAdapter#PushMessageWithComplition}.
      */
     public Completable sendMessage(final Message message) {
-        String action = message.stringForKey("action");
-        if ("3".equals(action)) {
-            return Completable.complete();
-        }
-        if ("1".equals(action)) {
-            // 生成经文图片
-            CardGenerator cardGenerator = CardGenerator.Companion.getInstance();
-
-            return Completable.create(emitter -> {
-                // 按 | 分割字符串
-                String params = message.stringForKey("action_params");
-                String[] parts = params.split("\\|"); // 需要转义 |
-                String tag, bible;
-                if (parts.length == 2) {
-                    tag = parts[0];    // 第一部分是 tag
-                    bible = parts[1];  // 第二部分是 bible
-                    String imageUrl = getRandomImageByTag(tag);
-                    cardGenerator.generateCardFromUrl(
-                            MainApp.getContext(),
-                            imageUrl,
-                            bible,
-                            // onSuccess 回调
-                            cardData -> {
-                                message.setMetaValue(Keys.ImageUrl, cardData.getFirst());
-                                if (aiExplore != null) {
-                                    try {
-                                        Message oldMsg = aiExplore.getMessage();
-                                        if (oldMsg != null) {
-                                            JsonObject data = gson.fromJson(oldMsg.stringForKey(KEY_AI_FEEDBACK), JsonObject.class);
-                                            if(data.has("session_id")){
-                                                data.addProperty("session_id", 0);
-                                            }
-                                            updateMessage(message, data);
-                                            if (message.getEntityID().equals(aiExplore.getMessage().getEntityID())) {
-                                                //临时方案....生成图片没经过AI，探索内容也沿用久的，但要跟着生成图片的气泡
-                                                aiExplore.setContextId(oldMsg.getEntityID());
-                                            }
-                                        }
-                                    } catch (Exception ignored) {
-
-                                    }
+        Integer action = message.integerForKey("action");
+        if (action != null) {
+            if (action == action_direct_msg) {
+                return Completable.complete();
+            } else if (action == action_daily_gw) {
+                String imageDate = message.stringForKey("image-date");
+                return ImageApi.listImageDaily("").subscribeOn(RX.io()).flatMap(data -> {
+                    if (data != null && !data.isEmpty()) {
+                        String url = data.get(0).getUrl();
+                        if (imageDate != null && !imageDate.isEmpty()) {
+                            for (ImageDaily d : data) {
+                                if (d.getDate().equals(imageDate)) {
+                                    url = d.getUrl();
+                                    break;
                                 }
-                                emitter.onComplete();
-                                return Unit.INSTANCE;
-                            },
-                            // onFailure 回调
-                            error -> {
-                                emitter.onError(error);
-                                return Unit.INSTANCE;
                             }
-                    );
-                } else {
-                    emitter.onError(new Throwable("no bible verse..."));
-                }
-            });
+                        }
+                        message.setMetaValue(Keys.ImageUrl, url);
+                        inheritExplore(message);
+                    }
+                    return Single.just(message);
+                }).ignoreElement();
+            }
         }
         String prompt = isCustomPrompt ? MainApp.getContext().getSharedPreferences(
                 "ai_prompt",
@@ -631,10 +634,14 @@ public class GWThreadHandler extends AbstractThreadHandler {
     public Thread createChatSessions() {
         DaoCore daoCore = ChatSDK.db().getDaoCore();
         QueryBuilder<Message> qb = daoCore.getDaoSession().queryBuilder(Message.class);
-        qb.where(MessageDao.Properties.Type.eq(MessageType.Audio));
+        qb.where(MessageDao.Properties.Type.eq(MessageType.Image));
         List<Message> data = qb.list();
         for (Message d : data) {
-            daoCore.deleteEntity(d);
+            if (d.integerForKey("action") == action_daily_gw) {
+                d.setType(DailyGWRegistration.GWMessageType);
+                daoCore.updateEntity(d);
+            }
+//            daoCore.deleteEntity(d);
         }
 
         String entityID = "0";
@@ -693,31 +700,6 @@ public class GWThreadHandler extends AbstractThreadHandler {
     }
 
 
-    public Single<ImageTagList> listImageTags() {
-        return imageTagCache != null
-                ? Single.just(imageTagCache)
-                : ImageApi.listImageTags(0, 0)
-                .doOnSuccess(tagList -> imageTagCache = tagList);
-    }
-
-    public String getRandomImageByTag(String tag) {
-        if (imageTagCache == null) {
-            return null;
-        }
-        Random random = new Random();
-        List<ImageTag> tags = imageTagCache.getTags();
-        for (ImageTag imageTag : tags) {
-            if (imageTag.getName().equals(tag)) {
-                List<ImageItem> items = imageTag.getImages();
-                ImageItem image = items.get(random.nextInt(items.size()));
-                return image.getUrl();
-            }
-        }
-
-        List<ImageItem> items = tags.get(random.nextInt(tags.size())).getImages();
-        return items.get(random.nextInt(items.size())).getUrl();
-    }
-
     @SuppressLint("CheckResult")
     public Single<Message> getWelcomeMsg() {
         if (welcome != null) {
@@ -766,9 +748,6 @@ public class GWThreadHandler extends AbstractThreadHandler {
 //                });
     }
 
-    private void updateMessage(Message message, String jsonStr) {
-
-    }
 
     private void updateMessage(Message message, JsonObject json) {
         if (json == null || message == null) {

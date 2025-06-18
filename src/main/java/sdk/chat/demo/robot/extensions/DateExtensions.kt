@@ -1,4 +1,5 @@
 package sdk.chat.demo.robot.extensions
+
 import android.content.Context
 import android.text.format.DateUtils
 import sdk.chat.demo.pre.R
@@ -22,13 +23,17 @@ object DateLocalizationUtil {
             isToday(now, target) -> context.getString(R.string.today)
             isYesterday(now, target) -> context.getString(R.string.yesterday)
             isWithinDays(now, target, 7) -> getDaysAgoText(context, now, target)
-            isSameYear(now, target) -> formatDate(date, context.getString(R.string.this_year_format))
+            isSameYear(now, target) -> formatDate(
+                date,
+                context.getString(R.string.this_year_format)
+            )
+
             else -> formatDate(date, context.getString(R.string.default_format))
         }
     }
 
     fun dateStr(date: Date?): String {
-        if(date==null){
+        if (date == null) {
             return ""
         }
         return dayFormat.format(date)
@@ -83,9 +88,27 @@ object DateLocalizationUtil {
 
     public fun formatDayAgo(dateAgo: Int): String {
         val calendar = Calendar.getInstance()
-        calendar.add(Calendar.DAY_OF_YEAR, -1*dateAgo) // 减去一个月
+        calendar.add(Calendar.DAY_OF_YEAR, -1 * dateAgo) // 减去一个月
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         return dateFormat.format(calendar.time)
     }
 
+    fun getDateBefore(dateStr: String?, dateAgo: Int): String {
+        if (dateStr == null || dateStr.isEmpty()) {
+            return formatDayAgo(dateAgo)
+        }
+        // 1. 解析输入日期
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val parsedDate =
+            inputFormat.parse(dateStr) ?: throw IllegalArgumentException("Invalid date format")
+
+        // 2. 计算指定天数前的日期
+        val calendar = Calendar.getInstance().apply {
+            time = parsedDate
+            add(Calendar.DAY_OF_YEAR, -dateAgo) // 减去指定天数
+        }
+
+        // 3. 格式化为字符串
+        return inputFormat.format(calendar.time)
+    }
 }

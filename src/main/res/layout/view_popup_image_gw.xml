@@ -1,34 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/popupView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#BF000000"
-    android:animateLayoutChanges="true">
+    android:animateLayoutChanges="true"
+    android:background="#BF000000">
 
-    <com.github.chrisbanes.photoview.PhotoView
-        android:id="@+id/photoView"
+    <LinearLayout
+        android:id="@+id/content"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:visibility="invisible" />
+        android:layout_above="@id/share"
+        android:background="#FAFAFA"
+        android:orientation="vertical">
 
-    <!--    <com.google.android.material.floatingactionbutton.FloatingActionButton-->
-    <!--        android:id="@+id/fab"-->
-    <!--        android:layout_width="64dp"-->
-    <!--        android:layout_height="64dp"-->
-    <!--        android:layout_alignParentEnd="true"-->
-    <!--        android:layout_alignParentBottom="true"-->
-    <!--        android:layout_gravity="end|bottom"-->
-    <!--        android:layout_marginEnd="10dp"-->
-    <!--        android:layout_marginBottom="10dp" />-->
+        <ImageView
+            android:id="@+id/photoView"
+            android:layout_width="match_parent"
+            android:layout_height="218dp"
+            android:scaleType="centerCrop" />
+
+        <TextView
+            android:id="@+id/bible"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="40dp"
+            android:lineSpacingExtra="16dp"
+            android:textColor="#333333"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <FrameLayout
+            android:id="@+id/footer"
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
+            android:layout_gravity="bottom"
+            android:background="#FAFAFA">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/dashed_line" />
+
+            <ImageView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_gravity="bottom"
+                android:layout_margin="34dp"
+                android:src="@mipmap/ic_qrcode" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="64dp"
+                android:layout_gravity="bottom"
+                android:layout_marginLeft="112dp"
+                android:layout_marginBottom="34dp"
+                android:gravity="center_vertical"
+                android:text="下载恩语App\n请扫描二维码或App商店搜索“恩语”"
+                android:textColor="#B1B1B1"
+                android:textSize="15sp" />
+        </FrameLayout>
+    </LinearLayout>
+
     <TextView
         android:id="@+id/share"
         android:layout_width="wrap_content"
@@ -36,14 +71,16 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentBottom="true"
         android:layout_gravity="start|bottom"
-        android:textSize="18sp"
-        android:padding="4dp"
-        android:drawablePadding="4dp"
-        android:text="@string/share"
         android:layout_marginStart="68dp"
-        android:layout_marginBottom="88dp"
+        android:layout_marginTop="64dp"
+        android:layout_marginBottom="80dp"
+        android:drawablePadding="16dp"
+        android:padding="4dp"
+        android:text="@string/share"
         android:textColor="@color/white"
+        android:textSize="18sp"
         app:drawableStartCompat="@mipmap/ic_share" />
+
     <TextView
         android:id="@+id/fab"
         android:layout_width="wrap_content"
@@ -51,12 +88,13 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_gravity="end|bottom"
-        android:textSize="18sp"
-        android:padding="4dp"
-        android:drawablePadding="4dp"
-        android:text="@string/download"
+        android:layout_marginTop="64dp"
         android:layout_marginEnd="68dp"
-        android:layout_marginBottom="88dp"
+        android:layout_marginBottom="80dp"
+        android:drawablePadding="16dp"
+        android:padding="4dp"
+        android:text="@string/download"
         android:textColor="@color/white"
+        android:textSize="18sp"
         app:drawableStartCompat="@mipmap/ic_download" />
 </RelativeLayout>

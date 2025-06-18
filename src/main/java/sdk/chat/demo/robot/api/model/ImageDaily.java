@@ -9,6 +9,8 @@ public class ImageDaily {
     private String url;
     private String date;
     private String reference;
+    @SerializedName("background_url")
+    private String backgroundUrl;
 
     public String getScripture() {
         return scripture;
@@ -40,5 +42,13 @@ public class ImageDaily {
 
     public void setReference(String reference) {
         this.reference = reference;
+    }
+
+    public String getBackgroundUrl() {
+        return backgroundUrl;
+    }
+
+    public void setBackgroundUrl(String backgroundUrl) {
+        this.backgroundUrl = backgroundUrl;
     }
 }

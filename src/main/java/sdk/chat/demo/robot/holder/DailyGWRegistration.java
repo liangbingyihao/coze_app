@@ -6,32 +6,54 @@ import android.view.View;
 
 import com.stfalcon.chatkit.messages.MessageHolders;
 
+import java.util.List;
+
 import sdk.chat.core.dao.Keys;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.types.MessageType;
+import sdk.chat.demo.examples.message.IncomingSnapMessageViewHolder;
+import sdk.chat.demo.examples.message.OutcomingSnapMessageViewHolder;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.activities.ImageViewerActivity;
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
 import sdk.chat.demo.robot.handlers.ImageMessageOnClickHandler;
+import sdk.chat.message.audio.AudioMessageHolder;
+import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.chat.model.MessageHolder;
 import sdk.chat.ui.custom.ImageMessageRegistration;
 
-public class ImageRegistration extends ImageMessageRegistration {
+public class DailyGWRegistration extends ImageMessageRegistration {
+    public static int GWMessageType = 777;
+
+    @Override
+    public List<Byte> getTypes() {
+        return types(GWMessageType);
+    }
 
     @Override
     public void onBindMessageHolders(Context context, MessageHolders holders) {
 //        holders.setIncomingTextConfig(GW.IncomingMessageViewHolder.class, R.layout.item_incoming_text)
 //                .setOutcomingTextConfig(GW.OutcomingMessageViewHolder.class, sdk.chat.ui.R.layout.view_holder_outcoming_text_message);
 //        holders.setIncomingImageHolder(GWView.IncomingMessageViewHolder.class, R.layout.item_incoming_text);
-        holders.setOutcomingImageConfig(GWView.OutgoingImageViewHolder.class, R.layout.item_feed_bible_pic);
+//        holders.setOutcomingImageConfig(GWView.OutgoingDailyGWViewHolder.class, R.layout.item_feed_daily_gw);
+        holders.registerContentType(
+                (byte) GWMessageType,
+                GWView.OutgoingDailyGWViewHolder.class,
+                R.layout.item_feed_daily_gw,
+                GWView.OutgoingDailyGWViewHolder.class,
+                R.layout.item_feed_daily_gw,
+                ChatSDKUI.shared().getMessageRegistrationManager());
+    }
 
+    @Override
+    public boolean hasContentFor(MessageHolder holder) {
+        return holder.message.typeIs(GWMessageType);
     }
 
     @Override
     public MessageHolder onNewMessageHolder(Message message) {
-        int action = message.integerForKey("action");
-        if (message.typeIs(MessageType.Image)) {
+        if (message.typeIs(GWMessageType)) {
             return new ImageHolder(message);
         }
         return null;
@@ -39,7 +61,7 @@ public class ImageRegistration extends ImageMessageRegistration {
 
     @Override
     public boolean onClick(Activity activity, View rootView, Message message) {
-        if (message.typeIs(MessageType.Image)) {
+        if (message.typeIs(GWMessageType)) {
 //            CardGenerator generator = CardGenerator.Companion.getInstance();
 //            Bitmap bitmap = generator.getCacheBitmap(message.stringForKey(Keys.ImageUrl));
 //            ImageMessageOnClickHandler.onClick(activity, rootView, bitmap);

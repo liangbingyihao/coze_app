@@ -3,7 +3,7 @@
     <string name="app_name">恩语</string>
     <string name="register">注册</string>
     <string name="contacts">AI助手</string>
-    <string name="conversations" formatted="false">新建对话</string>
+    <string name="conversations" formatted="false">继续对话</string>
     <string name="create_session_hint" formatted="false">我要试试</string>
     <string name="today">今天</string>
     <string name="yesterday">昨天</string>
