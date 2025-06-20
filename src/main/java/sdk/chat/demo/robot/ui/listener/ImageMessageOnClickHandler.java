@@ -1,18 +1,17 @@
-package sdk.chat.demo.robot.handlers;
+package sdk.chat.demo.robot.ui.listener;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupWindow;
 import android.graphics.drawable.ColorDrawable;
 
+import sdk.chat.demo.robot.ui.PopupImageView;
 import sdk.chat.ui.R;
 import sdk.chat.ui.activities.BaseActivity;
-import sdk.chat.demo.robot.ui.PopupImageView;
 
 
 public class ImageMessageOnClickHandler {

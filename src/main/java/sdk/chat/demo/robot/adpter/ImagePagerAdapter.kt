@@ -1,4 +1,5 @@
 package sdk.chat.demo.robot.adpter
+import android.annotation.SuppressLint
 import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
@@ -37,7 +38,7 @@ class ImagePagerAdapter(
         val photoView: ImageView = view.findViewById<ImageView>(R.id.photoView).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
         }
-        val content: View = view.findViewById<View>(R.id.content);
+        val content: View = view.findViewById<View>(R.id.bible_container);
         val day: TextView = view.findViewById<TextView>(R.id.day);
         val month: TextView = view.findViewById<TextView>(R.id.month);
         val bible: TextView = view.findViewById<TextView>(R.id.bible);
@@ -49,7 +50,7 @@ class ImagePagerAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_image, parent, false)
+            .inflate(R.layout.item_image_gw, parent, false)
         return ViewHolder(view)
     }
 
@@ -74,6 +75,7 @@ class ImagePagerAdapter(
                     return false
                 }
 
+                @SuppressLint("SetTextI18n")
                 override fun onResourceReady(
                     resource: Drawable,
                     model: Any?,
@@ -86,8 +88,7 @@ class ImagePagerAdapter(
                         holder.content.visibility= View.VISIBLE
                         holder.day.text = item.date.substring(8)
                         holder.month.text = item.date.substring(0,7)
-                        holder.bible.text = item.scripture
-                        holder.reference.text = item.reference
+                        holder.bible.text = item.scripture+"\n("+item.reference+")"
                         holder.photoView.setImageDrawable(resource)
                         return false
                     }

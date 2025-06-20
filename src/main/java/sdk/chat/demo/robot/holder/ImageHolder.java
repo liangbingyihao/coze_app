@@ -23,16 +23,15 @@ import sdk.chat.ui.module.UIModule;
 public class ImageHolder extends ImageMessageHolder {
     private String bibleDate;
     private ImageDaily imageDaily;
-    private String bible;
-    private String imageUrl;
+    //    private String bible;
+//    private String imageUrl;
     private final int action;
 
     public ImageHolder(Message message) {
         super(message);
         action = message.integerForKey("action");
         if (action == GWThreadHandler.action_bible_pic) {
-            bible = message.stringForKey("image-text");
-            imageUrl = message.stringForKey(Keys.ImageUrl);
+            imageDaily = new ImageDaily(message.stringForKey("image-text"),message.stringForKey(Keys.ImageUrl));
         } else if (action == GWThreadHandler.action_daily_gw) {
             bibleDate = message.stringForKey("image-date");
         }
@@ -49,15 +48,15 @@ public class ImageHolder extends ImageMessageHolder {
         return imageDaily;
     }
 
-    public String getBible() {
-        return bible;
-    }
-
-    @Nullable
-    @Override
-    public String getImageUrl() {
-        return imageUrl;
-    }
+//    public String getBible() {
+//        return bible;
+//    }
+//
+//    @Nullable
+//    @Override
+//    public String getImageUrl() {
+//        return imageUrl;
+//    }
 
     public String getText() {
         return message.getText();

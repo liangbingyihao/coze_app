@@ -154,6 +154,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
                 v.text = data.text
                 if (data.action == 1) {
                     var bible = aiFeedback?.feedback?.bible ?: ""
+//                    bible = aiFeedback?.feedbackText ?:""
                     v.setOnClickListener { view ->
                         // 可以使用view参数
                         if (aiFeedback != null && !bible.isEmpty()) {

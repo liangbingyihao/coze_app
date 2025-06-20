@@ -1,6 +1,8 @@
 package sdk.chat.demo.robot.ui;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.res.Configuration;
 import android.os.Parcelable;
 import android.util.AttributeSet;
@@ -10,7 +12,6 @@ import android.widget.Toast;
 
 import androidx.annotation.LayoutRes;
 import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.ConcatAdapter;
 import androidx.recyclerview.widget.DiffUtil;
 
 import com.stfalcon.chatkit.messages.MessageHolders;
@@ -29,7 +30,6 @@ import io.reactivex.Single;
 import io.reactivex.SingleOnSubscribe;
 import io.reactivex.SingleSource;
 import io.reactivex.functions.Function;
-import sdk.chat.core.dao.Keys;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.dao.Thread;
 import sdk.chat.core.events.EventType;
@@ -38,10 +38,10 @@ import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.Progress;
 import sdk.chat.core.utils.CurrentLocale;
 import sdk.chat.core.utils.TimeLog;
-import sdk.chat.demo.robot.adpter.FooterAdapter;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
-import sdk.chat.demo.robot.holder.TextHolder;
+import sdk.chat.demo.robot.ui.listener.GWClickListener;
 import sdk.chat.ui.ChatSDKUI;
+import sdk.chat.ui.activities.BaseActivity;
 import sdk.chat.ui.chat.model.MessageHolder;
 import sdk.chat.ui.module.UIModule;
 import sdk.chat.ui.performance.MessageHoldersDiffCallback;
@@ -109,6 +109,7 @@ public class GWChatView extends LinearLayout implements MessagesListAdapter.OnLo
         messagesListAdapter = new MessagesListAdapter<>(ChatSDK.currentUserID(), holders, null);
 
         messagesListAdapter.setLoadMoreListener(this);
+//        messagesListAdapter.setOnMessageViewClickListener(new GWClickListener());
 
         messagesListAdapter.setDateHeadersFormatter(date -> {
             ChatDateProvider provider = ChatSDK.feather().instance(ChatDateProvider.class);
@@ -120,49 +121,53 @@ public class GWChatView extends LinearLayout implements MessagesListAdapter.OnLo
             }
         });
 
-        messagesListAdapter.setOnMessageClickListener(holder -> {
-            Message message = holder.getMessage();
-            if (!message.canResend() && message.isReply()) {
-                String originalMessageEntityID = message.stringForKey(Keys.Id);
-                if (originalMessageEntityID != null) {
-                    Message originalMessage = ChatSDK.db().fetchEntityWithEntityID(originalMessageEntityID, Message.class);
-                    MessageHolder originalHolder = ChatSDKUI.provider().holderProvider().getMessageHolder(originalMessage);
-                    if (originalHolder != null) {
-                        int index = messageHolders.indexOf(originalHolder);
-                        if (index >= 0) {
-                            messagesList.smoothScrollToPosition(index);
-                        }
-                    }
-                }
-            } else {
-                delegate.onClick(holder.getMessage());
-            }
-        });
+//        messagesListAdapter.setOnMessageClickListener(holder -> {
+//            Message message = holder.getMessage();
+//            if (!message.canResend() && message.isReply()) {
+//                String originalMessageEntityID = message.stringForKey(Keys.Id);
+//                if (originalMessageEntityID != null) {
+//                    Message originalMessage = ChatSDK.db().fetchEntityWithEntityID(originalMessageEntityID, Message.class);
+//                    MessageHolder originalHolder = ChatSDKUI.provider().holderProvider().getMessageHolder(originalMessage);
+//                    if (originalHolder != null) {
+//                        int index = messageHolders.indexOf(originalHolder);
+//                        if (index >= 0) {
+//                            messagesList.smoothScrollToPosition(index);
+//                        }
+//                    }
+//                }
+//            } else {
+//                delegate.onClick(holder.getMessage());
+//            }
+//        });
 
-        messagesListAdapter.setOnMessageLongClickListener(holder -> {
-            delegate.onLongClick(holder.getMessage());
-        });
+//        messagesListAdapter.setOnMessageLongClickListener(holder -> {
+//            delegate.onLongClick(holder.getMessage());
+//        });
 
 
-        FooterAdapter footerAdapter = new FooterAdapter();
-        ConcatAdapter concatAdapter = new ConcatAdapter(
-                new ConcatAdapter.Config.Builder()
-                        .setIsolateViewTypes(false) // 允许共享 ViewType
-                        .build(),
-                messagesListAdapter,
-                footerAdapter
-        );
+//        FooterAdapter footerAdapter = new FooterAdapter();
+//        ConcatAdapter concatAdapter = new ConcatAdapter(
+//                new ConcatAdapter.Config.Builder()
+//                        .setIsolateViewTypes(false) // 允许共享 ViewType
+//                        .build(),
+//                messagesListAdapter,
+//                footerAdapter
+//        );
 
 
 //        messagesList.setAdapter(concatAdapter);
         messagesList.setAdapter(messagesListAdapter);
 
-        messagesListAdapter.setUserClickListener(userID -> {
-            ChatSDK.ui().startProfileActivity(getContext(), userID);
-        });
+//        messagesListAdapter.setUserClickListener(userID -> {
+//            ChatSDK.ui().startProfileActivity(getContext(), userID);
+//        });
 
         onLoadMore(0, 0);
 
+    }
+
+    public MessagesListAdapter<MessageHolder> getMessagesListAdapter() {
+        return messagesListAdapter;
     }
 
     public void addListeners() {

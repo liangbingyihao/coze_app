@@ -334,7 +334,7 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
     override fun applyStyle(style: MessagesListStyle) {
 //        this.style = style
         if (direction == MessageDirection.Incoming) {
-            applyIncomingStyle(style)
+//            applyIncomingStyle(style)
         } else {
 //            applyOutgoingStyle(style)
         }
@@ -463,14 +463,12 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
             return
         }
         var action = imageHolder.action;
-        var imageUrl: String?=null;
+        var imageDaily: ImageDaily = imageHolder.getImageDaily()
         if(action==GWThreadHandler.action_bible_pic){
-            imageUrl = imageHolder.imageUrl;
-            bible?.text = holder.message.stringForKey("image-text")
+            bible?.text = imageDaily.scripture
         }else if(action==GWThreadHandler.action_daily_gw){
             var imageDaily: ImageDaily? = imageHolder.getImageDaily()
             if(imageDaily!=null){
-                imageUrl = imageDaily.backgroundUrl;
                 day?.text = imageDaily.date.substring(8)
                 month?.text = imageDaily.date.substring(0,7)
                 bible?.text = imageDaily.scripture
@@ -478,7 +476,7 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
             }
         }
         Glide.with(image!!)
-            .load(imageUrl)
+            .load(imageDaily.backgroundUrl)
             .diskCacheStrategy(DiskCacheStrategy.ALL)
             .placeholder(sdk.chat.demo.pre.R.drawable.icn_200_image_message_placeholder) // 占位图
             .error(sdk.chat.demo.pre.R.drawable.icn_200_image_message_error) // 错误图

@@ -12,6 +12,11 @@ public class ImageDaily {
     @SerializedName("background_url")
     private String backgroundUrl;
 
+    public ImageDaily(String scripture, String backgroundUrl) {
+        this.scripture = scripture;
+        this.backgroundUrl = backgroundUrl;
+    }
+
     public String getScripture() {
         return scripture;
     }

@@ -12,7 +12,6 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -25,13 +24,10 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
-import com.github.chrisbanes.photoview.PhotoView;
 
 import java.lang.ref.WeakReference;
 
 import io.reactivex.Observable;
-import io.reactivex.Single;
-import io.reactivex.SingleOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
@@ -48,8 +44,8 @@ public class PopupImageView extends RelativeLayout {
     protected ImageView photoView;
     protected TextView bible;
 //    protected ProgressBar progressBar;
-    protected TextView fab;
-    protected TextView share;
+    protected ImageView fab;
+    protected ImageView share;
     protected View popupView;
 
     private String cacheKey;
@@ -75,7 +71,7 @@ public class PopupImageView extends RelativeLayout {
 
     @LayoutRes
     public int getLayout() {
-        return sdk.chat.demo.pre.R.layout.view_popup_image_gw;
+        return sdk.chat.demo.pre.R.layout.view_popup_image_bible;
     }
 
     public void initViews() {

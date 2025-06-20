@@ -74,6 +74,7 @@ public class ImageApi {
 
     public static String getRandomImageByTag(String tag) {
         if (imageTagCache == null) {
+            ImageApi.listImageTags().subscribe();
             return null;
         }
         Random random = new Random();

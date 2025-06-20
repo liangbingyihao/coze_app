@@ -374,10 +374,19 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 }).ignoreElement();
             }
         }
-        String prompt = isCustomPrompt ? MainApp.getContext().getSharedPreferences(
-                "ai_prompt",
-                Context.MODE_PRIVATE // 仅当前应用可访问
-        ).getString("ai_prompt" + action, null) : null;
+
+        String prompt = null;
+        if (isCustomPrompt) {
+            String k = "ai_prompt";
+            if (message.getMetaValuesAsMap().containsKey("action")) {
+                k = "ai_prompt" + action;
+            }
+            prompt = MainApp.getContext().getSharedPreferences(
+                    "ai_prompt",
+                    Context.MODE_PRIVATE // 仅当前应用可访问
+            ).getString(k, null);
+        }
+
         return GWApiManager.shared().askRobot(message, prompt)
                 .subscribeOn(RX.io()).flatMap(data -> {
                     message.setEntityID(data.get("id").getAsString());

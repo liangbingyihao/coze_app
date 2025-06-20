@@ -22,10 +22,12 @@ import sdk.chat.core.utils.PermissionRequestHandler
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.ImagePagerAdapter
 import sdk.chat.demo.robot.api.ImageApi
-import sdk.chat.demo.robot.extensions.DateLocalizationUtil.formatDayAgo
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil.getDateBefore
 import sdk.chat.demo.robot.extensions.ImageSaveUtils
 import sdk.chat.demo.robot.handlers.GWThreadHandler
+import sdk.chat.demo.robot.holder.DailyGWHolder
+import sdk.chat.demo.robot.holder.ImageHolder
+import sdk.chat.demo.robot.ui.listener.GWClickListener
 import sdk.chat.ui.activities.BaseActivity
 import sdk.chat.ui.utils.ToastHelper
 
@@ -36,6 +38,7 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
     private var isLoading = false
     private lateinit var adapter: ImagePagerAdapter
     private var dateStr: String? = null
+    private lateinit var imageHandler: GWClickListener<ImageHolder>
 
     companion object {
         private const val EXTRA_INITIAL_DATA = "initial_data"
@@ -56,12 +59,12 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
         dateStr = intent.getStringExtra(EXTRA_INITIAL_DATA)
 //        hideSystemBars() // 启动时立即隐藏
         findViewById<View>(R.id.back).setOnClickListener(this)
-        findViewById<View>(R.id.download).setOnClickListener(this)
-        findViewById<View>(R.id.share).setOnClickListener(this)
-        if(dateStr==null|| dateStr!!.isEmpty()){
+        findViewById<View>(R.id.btn_download).setOnClickListener(this)
+        findViewById<View>(R.id.btn_share).setOnClickListener(this)
+        if (dateStr == null || dateStr!!.isEmpty()) {
             findViewById<View>(R.id.conversations).setOnClickListener(this)
-        }else{
-            findViewById<View>(R.id.conversations).visibility= View.INVISIBLE
+        } else {
+            findViewById<View>(R.id.conversations).visibility = View.INVISIBLE
         }
 
         viewPager = findViewById(R.id.viewPager)
@@ -71,6 +74,7 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
 
 //        // 手势滑动退出（可选）
         setupGestureExit()
+        imageHandler = GWClickListener<ImageHolder>(this)
     }
 
     private fun setAdapter() {
@@ -140,10 +144,10 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
                 .subscribe(
                     { data ->
                         if (data != null) {
-                            if(dateStr!=null&&!dateStr!!.isEmpty()){
-                                var newData = listOf(data.first  { it.date  == dateStr })
+                            if (dateStr != null && !dateStr!!.isEmpty()) {
+                                var newData = listOf(data.first { it.date == dateStr })
                                 adapter.replaceData(newData)
-                            }else{
+                            } else {
                                 endDateStr = getDateBefore(data[data.size - 1].date, 1)
                                 adapter.replaceData(data.reversed())
                                 viewPager.setCurrentItem(adapter.itemCount - 1, false)
@@ -184,12 +188,10 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
                 finish()
             }
 
-            R.id.download -> {
-                save(false)
-            }
-
-            R.id.share -> {
-                save(true)
+            R.id.btn_download,R.id.btn_share -> {
+                val currentPosition = viewPager.currentItem
+                var data = DailyGWHolder(GWThreadHandler.action_daily_gw, adapter.getUrlAt(currentPosition))
+                imageHandler.onMessageViewClick(v, data)
             }
 
             R.id.conversations -> {
@@ -216,8 +218,11 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
         isLoading = false
     }
 
-    private fun save(share: Boolean) {
+    private fun save(view: View, share: Boolean) {
         val currentPosition = viewPager.currentItem
+        var data = DailyGWHolder(GWThreadHandler.action_daily_gw, adapter.getUrlAt(currentPosition))
+        imageHandler.onMessageViewClick(view, data)
+        return
 
 
         val recyclerView = viewPager.getChildAt(0) as? RecyclerView ?: run {

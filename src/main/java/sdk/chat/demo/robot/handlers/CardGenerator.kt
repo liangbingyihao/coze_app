@@ -1,7 +1,7 @@
 package sdk.chat.demo.robot.handlers;
 
+import android.annotation.SuppressLint
 import android.content.Context
-import android.content.res.Resources
 import android.graphics.*
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -13,6 +13,7 @@ import android.text.TextPaint
 import android.util.LruCache
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.FileProvider
@@ -22,25 +23,22 @@ import sdk.chat.demo.MainApp
 import java.io.File
 import java.io.FileOutputStream
 import androidx.core.graphics.scale
-import androidx.lifecycle.Lifecycle
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.load.engine.GlideException
-import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.transition.Transition
-import com.github.chrisbanes.photoview.PhotoView
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
-import kotlin.math.min
 import sdk.chat.demo.pre.R
 import com.bumptech.glide.request.target.CustomTarget
+import kotlinx.coroutines.suspendCancellableCoroutine
+import sdk.chat.demo.robot.api.model.ImageDaily
 import java.io.IOException
+import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 
 class CardGenerator private constructor() {
 
@@ -331,28 +329,39 @@ class CardGenerator private constructor() {
      * @param text 卡片文本
      * @param callback 结果回调（主线程执行）
      */
-    fun generateCardFromUrl(
+    fun generateBibleCard(
         context: Context,
-        imageUrl: String,
-        text: String,
-        onSuccess: (Pair<String, Bitmap>) -> Unit,
+        resId: Int,
+        imageDetail: ImageDaily,
+        onSuccess: (Bitmap) -> Unit,
         onFailure: (Throwable) -> Unit
     ) {
-        // 1. 检查内存缓存
-        val cacheKey = "$imageUrl|$text"
-        memoryCache.get(cacheKey)?.let {
-            onSuccess(Pair(cacheKey, it))
-            return
+        var cacheKey: String? = null
+        var imageUrl: String? = null
+        assert(resId == R.layout.view_popup_image_bible || resId == R.layout.item_image_gw)
+        if (resId == R.layout.item_image_gw) {
+            cacheKey = "image_daily_gw_${imageDetail.date}"
+            imageUrl = imageDetail.backgroundUrl
+        } else {
+            cacheKey = "${imageDetail.backgroundUrl}|${imageDetail.scripture}"
+            imageUrl = imageDetail.backgroundUrl
         }
-
-        // 2. 检查磁盘缓存
-        getCachedCardFile(cacheKey)?.let { file ->
-            BitmapFactory.decodeFile(file.absolutePath)?.let {
-                memoryCache.put(cacheKey, it)
-                onSuccess(Pair(cacheKey, it))
+//        // 1. 检查内存缓存
+        memoryCache.get(cacheKey)?.let {
+            if (!it.isRecycled) {
+                onSuccess(it)
                 return
             }
         }
+//
+//        // 2. 检查磁盘缓存
+//        getCachedCardFile(cacheKey)?.let { file ->
+//            BitmapFactory.decodeFile(file.absolutePath)?.let {
+//                memoryCache.put(cacheKey, it)
+//                onSuccess(Pair(cacheKey, it))
+//                return
+//            }
+//        }
 
 
         // 使用Glide加载网络图片
@@ -369,16 +378,23 @@ class CardGenerator private constructor() {
 
                     CoroutineScope(Dispatchers.Main).launch {
                         try {
+
+//                            val deferredBitmaps = listOf(
+//                                async { loadBitmapWithGlide(context, imageUrl) },
+//                                async { loadBitmapWithGlide(context, "https://api-test.kolacdn.xyz") },
+//                            )
+//                            val bitmaps = deferredBitmaps.awaitAll()
+
                             val bitmap = captureLayoutAsync(
                                 context,
-                                R.layout.view_bible_image,
+                                resId,
+                                imageDetail,
                                 resource,
-                                text
                             )
                             if (bitmap != null) {
                                 memoryCache.put(cacheKey, bitmap)
-                                saveCardToCache(cacheKey, bitmap)
-                                onSuccess(Pair(cacheKey, bitmap))
+//                                saveCardToCache(cacheKey, bitmap)
+                                onSuccess(bitmap)
                             } else {
                                 onFailure(Throwable("生成失败"))
                             }
@@ -386,17 +402,6 @@ class CardGenerator private constructor() {
                             onFailure(e)
                         }
                     }
-
-//                    generateCardAsync(context, resource, text) { result ->
-//                        result.onSuccess { bitmap ->
-//                            // 存入缓存
-//                            memoryCache.put(cacheKey, bitmap)
-//                            saveCardToCache(cacheKey, bitmap)
-//                            onSuccess(Pair(cacheKey, bitmap))
-//                        }.onFailure {
-//                            onFailure(it)
-//                        }
-//                    }
                 }
 
                 override fun onLoadFailed(errorDrawable: Drawable?) {
@@ -410,74 +415,105 @@ class CardGenerator private constructor() {
             })
     }
 
+    suspend fun loadBitmapWithGlide(context: Context, url: String): Bitmap =
+        suspendCancellableCoroutine { continuation ->
+            val target = object : CustomTarget<Bitmap>() {
+                override fun onResourceReady(
+                    resource: Bitmap,
+                    transition: Transition<in Bitmap>?
+                ) {
+                    continuation.resume(resource) { cause ->
+                    }
+                }
+
+                override fun onLoadFailed(errorDrawable: Drawable?) {
+                    continuation.resumeWithException(
+                        IOException("Image load failed: $url")
+                    )
+                }
+
+                override fun onLoadCleared(placeholder: Drawable?) {
+                    continuation.cancel()
+                }
+            }
+
+            // 启动 Glide 请求
+            Glide.with(context)
+                .asBitmap()
+                .load(url)
+                .into(target)
+
+            // 关键修复：添加 onCancellation 处理
+            continuation.invokeOnCancellation {
+                Glide.with(context).clear(target) // 协程取消时清理 Glide 请求
+            }
+        }
+
+    @SuppressLint("SetTextI18n")
     suspend fun captureLayoutAsync(
         context: Context,
         layoutResId: Int,
-        resource: Bitmap,
-        bible: String,
-        width: Int = 0,
-        height: Int = 0,
-        delayMs: Long = 0L
+        imageDetail: ImageDaily,
+        bitmaps: Bitmap,
     ): Bitmap? = withContext(Dispatchers.Main) {
-//        val cacheKey = "$imageUrl|$bible"
-//        cacheKey.let { memoryCache.get(it) }?.let { return@withContext it }
-//        cacheKey.let {
-//            getCachedCardFile(cacheKey)?.let { file ->
-//                BitmapFactory.decodeFile(file.absolutePath)?.let {
-//                    memoryCache.put(cacheKey, it)
-//                    return@withContext it
-//                }
-//            }
-//        }
-
         val view = LayoutInflater.from(context).inflate(layoutResId, null, false).apply {
             setLayerType(View.LAYER_TYPE_SOFTWARE, null)
         }
 
+
         val img = view.findViewById<ImageView>(R.id.photoView)
-        img.setImageBitmap(resource)
+        img.setImageBitmap(bitmaps)
 
 
         try {
             view.findViewById<TextView>(R.id.bible).apply {
-                text = bible
+                text = imageDetail.scripture + imageDetail.reference?.let { "\n($it)" }.orEmpty()
+            }
+            var viewContent: View = view.findViewById<View>(R.id.content)
+            if (layoutResId == R.layout.item_image_gw) {
+                view.findViewById<TextView>(R.id.day).apply {
+                    text = imageDetail.date.substring(8)
+                }
+                view.findViewById<TextView>(R.id.month).apply {
+                    text = imageDetail.date.substring(0, 7)
+                }
+                view.findViewById<View>(R.id.footer).visibility = View.VISIBLE
+                val widthSpec =
+                    View.MeasureSpec.makeMeasureSpec(
+                        getScreenWidth(context),
+                        View.MeasureSpec.EXACTLY
+                    )
+                val heightSpec = View.MeasureSpec.makeMeasureSpec(
+                    getScreenHeight(context),
+                    View.MeasureSpec.EXACTLY
+                )
+                viewContent.measure(widthSpec, heightSpec)
+            } else {
+                val widthSpec =
+                    View.MeasureSpec.makeMeasureSpec(
+                        getScreenWidth(context),
+                        View.MeasureSpec.EXACTLY
+                    )
+                val heightSpec = View.MeasureSpec.makeMeasureSpec(
+                    getScreenHeight(context),
+                    View.MeasureSpec.AT_MOST
+                )
+                viewContent.measure(widthSpec, heightSpec)
             }
 
-            if (delayMs > 0) delay(delayMs)
 
-
-            val (safeWidth, safeHeight) = getSafeMeasureSpecs(view, width, height)
-            view.measure(safeWidth, safeHeight)
-            view.layout(0, 0, view.measuredWidth, view.measuredHeight)
+            viewContent.layout(0, 0, viewContent.measuredWidth, viewContent.measuredHeight)
 
             createBitmap(
-                view.measuredWidth.coerceAtLeast(1),
-                view.measuredHeight.coerceAtLeast(1),
-                Bitmap.Config.RGB_565
+                viewContent.measuredWidth.coerceAtLeast(1),
+                viewContent.measuredHeight.coerceAtLeast(1),
+                Bitmap.Config.ARGB_8888
             ).apply {
-                Canvas(this).run { view.draw(this) }
+                Canvas(this).run { viewContent.draw(this) }
             }.compressToSafeSize()
         } catch (e: Exception) {
             null
         }
-    }
-
-    private fun getSafeMeasureSpecs(view: View, width: Int, height: Int): Pair<Int, Int> {
-        val maxWidth = min(width.takeIf { it > 0 } ?: Int.MAX_VALUE,
-            Resources.getSystem().displayMetrics.widthPixels)
-        val maxHeight = min(height.takeIf { it > 0 } ?: Int.MAX_VALUE,
-            Resources.getSystem().displayMetrics.heightPixels)
-
-        val measureWidth = when {
-            width > 0 -> View.MeasureSpec.makeMeasureSpec(maxWidth, View.MeasureSpec.EXACTLY)
-            else -> View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        }
-
-        val measureHeight = when {
-            height > 0 -> View.MeasureSpec.makeMeasureSpec(maxHeight, View.MeasureSpec.EXACTLY)
-            else -> View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        }
-        return Pair(measureWidth, measureHeight)
     }
 
     private fun Bitmap.compressToSafeSize(maxSizeKB: Int = 500): Bitmap {

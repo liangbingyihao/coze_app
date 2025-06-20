@@ -51,7 +51,9 @@ import sdk.chat.demo.robot.handlers.GWThreadHandler;
 import sdk.chat.demo.robot.ui.CustomChatView;
 import sdk.chat.demo.robot.ui.GWChatView;
 import sdk.chat.demo.robot.ui.KeyboardOverlayHelper;
+import sdk.chat.demo.robot.ui.listener.GWClickListener;
 import sdk.chat.ui.ChatSDKUI;
+import sdk.chat.ui.activities.BaseActivity;
 import sdk.chat.ui.activities.preview.ChatPreviewActivity;
 import sdk.chat.ui.audio.AudioBinder;
 import sdk.chat.ui.chat.model.MessageHolder;
@@ -268,6 +270,8 @@ public class GWChatFragment extends AbstractChatFragment implements ChatView.Del
 
         chatView.setDelegate(this);
         chatView.initViews();
+
+        GWClickListener.registerListener((BaseActivity)getActivity(),chatView.getMessagesListAdapter());
 
         if (UIModule.config().messageSelectionEnabled) {
             chatView.enableSelectionMode(count -> {

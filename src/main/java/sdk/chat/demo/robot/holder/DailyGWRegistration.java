@@ -10,15 +10,11 @@ import java.util.List;
 
 import sdk.chat.core.dao.Keys;
 import sdk.chat.core.dao.Message;
-import sdk.chat.core.types.MessageType;
-import sdk.chat.demo.examples.message.IncomingSnapMessageViewHolder;
-import sdk.chat.demo.examples.message.OutcomingSnapMessageViewHolder;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.activities.ImageViewerActivity;
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
-import sdk.chat.demo.robot.handlers.ImageMessageOnClickHandler;
-import sdk.chat.message.audio.AudioMessageHolder;
+import sdk.chat.demo.robot.ui.listener.ImageMessageOnClickHandler;
 import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.chat.model.MessageHolder;
 import sdk.chat.ui.custom.ImageMessageRegistration;
@@ -59,33 +55,33 @@ public class DailyGWRegistration extends ImageMessageRegistration {
         return null;
     }
 
-    @Override
-    public boolean onClick(Activity activity, View rootView, Message message) {
-        if (message.typeIs(GWMessageType)) {
-//            CardGenerator generator = CardGenerator.Companion.getInstance();
-//            Bitmap bitmap = generator.getCacheBitmap(message.stringForKey(Keys.ImageUrl));
-//            ImageMessageOnClickHandler.onClick(activity, rootView, bitmap);
-            Integer action = message.integerForKey("action");
-            if (action == GWThreadHandler.action_daily_gw) {
-                String dateStr = message.stringForKey("image-date");
-                if(dateStr==null||dateStr.isEmpty()){
-                    dateStr = DateLocalizationUtil.INSTANCE.formatDayAgo(0);
-                }
-                ImageViewerActivity.Companion.start(activity, dateStr);
-            } else {
-                ImageMessageOnClickHandler.onClick(activity, rootView, message.stringForKey(Keys.ImageUrl), message.stringForKey("image-text"));
-            }
-            return true;
-        } else {
-            return super.onClick(activity, rootView, message);
-        }
-//        if (!super.onClick(activity, rootView, message)) {
-//            if (message.typeIs(MessageType.Image)) {
-//                ImageMessageOnClickHandler.onClick(activity, rootView, message.stringForKey(Keys.ImageUrl));
-//                return true;
+//    @Override
+//    public boolean onClick(Activity activity, View rootView, Message message) {
+//        if (message.typeIs(GWMessageType)) {
+////            CardGenerator generator = CardGenerator.Companion.getInstance();
+////            Bitmap bitmap = generator.getCacheBitmap(message.stringForKey(Keys.ImageUrl));
+////            ImageMessageOnClickHandler.onClick(activity, rootView, bitmap);
+//            Integer action = message.integerForKey("action");
+//            if (action == GWThreadHandler.action_daily_gw) {
+//                String dateStr = message.stringForKey("image-date");
+//                if(dateStr==null||dateStr.isEmpty()){
+//                    dateStr = DateLocalizationUtil.INSTANCE.formatDayAgo(0);
+//                }
+//                ImageViewerActivity.Companion.start(activity, dateStr);
+//            } else {
+//                ImageMessageOnClickHandler.onClick(activity, rootView, message.stringForKey(Keys.ImageUrl), message.stringForKey("image-text"));
 //            }
-//            return false;
+//            return true;
+//        } else {
+//            return super.onClick(activity, rootView, message);
 //        }
-//        return true;
-    }
+////        if (!super.onClick(activity, rootView, message)) {
+////            if (message.typeIs(MessageType.Image)) {
+////                ImageMessageOnClickHandler.onClick(activity, rootView, message.stringForKey(Keys.ImageUrl));
+////                return true;
+////            }
+////            return false;
+////        }
+////        return true;
+//    }
 }
