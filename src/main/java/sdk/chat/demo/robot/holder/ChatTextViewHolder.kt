@@ -1,7 +1,6 @@
 package sdk.chat.demo.robot.holder
 
 import android.text.util.Linkify
-import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
@@ -9,7 +8,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.graphics.toColorInt
 import androidx.core.view.ViewCompat
 import com.mikepenz.iconics.view.IconicsImageView
 import com.stfalcon.chatkit.messages.MessageHolders
@@ -22,10 +20,8 @@ import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.manager.DownloadablePayload
 import sdk.chat.core.session.ChatSDK
-import sdk.chat.demo.MainApp
 import sdk.chat.demo.robot.IconUtils
 import sdk.chat.demo.robot.api.model.MessageDetail
-import sdk.chat.demo.robot.handlers.CardGenerator
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.ui.R
 import sdk.chat.ui.chat.model.MessageHolder
@@ -71,7 +67,10 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
 
     open val btnFavorite: IconicsImageView? =
         itemView.findViewById(sdk.chat.demo.pre.R.id.btn_favorite)
+    open val btnPlay: ImageView? =
+        itemView.findViewById(sdk.chat.demo.pre.R.id.btn_play)
     open val btnDelete: IconicsImageView? = itemView.findViewById(sdk.chat.demo.pre.R.id.btn_delete)
+    open val feedbackMenu: View? = itemView.findViewById(sdk.chat.demo.pre.R.id.feedback_menu)
 
     open var format: DateFormat? = null
 
@@ -143,6 +142,11 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
         }
         setFavorite(t.message.integerForKey(keyIsGood))
         val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
+        if(t.message.equals(threadHandler.playingMsg)){
+            btnPlay?.setImageResource(sdk.chat.demo.pre.R.mipmap.ic_pause_black);
+        }else{
+            btnPlay?.setImageResource(sdk.chat.demo.pre.R.mipmap.ic_play_black);
+        }
         var aiFeedback: MessageDetail? = (t as? TextHolder)?.getAiFeedback();
         var i = 0
         var aiExplore = threadHandler.aiExplore
@@ -187,51 +191,21 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
                 v.visibility = View.GONE
             }
             ++i
-//                v.setOnClickListener { view ->
-//                    // 可以使用view参数
-//                    if (data.action == 1) {
-//                        CardGenerator.getInstance()
-//                            .generateCardFromUrl(
-//                                context = MainApp.getContext(),
-//                                imageUrl = "https://oss.tikvpn.in/img/7aa7fc3ff50646a9a8c6a426102b2659.jpg",
-//                                text = bible
-//                            ) { result ->
-//                                result.onSuccess { (key, bitmap) ->
-//                                    view as TextView // 安全转换
-//                                    threadHandler.sendExploreMessage(
-//                                        view.text.toString().trim(),
-//                                        t.message.entityID,
-//                                        t.message.thread,
-//                                        data.action,
-//                                        key
-//                                    ).subscribe();
-//                                }.onFailure {
-//                                    Toast.makeText(view.context, "生成失败", Toast.LENGTH_SHORT)
-//                                        .show()
-//                                }
-//                            }
-//                    } else {
-//                        view as TextView // 安全转换
-//                        threadHandler.sendExploreMessage(
-//                            view.text.toString().trim(),
-//                            t.message.entityID,
-//                            t.message.thread,
-//                            data.action,
-//                            data.params
-//                        ).subscribe();
-//                    }
-//                }
-//            } else {
-//                v.visibility = View.GONE
-//            }
         }
 
 //        t.message.metaValuesAsMap
+        var feedbackText = aiFeedback?.feedbackText ?: t.message.stringForKey("feedback")
         feedback?.let {
 //            it.text = t.message.stringForKey("feedback")+t.message.id+t.message.type;
 //            val markdown = "**Hello** _Markdown_"
             Markwon.create(it.context)
-                .setMarkdown(it, aiFeedback?.feedbackText ?: t.message.stringForKey("feedback"))
+                .setMarkdown(it, feedbackText)
+        }
+
+        if(aiFeedback?.status !=2||feedbackText.isEmpty()){
+            feedbackMenu?.visibility = View.GONE
+        }else{
+            feedbackMenu?.visibility = View.VISIBLE
         }
 
         var topic = threadHandler.getSessionName(t.message.threadId)

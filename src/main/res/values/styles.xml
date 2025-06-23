@@ -54,6 +54,13 @@
         <item name="layout_alignSelf">flex_start</item>
     </style>
 
+    <style name="FeedOperator">
+        <item name="android:layout_width">27dp</item>
+        <item name="android:layout_height">27dp</item>
+        <item name="android:layout_marginStart">14dp</item>
+        <item name="android:padding">2dp</item>
+        <item name="android:background">@drawable/dashed_border_selector</item>
+    </style>
 <!--    <style name="Widget.MyApp.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">-->
 <!--        &lt;!&ndash; 基础样式继承自Material3 &ndash;&gt;-->
 <!--        &lt;!&ndash; 文字样式 &ndash;&gt;-->

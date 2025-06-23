@@ -22,17 +22,18 @@
     <LinearLayout
         android:id="@+id/bible_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:gravity="left"
+        android:layout_gravity="bottom"
         android:background="@drawable/gradient_bible_image"
         android:orientation="vertical"
         android:paddingLeft="34dp"
         android:paddingRight="34dp">
 
-        <View
-            android:layout_width="1dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+<!--        <View-->
+<!--            android:layout_width="1dp"-->
+<!--            android:layout_height="0dp"-->
+<!--            android:layout_weight="1" />-->
 
         <TextView
             android:id="@+id/day"

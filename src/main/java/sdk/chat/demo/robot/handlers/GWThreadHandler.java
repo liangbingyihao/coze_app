@@ -63,6 +63,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
     private List<Thread> sessionCache;
     private Message welcome;
     private AIExplore aiExplore;
+    private Message playingMsg;
     private Boolean isCustomPrompt = null;
     private SystemConf serverPrompt = null;
     private final static Gson gson = new Gson();
@@ -78,6 +79,32 @@ public class GWThreadHandler extends AbstractThreadHandler {
 
     public AIExplore getAiExplore() {
         return aiExplore;
+    }
+
+    public Message getPlayingMsg() {
+        return playingMsg;
+    }
+
+    public boolean setPlayingMsg(Message newPlaying) {
+        if (this.playingMsg == null) {
+            if (newPlaying != null) {
+                this.playingMsg = newPlaying;
+            } else {
+                return false;
+            }
+        } else {
+            Message oldPlaying = this.playingMsg;
+            if (newPlaying != null && oldPlaying.getId().equals(newPlaying.getId())) {
+                return true;
+            } else {
+                this.playingMsg = newPlaying;
+            }
+            ChatSDK.events().source().accept(NetworkEvent.messageUpdated(oldPlaying));
+        }
+        if (newPlaying != null) {
+            ChatSDK.events().source().accept(NetworkEvent.messageUpdated(newPlaying));
+        }
+        return true;
     }
 
     public Single<SystemConf> getServerPrompt() {
@@ -438,6 +465,15 @@ public class GWThreadHandler extends AbstractThreadHandler {
                     ChatSDK.db().update(thread);
                     return Single.just(thread);
                 });
+    }
+
+    public void clearFeedbackText(Message message) {
+        //TODO 同步后端
+        JsonObject data = gson.fromJson(message.stringForKey(KEY_AI_FEEDBACK), JsonObject.class);
+        if (data.has("feedback_text")) {
+            data.addProperty("feedback_text", "");
+        }
+        updateMessage(message, data);
     }
 
     public Completable deleteThread(Thread thread) {

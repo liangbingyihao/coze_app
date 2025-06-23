@@ -1,14 +1,16 @@
 package sdk.chat.demo.robot.activities
 
+import android.app.AlertDialog
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,6 +20,7 @@ import io.reactivex.functions.Action
 import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import materialsearchview.MaterialSearchView
+import sdk.chat.core.dao.Message
 import sdk.chat.core.dao.Thread
 import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
@@ -25,15 +28,18 @@ import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.HistoryAdapter
 import sdk.chat.demo.robot.adpter.HistoryItem
+import sdk.chat.demo.robot.extensions.LanguageUtils
 import sdk.chat.demo.robot.fragments.GWChatFragment
 import sdk.chat.demo.robot.handlers.GWThreadHandler
+import sdk.chat.demo.robot.ui.listener.GWClickListener
 import sdk.chat.ui.ChatSDKUI
 import sdk.chat.ui.activities.MainActivity
 import sdk.guru.common.RX
+import java.util.Locale
 import kotlin.math.min
 
 
-class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnClickListener {
+class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnClickListener,GWClickListener.TTSSpeaker {
     open lateinit var drawerLayout: DrawerLayout
     open lateinit var searchView: MaterialSearchView
     private lateinit var recyclerView: RecyclerView
@@ -43,7 +49,8 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
     private val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
     private val chatTag = "tag_chat";
     private var toReloadSessions = false
-    private var pickImageLauncher: ActivityResultLauncher<Intent?>? = null
+    private lateinit var textToSpeech: TextToSpeech
+    private lateinit var ttsCheckLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // 加载菜单资源
@@ -126,49 +133,60 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
 
         requestPermissions();
 
-        // 注册从相册选择图片的launcher
-        pickImageLauncher = registerForActivityResult(
-            StartActivityForResult(),
-            { result ->
-                if (result.getResultCode() === RESULT_OK) {
-                    val data: Intent? = result.getData()
-                    if (data != null) {
-                        val imageUri: Uri? = data.getData()
-                        // 处理选择的图片
-                        if (imageUri != null) {
-                            // 或者分享图片
-                            val shareIntent = Intent(Intent.ACTION_SEND)
+        // 检查 TTS 是否可用
+        // 注册 ActivityResultLauncher
+        ttsCheckLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+                initTTS() // TTS 可用，初始化
+            } else {
+                // 提示用户安装 TTS 数据
+                val installIntent = Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA)
+                startActivity(installIntent)
+            }
+        }
+
+        // 检查 TTS 数据
+        val checkIntent = Intent(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA)
+//        ttsCheckLauncher.launch(checkIntent)
 
 
-                            // 设置分享类型为图片和文本
-                            shareIntent.setType("image/*")
+        if (checkIntent.resolveActivity(packageManager) != null) {
+            // 确认有 TTS 引擎后再启动
+            ttsCheckLauncher.launch(checkIntent)
+        } else {
+            // 设备完全无 TTS 支持时的处理
+//            handleNoTtsEngine()
+            Toast.makeText(this, "暂不支持语音播放", Toast.LENGTH_SHORT).show()
 
-
-                            // 添加图片URI
-                            shareIntent.putExtra(Intent.EXTRA_STREAM, imageUri)
-
-
-                            // 添加文本内容（包含下载链接）
-                            val shareText =
-                                "看看这个有趣的图片！下载我们的应用: " + "https://play.google.com/store/apps/details?id=com.color.colorvpn&hl=en"
-                            shareIntent.putExtra(Intent.EXTRA_TEXT, shareText)
-
-
-                            // 创建选择器，避免直接显示Intent.createChooser的标题
-                            val chooserIntent = Intent.createChooser(shareIntent, "分享到")
-
-
-                            // 验证是否有应用可以处理此Intent
-                            if (shareIntent.resolveActivity(getPackageManager()) != null) {
-                                startActivity(chooserIntent)
-                            } else {
-                                Toast.makeText(this, "没有找到可用的分享应用", Toast.LENGTH_SHORT)
-                                    .show()
-                            }
-                        }
-                    }
+            AlertDialog.Builder(this)
+                .setTitle("需要语音支持")
+                .setMessage("您的设备缺少语音合成引擎，是否安装 Google TTS？")
+                .setPositiveButton("安装") { _, _ ->
+                    safeInstallTtsEngine()
                 }
-            })
+                .setNegativeButton("取消") { _, _ ->
+                    Toast.makeText(this, "部分功能将不可用", Toast.LENGTH_SHORT).show()
+                }
+                .show()
+        }
+    }
+
+    private fun safeInstallTtsEngine() {
+        val installIntent = Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+
+        // 再次检查安装 Intent 是否可用
+        if (installIntent.resolveActivity(packageManager) != null) {
+            startActivity(installIntent)
+        } else {
+            // 连安装入口都没有的极端情况（如国产 ROM）
+            Toast.makeText(
+                this,
+                "您的设备不支持语音功能",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     private fun toMenuItems(data: List<Thread>): ArrayList<HistoryItem> {
@@ -229,6 +247,55 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
 
     }
 
+    private fun initTTS() {
+        textToSpeech = TextToSpeech(this) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                val result = textToSpeech.setLanguage(Locale.getDefault())
+                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                    Toast.makeText(this, "Language not supported", Toast.LENGTH_SHORT).show()
+                } else {
+//                    speek("你好, Android TTS")
+//                    textToSpeech.speak("Hello, Android TTS", TextToSpeech.QUEUE_FLUSH, null, null)
+                }
+            } else {
+                Toast.makeText(this, "TTS initialization failed", Toast.LENGTH_SHORT).show()
+            }
+        }
+        textToSpeech.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+            override fun onStart(utteranceId: String?) {
+                Toast.makeText(this@MainDrawerActivity, "onStart", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onDone(utteranceId: String?) {
+
+                //通知老的播放按键恢复一下
+                threadHandler.setPlayingMsg(null);
+                Toast.makeText(this@MainDrawerActivity, "onDone", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onError(utteranceId: String?) {
+                threadHandler.setPlayingMsg(null);
+                Toast.makeText(this@MainDrawerActivity, "playError", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    override fun speek(text:String, msgId:String){
+        var rawText = text.replace("*","").replace("<br>|</br>|<br/>".toRegex(), "")
+        textToSpeech.language = LanguageUtils.getTextLanguage(rawText)
+        textToSpeech.speak(rawText, TextToSpeech.QUEUE_FLUSH, null, msgId)
+    }
+
+    override fun getCurrentUtteranceId(): String? {
+        return currentUtteranceId;
+    }
+
+    override fun stop() {
+        if(textToSpeech.isSpeaking){
+            textToSpeech.stop()
+        }
+    }
+
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
@@ -258,9 +325,9 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
             }
 
             R.id.action_share -> {
-                val intent = Intent(Intent.ACTION_PICK)
-                intent.setType("image/*")
-                pickImageLauncher!!.launch(intent)
+//                val intent = Intent(Intent.ACTION_PICK)
+//                intent.setType("image/*")
+//                pickImageLauncher!!.launch(intent)
                 true
             }
 
@@ -385,4 +452,9 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        textToSpeech.stop()
+        textToSpeech.shutdown()
+    }
 }

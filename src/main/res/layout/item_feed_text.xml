@@ -38,7 +38,7 @@
 
 
     <!-- 底部行（时间 + 操作菜单） -->
-    <com.google.android.flexbox.FlexboxLayout
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone"
@@ -73,7 +73,7 @@
             android:textColor="@color/gray"
             android:textSize="12sp"
             tools:text="10:20" />
-    </com.google.android.flexbox.FlexboxLayout>
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/session_container"
@@ -114,29 +114,48 @@
         tools:text="111这是机器人回复的文本" />
 
     <!-- 底部行（时间 + 操作菜单） -->
-    <com.google.android.flexbox.FlexboxLayout
+    <LinearLayout
+        android:id="@+id/feedback_menu"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        app:alignItems="center"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        app:alignItems="flex_start"
         app:flexDirection="row"
         app:justifyContent="flex_start"
         app:layout_alignSelf="flex_start">
 
         <ImageView
             android:id="@+id/btn_copy"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginStart="12dp"
-            android:src="@drawable/icon_copy" />
+            style="@style/FeedOperator"
+            android:layout_marginStart="0dp"
+            android:src="@mipmap/ic_copy_black" />
 
         <ImageView
             android:id="@+id/btn_play"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginStart="14dp"
-            android:src="@drawable/icon_pause" />
-    </com.google.android.flexbox.FlexboxLayout>
+            style="@style/FeedOperator"
+            android:src="@mipmap/ic_play_black" />
+        <ImageView
+            android:id="@+id/btn_pic"
+            style="@style/FeedOperator"
+            android:src="@mipmap/ic_pic_black" />
+        <ImageView
+            android:id="@+id/btn_like"
+            style="@style/FeedOperator"
+            android:src="@mipmap/ic_like_black" />
+        <ImageView
+            android:id="@+id/btn_share"
+            style="@style/FeedOperator"
+            android:src="@mipmap/ic_share_black" />
+        <ImageView
+            android:id="@+id/btn_del"
+            style="@style/FeedOperator"
+            android:src="@mipmap/ic_del_black" />
+        <ImageView
+            android:id="@+id/btn_redo"
+            style="@style/FeedOperator"
+            android:src="@mipmap/ic_redo_black" />
+    </LinearLayout>
 
 
     <com.google.android.material.button.MaterialButton
