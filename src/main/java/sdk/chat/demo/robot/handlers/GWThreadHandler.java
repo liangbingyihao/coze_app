@@ -48,6 +48,7 @@ import sdk.chat.demo.pre.BuildConfig;
 import sdk.chat.demo.robot.adpter.data.AIExplore;
 import sdk.chat.demo.robot.api.GWApiManager;
 import sdk.chat.demo.robot.api.ImageApi;
+import sdk.chat.demo.robot.api.model.AIFeedback;
 import sdk.chat.demo.robot.api.model.ImageDaily;
 import sdk.chat.demo.robot.api.model.MessageDetail;
 import sdk.chat.demo.robot.api.model.SystemConf;
@@ -76,6 +77,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
     public final static int action_bible_pic = 1;
     public final static int action_daily_gw = 2;
     public final static int action_direct_msg = 3;
+    public final static int action_daily_pray = 4;
 
     public AIExplore getAiExplore() {
         return aiExplore;
@@ -317,10 +319,14 @@ public class GWThreadHandler extends AbstractThreadHandler {
         return true;
     }
 
-    public Completable sendExploreMessage(final String text, final String contextId, final Thread thread, int action, String params) {
+    public Completable sendExploreMessage(final String text, final Message contextMsg, int action, String params) {
+        if (action == action_bible_pic) {
+            return genBiblePic(contextMsg);
+        }
+        Thread thread = contextMsg.getThread() != null ? contextMsg.getThread() : createChatSessions();
         return new MessageSendRig(new MessageType(MessageType.Text), thread, message -> {
             message.setText(text);
-            message.setMetaValue("context_id", contextId);
+            message.setMetaValue("context_id", contextMsg.getEntityID());
             message.setMetaValue("action", action);
 //    action_daily_ai = 0
 //    action_bible_pic = 1
@@ -344,8 +350,26 @@ public class GWThreadHandler extends AbstractThreadHandler {
             } else if (action == action_daily_gw) {
                 message.setType(DailyGWRegistration.GWMessageType);
                 message.setMetaValue("image-date", params);
+            } else if (action == action_daily_pray && params != null && !params.isEmpty()) {
+                message.setText(params + "\n" + text);
             }
         }).run();
+    }
+
+    private Completable genBiblePic(Message message) {
+        MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(message);
+        if (aiFeedback == null || aiFeedback.getFeedback() == null || aiFeedback.getFeedback().getBible() == null || aiFeedback.getFeedback().getBible().isEmpty()) {
+            return Completable.complete();
+        }
+        return ImageApi.listImageTags().subscribeOn(RX.io()).flatMap(data -> {
+            String tag = aiFeedback.getFeedback().getTag();
+            String imageUrl = ImageApi.getRandomImageByTag(tag);
+            message.setMetaValue(Keys.ImageUrl, imageUrl);
+//            message.setType(MessageType.Image);
+            ChatSDK.db().update(message, false);
+            ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
+            return Single.just(message);
+        }).ignoreElement();
     }
 
     private void inheritExplore(Message message) {
@@ -385,17 +409,27 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 String imageDate = message.stringForKey("image-date");
                 return ImageApi.listImageDaily("").subscribeOn(RX.io()).flatMap(data -> {
                     if (data != null && !data.isEmpty()) {
-                        String url = data.get(0).getUrl();
+                        ImageDaily m = null;
                         if (imageDate != null && !imageDate.isEmpty()) {
                             for (ImageDaily d : data) {
                                 if (d.getDate().equals(imageDate)) {
-                                    url = d.getUrl();
+                                    m = d;
                                     break;
                                 }
                             }
                         }
-                        message.setMetaValue(Keys.ImageUrl, url);
-                        inheritExplore(message);
+                        if (m == null) {
+                            m = data.get(0);
+                        }
+                        message.setMetaValue(Keys.ImageUrl, m.getUrl());
+                        MessageDetail messageDetail = new MessageDetail();
+                        messageDetail.setStatus(2);
+                        AIFeedback aiFeedback = new AIFeedback();
+                        messageDetail.setFeedback(aiFeedback);
+                        aiFeedback.setFunction(m.getExploreWithParams());
+                        if (!aiFeedback.getFunction().isEmpty()) {
+                            updateMessage(message, gson.toJsonTree(messageDetail).getAsJsonObject());
+                        }
                     }
                     return Single.just(message);
                 }).ignoreElement();
@@ -809,7 +843,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
 
             if (messageDetail.getStatus() == 2) {
                 disposables.clear();
-                if (messageDetail.getSessionId() > 0) {
+                if (messageDetail.getSessionId() != null && messageDetail.getSessionId() > 0) {
                     message.setThreadId(messageDetail.getSessionId());
                     updateThread(Long.toString(messageDetail.getSessionId()), messageDetail.getFeedback().getTopic(), new Date());
                 }

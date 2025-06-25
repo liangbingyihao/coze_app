@@ -23,4 +23,5 @@
     <string name="search">Search</string>
     <string name="timeline">Timeline</string>
     <string name="pending_image">Processing image...</string>
+    <string name="copied">Copied to clipboard.</string>
   </resources>

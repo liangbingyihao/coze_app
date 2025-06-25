@@ -21,6 +21,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import kotlin.Unit;
+import sdk.chat.core.dao.Keys;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.events.NetworkEvent;
 import sdk.chat.core.session.ChatSDK;
@@ -64,7 +65,8 @@ public class GWClickListener<MESSAGE extends IMessage> implements MessagesListAd
         GWClickListener listener = new GWClickListener(activity);
         adapter.registerViewClickListener(R.id.image_container, listener);
         adapter.registerViewClickListener(R.id.btn_download, listener);
-        adapter.registerViewClickListener(R.id.btn_share, listener);
+        adapter.registerViewClickListener(R.id.btn_share_image, listener);
+        adapter.registerViewClickListener(R.id.btn_share_text, listener);
         adapter.registerViewClickListener(R.id.btn_play, listener);
         adapter.registerViewClickListener(R.id.btn_copy, listener);
         adapter.registerViewClickListener(R.id.btn_pic, listener);
@@ -73,18 +75,38 @@ public class GWClickListener<MESSAGE extends IMessage> implements MessagesListAd
 
     @Override
     public void onMessageViewClick(View view, IMessage imessage) {
-        if (this.weakContext == null || this.weakContext.get() == null) {
+        if (this.weakContext.get() == null) {
             return;
         }
         int id = view.getId();
-        if (id == R.id.btn_download || id == R.id.btn_share) {
-            if (pending) {
-                ToastHelper.show(getContext(), getContext().getString(R.string.pending_image));
-                return;
+
+        int resId;
+        ImageDaily imageDaily;
+        if (imessage.getClass() == TextHolder.class) {
+            TextHolder t = (TextHolder) imessage;
+            resId = R.layout.view_popup_image_bible;
+            imageDaily = new ImageDaily(t.getAiFeedback().getFeedback().getBible(), t.message.stringForKey(Keys.ImageUrl));
+//                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+//                shareIntent.setType("text/plain"); // 或具体类型如 "image/jpeg"
+//                shareIntent.putExtra(Intent.EXTRA_TEXT, t.getAiFeedback().getFeedbackText());
+//                shareIntent.putExtra(Intent.EXTRA_SUBJECT, "恩语之声"); // 临时权限
+//
+//                weakContext.get().startActivity(Intent.createChooser(shareIntent, "分享到"));
+//                return;
+        } else if (imessage.getClass() == DailyGWHolder.class) {
+            resId = R.layout.item_image_gw;
+            imageDaily = ((DailyGWHolder) imessage).getImageDaily();
+        } else {
+            ImageHolder holder = (ImageHolder) imessage;
+            imageDaily = holder.getImageDaily();
+            if (holder.getAction() == GWThreadHandler.action_bible_pic) {
+                resId = R.layout.view_popup_image_bible;
+            } else {
+                resId = R.layout.item_image_gw;
             }
-//            ImageHolder imageHolder = (ImageHolder) imessage;
-            int resId;
-            ImageDaily imageDaily;
+        }
+
+        if (id == R.id.btn_share_text) {
             if (imessage.getClass() == TextHolder.class) {
                 TextHolder t = (TextHolder) imessage;
                 Intent shareIntent = new Intent(Intent.ACTION_SEND);
@@ -93,19 +115,14 @@ public class GWClickListener<MESSAGE extends IMessage> implements MessagesListAd
                 shareIntent.putExtra(Intent.EXTRA_SUBJECT, "恩语之声"); // 临时权限
 
                 weakContext.get().startActivity(Intent.createChooser(shareIntent, "分享到"));
-                return;
-            } else if (imessage.getClass() == DailyGWHolder.class) {
-                resId = R.layout.item_image_gw;
-                imageDaily = ((DailyGWHolder) imessage).getImageDaily();
-            } else {
-                ImageHolder holder = (ImageHolder) imessage;
-                imageDaily = holder.getImageDaily();
-                if (holder.getAction() == GWThreadHandler.action_bible_pic) {
-                    resId = R.layout.view_popup_image_bible;
-                } else {
-                    resId = R.layout.item_image_gw;
-                }
             }
+        } else if (id == R.id.btn_download || id == R.id.btn_share_image) {
+            if (pending) {
+                ToastHelper.show(getContext(), getContext().getString(R.string.pending_image));
+                return;
+            }
+//            ImageHolder imageHolder = (ImageHolder) imessage;
+
             pending = true;
             Disposable disposable = PermissionRequestHandler
                     .requestWriteExternalStorage(weakContext.get())
@@ -138,7 +155,7 @@ public class GWClickListener<MESSAGE extends IMessage> implements MessagesListAd
                                         Bitmap.CompressFormat.JPEG
                                 );
                                 if (bitmapURL != null) {
-                                    if (id == R.id.btn_share) {
+                                    if (id == R.id.btn_share_image) {
                                         Intent shareIntent = new Intent(Intent.ACTION_SEND);
                                         shareIntent.setType("image/*"); // 或具体类型如 "image/jpeg"
                                         shareIntent.putExtra(Intent.EXTRA_STREAM, bitmapURL);
@@ -162,9 +179,9 @@ public class GWClickListener<MESSAGE extends IMessage> implements MessagesListAd
             weakContext.get().onSubscribe(disposable);
 
         } else if (id == R.id.image_container) {
-            ImageHolder imageHolder = (ImageHolder) imessage;
-            ImageDaily imageDaily = imageHolder.getImageDaily();
-            if (imageHolder.getAction() == GWThreadHandler.action_daily_gw) {
+//            ImageHolder imageHolder = (ImageHolder) imessage;
+//            ImageDaily imageDaily = imageHolder.getImageDaily();
+            if (resId == R.layout.item_image_gw) {
                 ImageViewerActivity.Companion.start(this.weakContext.get(), imageDaily.getDate());
             } else {
                 ImageMessageOnClickHandler.onClick(this.weakContext.get(), view, imageDaily.getBackgroundUrl(), imageDaily.getScripture());
@@ -191,6 +208,7 @@ public class GWClickListener<MESSAGE extends IMessage> implements MessagesListAd
                 TextHolder holder = (TextHolder) imessage;
                 ClipData clip = ClipData.newPlainText("恩语", holder.getAiFeedback().getFeedbackText());
                 clipboard.setPrimaryClip(clip);
+                ToastHelper.show(getContext(), getContext().getString(R.string.copied));
             }
         } else if (id == R.id.btn_pic) {
             if (this.weakContext.get() != null && imessage.getClass() == TextHolder.class) {
@@ -199,8 +217,7 @@ public class GWClickListener<MESSAGE extends IMessage> implements MessagesListAd
                 AIFeedback feedback = t.getAiFeedback().getFeedback();
                 threadHandler.sendExploreMessage(
                         "",
-                        t.message.getEntityID(),
-                        t.message.getThread(),
+                        t.message,
                         GWThreadHandler.action_bible_pic,
                         feedback.getTag() + "|" + feedback.getBible()
                 ).subscribe();

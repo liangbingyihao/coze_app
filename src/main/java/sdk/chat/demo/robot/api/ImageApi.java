@@ -37,7 +37,7 @@ public class ImageApi {
     private final static String URL2 = "https://api-test.kolacdn.xyz/api/v1/app/";
     private final static String URL_IMAGE_TAG = URL2 + "scripture/background";
     private final static String URL_IMAGE_DAILY_GW = URL2 + "scripture/daily";
-    private final static String KEY_CACHE_IMG_DAILY = "bibleDaily";
+    private final static String KEY_CACHE_IMG_DAILY = "gwDaily";
     private static String oldestImageDailyDate = null;
 //    private final static OkHttpClient client;
 //

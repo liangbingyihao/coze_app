@@ -2,7 +2,10 @@ package sdk.chat.demo.robot.api.model;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import sdk.chat.demo.robot.handlers.GWThreadHandler;
 
 public class ImageDaily {
     private String scripture;
@@ -11,6 +14,7 @@ public class ImageDaily {
     private String reference;
     @SerializedName("background_url")
     private String backgroundUrl;
+    private ArrayList<String> explore;
 
     public ImageDaily(String scripture, String backgroundUrl) {
         this.scripture = scripture;
@@ -55,5 +59,31 @@ public class ImageDaily {
 
     public void setBackgroundUrl(String backgroundUrl) {
         this.backgroundUrl = backgroundUrl;
+    }
+
+    public ArrayList<String> getExplore() {
+        return explore;
+    }
+
+    public void setExplore(ArrayList<String> explore) {
+        this.explore = explore;
+    }
+
+    public List<List<String>> getExploreWithParams() {
+
+        List<List<String>> function = new ArrayList<>();
+        for (String f : explore) {
+            if (f.indexOf("祷告默想和实际应用") > 0) {
+                function.add(
+                        List.of(f, Integer.toString(GWThreadHandler.action_daily_pray), scripture)
+                );
+            } else {
+                function.add(
+                        List.of(f)
+                );
+            }
+        }
+
+        return function;
     }
 }

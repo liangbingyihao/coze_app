@@ -9,11 +9,13 @@ import org.pmw.tinylog.Logger;
 
 import java.text.DateFormat;
 
+import kotlin.jvm.JvmField;
 import sdk.chat.core.dao.Keys;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.demo.robot.api.ImageApi;
 import sdk.chat.demo.robot.api.model.ImageDaily;
+import sdk.chat.demo.robot.api.model.MessageDetail;
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
 import sdk.chat.ui.chat.model.ImageMessageHolder;
@@ -30,7 +32,7 @@ public class ImageHolder extends ImageMessageHolder {
     public ImageHolder(Message message) {
         super(message);
         action = message.integerForKey("action");
-        if (action == GWThreadHandler.action_bible_pic) {
+        if (!message.stringForKey(Keys.ImageUrl).isEmpty()) {
             imageDaily = new ImageDaily(message.stringForKey("image-text"),message.stringForKey(Keys.ImageUrl));
         } else if (action == GWThreadHandler.action_daily_gw) {
             bibleDate = message.stringForKey("image-date");

@@ -5,7 +5,6 @@ import android.graphics.Color
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.OnClickListener
 import android.view.ViewGroup
 import android.widget.PopupWindow
 import androidx.core.graphics.drawable.toDrawable
@@ -21,7 +20,7 @@ class PopupMenuHelper(
     private var isShowing = false
 
     fun dismiss() {
-        popupWindow?.dismiss()
+        popupWindow.dismiss()
     }
 
     fun setPopupWindow(resId: Int) {
@@ -68,7 +67,7 @@ class PopupMenuHelper(
         } else {
             // 显示在下方
             setPopupWindow(R.layout.menu_popup_bottom)
-            popupWindow?.showAsDropDown(anchorView, 0, 0, Gravity.END)
+            popupWindow.showAsDropDown(anchorView, 0, 0, Gravity.END)
         }
 
         isShowing = true

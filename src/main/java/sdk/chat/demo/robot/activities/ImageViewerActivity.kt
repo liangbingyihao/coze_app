@@ -200,8 +200,7 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
                 threadHandler.aiExplore.contextId
                 threadHandler.sendExploreMessage(
                     "【每日恩语】-${date}",
-                    threadHandler.aiExplore.contextId ?: threadHandler.aiExplore.message.entityID,
-                    threadHandler.createChatSessions(),
+                    threadHandler.aiExplore.message,
                     2,
                     date
                 ).subscribe();
@@ -218,76 +217,76 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
         isLoading = false
     }
 
-    private fun save(view: View, share: Boolean) {
-        val currentPosition = viewPager.currentItem
-        var data = DailyGWHolder(GWThreadHandler.action_daily_gw, adapter.getUrlAt(currentPosition))
-        imageHandler.onMessageViewClick(view, data)
-        return
-
-
-        val recyclerView = viewPager.getChildAt(0) as? RecyclerView ?: run {
-            ToastHelper.show(this, "RecyclerView not found")
-            return
-        }
-
-        val currentViewHolder =
-            recyclerView.findViewHolderForAdapterPosition(currentPosition) as? ImagePagerAdapter.ViewHolder
-                ?: run {
-                    ToastHelper.show(this, "View not ready at position $currentPosition")
-                    return
-                }
-
-        val currentView = currentViewHolder.itemView
-        currentView.findViewById<View>(R.id.footer).visibility = View.VISIBLE
-        currentView.post {
-            val disposable = PermissionRequestHandler
-                .requestWriteExternalStorage(this@ImageViewerActivity)
-                .andThen( // 权限请求成功后，执行后续操作
-                    Observable.fromCallable<Bitmap> {
-                        val bitmap = createBitmap(currentView.width, currentView.height)
-
-                        // 2. 将 View 绘制到 Bitmap
-                        val canvas = Canvas(bitmap)
-                        currentView.draw(canvas)
-
-                        currentView.post {
-                            currentView.findViewById<View>(R.id.footer).visibility =
-                                View.INVISIBLE
-                        }
-
-                        bitmap
-                    }
-                        .subscribeOn(Schedulers.io())
-                )
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    { bitmap ->
-                        val bitmapURL = ImageSaveUtils.saveBitmapToGallery(
-                            context = this@ImageViewerActivity,
-                            bitmap = bitmap,
-                            filename = "img_${System.currentTimeMillis()}",
-                            format = Bitmap.CompressFormat.JPEG
-                        )
-                        bitmap.recycle()
-                        if (bitmapURL != null) {
-                            ToastHelper.show(this, getString(R.string.image_saved))
-                            if (share) {
-                                val shareIntent = Intent(Intent.ACTION_SEND)
-                                shareIntent.setType("image/*") // 或具体类型如 "image/jpeg"
-                                shareIntent.putExtra(Intent.EXTRA_STREAM, bitmapURL)
-                                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) // 临时权限
-
-                                startActivity(Intent.createChooser(shareIntent, "分享图片"))
-                            }
-                        } else {
-                            ToastHelper.show(this, getString(R.string.image_save_failed))
-                        }
-                    },
-                    this
-                )
-            dm.add(disposable)
-        }
-    }
+//    private fun save(view: View, share: Boolean) {
+//        val currentPosition = viewPager.currentItem
+//        var data = DailyGWHolder(GWThreadHandler.action_daily_gw, adapter.getUrlAt(currentPosition))
+//        imageHandler.onMessageViewClick(view, data)
+//        return
+//
+//
+//        val recyclerView = viewPager.getChildAt(0) as? RecyclerView ?: run {
+//            ToastHelper.show(this, "RecyclerView not found")
+//            return
+//        }
+//
+//        val currentViewHolder =
+//            recyclerView.findViewHolderForAdapterPosition(currentPosition) as? ImagePagerAdapter.ViewHolder
+//                ?: run {
+//                    ToastHelper.show(this, "View not ready at position $currentPosition")
+//                    return
+//                }
+//
+//        val currentView = currentViewHolder.itemView
+//        currentView.findViewById<View>(R.id.footer).visibility = View.VISIBLE
+//        currentView.post {
+//            val disposable = PermissionRequestHandler
+//                .requestWriteExternalStorage(this@ImageViewerActivity)
+//                .andThen( // 权限请求成功后，执行后续操作
+//                    Observable.fromCallable<Bitmap> {
+//                        val bitmap = createBitmap(currentView.width, currentView.height)
+//
+//                        // 2. 将 View 绘制到 Bitmap
+//                        val canvas = Canvas(bitmap)
+//                        currentView.draw(canvas)
+//
+//                        currentView.post {
+//                            currentView.findViewById<View>(R.id.footer).visibility =
+//                                View.INVISIBLE
+//                        }
+//
+//                        bitmap
+//                    }
+//                        .subscribeOn(Schedulers.io())
+//                )
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(
+//                    { bitmap ->
+//                        val bitmapURL = ImageSaveUtils.saveBitmapToGallery(
+//                            context = this@ImageViewerActivity,
+//                            bitmap = bitmap,
+//                            filename = "img_${System.currentTimeMillis()}",
+//                            format = Bitmap.CompressFormat.JPEG
+//                        )
+//                        bitmap.recycle()
+//                        if (bitmapURL != null) {
+//                            ToastHelper.show(this, getString(R.string.image_saved))
+//                            if (share) {
+//                                val shareIntent = Intent(Intent.ACTION_SEND)
+//                                shareIntent.setType("image/*") // 或具体类型如 "image/jpeg"
+//                                shareIntent.putExtra(Intent.EXTRA_STREAM, bitmapURL)
+//                                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) // 临时权限
+//
+//                                startActivity(Intent.createChooser(shareIntent, "分享图片"))
+//                            }
+//                        } else {
+//                            ToastHelper.show(this, getString(R.string.image_save_failed))
+//                        }
+//                    },
+//                    this
+//                )
+//            dm.add(disposable)
+//        }
+//    }
 //    fun Activity.showSystemUI() {
 //        WindowCompat.setDecorFitsSystemWindows(window, true)
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {

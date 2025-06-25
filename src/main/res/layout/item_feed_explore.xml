@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/explore1"
+        style="@style/ExploreButtonStyle"
+        android:layout_marginTop="16dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/explore2"
+        style="@style/ExploreButtonStyle"
+        android:layout_marginTop="8dp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/explore3"
+        style="@style/ExploreButtonStyle"
+        android:layout_marginTop="8dp"/>
+</merge>

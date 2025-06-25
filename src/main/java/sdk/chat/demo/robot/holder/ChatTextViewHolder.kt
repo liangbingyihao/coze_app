@@ -1,14 +1,24 @@
 package sdk.chat.demo.robot.holder
 
+//import sdk.chat.ui.R
+import android.graphics.drawable.Drawable
 import android.text.util.Linkify
-import android.util.TypedValue
+import android.view.ActionMode
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.ViewCompat
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
 import com.mikepenz.iconics.view.IconicsImageView
 import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessagesListAdapter
@@ -16,23 +26,25 @@ import com.stfalcon.chatkit.messages.MessagesListStyle
 import io.noties.markwon.Markwon
 import io.reactivex.functions.Consumer
 import io.reactivex.functions.Predicate
+import sdk.chat.core.dao.Keys
 import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.manager.DownloadablePayload
 import sdk.chat.core.session.ChatSDK
+import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.IconUtils
 import sdk.chat.demo.robot.api.model.MessageDetail
 import sdk.chat.demo.robot.handlers.GWThreadHandler
-import sdk.chat.ui.R
 import sdk.chat.ui.chat.model.MessageHolder
 import sdk.chat.ui.module.UIModule
-import sdk.chat.ui.utils.DrawableUtil
 import sdk.chat.ui.view_holders.v2.MessageDirection
 import sdk.chat.ui.views.ProgressView
 import sdk.guru.common.DisposableMap
 import sdk.guru.common.RX
 import java.text.DateFormat
 import kotlin.math.abs
+import androidx.core.view.size
+import androidx.core.view.get
 
 open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: MessageDirection) :
     MessageHolders.BaseMessageViewHolder<T>(itemView, null),
@@ -40,7 +52,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
     Consumer<Throwable> {
 
     val keyIsGood: String = "is-good"
-    open var root: View? = itemView.findViewById(R.id.root)
+    open var root: View? = itemView.findViewById(sdk.chat.ui.R.id.root)
     open var bubble: ViewGroup? = itemView.findViewById(R.id.bubble)
 
     open var messageIcon: ImageView? = itemView.findViewById(R.id.messageIcon)
@@ -48,7 +60,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
     open var imageOverlay: ImageView? = itemView.findViewById(R.id.imageOverlay)
 
     open var text: TextView? = itemView.findViewById(R.id.messageText)
-    open var feedback: TextView? = itemView.findViewById(sdk.chat.demo.pre.R.id.feedback)
+    open var feedback: TextView? = itemView.findViewById(R.id.feedback)
     open var time: TextView? = itemView.findViewById(R.id.messageTime)
 
     open var readStatus: ImageView? = itemView.findViewById(R.id.readStatus)
@@ -62,28 +74,31 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
     open var resendTextView: TextView? = itemView.findViewById(R.id.resendTextView)
     open var resendContainer: ConstraintLayout? = itemView.findViewById(R.id.resendContainer)
     open var sessionContainer: View? =
-        itemView.findViewById(sdk.chat.demo.pre.R.id.session_container)
-    open var sessionName: TextView? = itemView.findViewById(sdk.chat.demo.pre.R.id.session_name)
+        itemView.findViewById(R.id.session_container)
+    open var sessionName: TextView? = itemView.findViewById(R.id.session_name)
 
     open val btnFavorite: IconicsImageView? =
-        itemView.findViewById(sdk.chat.demo.pre.R.id.btn_favorite)
+        itemView.findViewById(R.id.btn_favorite)
     open val btnPlay: ImageView? =
-        itemView.findViewById(sdk.chat.demo.pre.R.id.btn_play)
-    open val btnDelete: IconicsImageView? = itemView.findViewById(sdk.chat.demo.pre.R.id.btn_delete)
-    open val feedbackMenu: View? = itemView.findViewById(sdk.chat.demo.pre.R.id.feedback_menu)
+        itemView.findViewById(R.id.btn_play)
+    open val btnDelete: IconicsImageView? = itemView.findViewById(R.id.btn_delete)
+    open val feedbackMenu: View? = itemView.findViewById(R.id.feedback_menu)
 
     open var format: DateFormat? = null
 
     open val dm = DisposableMap()
-    open val direction: MessageDirection = direction
+    open var image: ImageView? = itemView.findViewById(R.id.image)
+    open var imageContainer: View? = itemView.findViewById(R.id.image_container)
+    open var imageMenu: View? = itemView.findViewById(R.id.image_menu)
+    open var bible: TextView? = itemView.findViewById(R.id.bible)
 
-    //    open var explore1: View? = itemView.findViewById(sdk.chat.demo.pre.R.id.explore1)
-//    open var explore2: View? = itemView.findViewById(sdk.chat.demo.pre.R.id.explore2)
-//    open var explore3: View? = itemView.findViewById(sdk.chat.demo.pre.R.id.explore3)
+    //    open var explore1: View? = itemView.findViewById(R.id.explore1)
+//    open var explore2: View? = itemView.findViewById(R.id.explore2)
+//    open var explore3: View? = itemView.findViewById(R.id.explore3)
     val exploreView: Map<String, TextView> = mapOf(
-        "explore0" to itemView.findViewById<TextView>(sdk.chat.demo.pre.R.id.explore1),
-        "explore1" to itemView.findViewById<TextView>(sdk.chat.demo.pre.R.id.explore2),
-        "explore2" to itemView.findViewById<TextView>(sdk.chat.demo.pre.R.id.explore3)
+        "explore0" to itemView.findViewById<TextView>(R.id.explore1),
+        "explore1" to itemView.findViewById<TextView>(R.id.explore2),
+        "explore2" to itemView.findViewById<TextView>(R.id.explore3)
     )
 
 //    open var userClickListener: MessagesListAdapter.UserClickListener? = null
@@ -101,7 +116,6 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
     }
 
     open fun bind(t: T) {
-//        Log.e("bindMsg", t.message.id.toString())
         progressView?.actionButton?.setOnClickListener(View.OnClickListener {
             actionButtonPressed(t)
         })
@@ -122,9 +136,6 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
             UIModule.shared().iconBinder.bind(it, t)
         }
 
-//        bindReadStatus(t)
-//        bindSendStatus(t)
-//        bindProgress(t)
 
         btnFavorite?.setOnClickListener {
             it.animate().scaleX(0.8f).scaleY(0.8f).setDuration(100).withEndAction {
@@ -142,10 +153,10 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
         }
         setFavorite(t.message.integerForKey(keyIsGood))
         val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
-        if(t.message.equals(threadHandler.playingMsg)){
-            btnPlay?.setImageResource(sdk.chat.demo.pre.R.mipmap.ic_pause_black);
-        }else{
-            btnPlay?.setImageResource(sdk.chat.demo.pre.R.mipmap.ic_play_black);
+        if (t.message.equals(threadHandler.playingMsg)) {
+            btnPlay?.setImageResource(R.mipmap.ic_pause_black);
+        } else {
+            btnPlay?.setImageResource(R.mipmap.ic_play_black);
         }
         var aiFeedback: MessageDetail? = (t as? TextHolder)?.getAiFeedback();
         var i = 0
@@ -156,8 +167,12 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
                 var data = aiExplore.itemList[i]
                 v.visibility = View.VISIBLE
                 v.text = data.text
-                if (data.action == 1) {
+                if (data.action == GWThreadHandler.action_bible_pic) {
                     var bible = aiFeedback?.feedback?.bible ?: ""
+                    if (bible.isEmpty()) {
+                        v.visibility = View.GONE
+                        continue
+                    }
 //                    bible = aiFeedback?.feedbackText ?:""
                     v.setOnClickListener { view ->
                         // 可以使用view参数
@@ -165,8 +180,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
                             view as TextView
                             threadHandler.sendExploreMessage(
                                 view.text.toString().trim(),
-                                t.message.entityID,
-                                t.message.thread,
+                                t.message,
                                 data.action,
                                 "${aiFeedback.feedback.tag}|${bible}"
                             ).subscribe();
@@ -180,8 +194,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
                         view as TextView // 安全转换
                         threadHandler.sendExploreMessage(
                             view.text.toString().trim(),
-                            t.message.entityID,
-                            t.message.thread,
+                            t.message,
                             data.action,
                             data.params
                         ).subscribe();
@@ -202,9 +215,9 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
                 .setMarkdown(it, feedbackText)
         }
 
-        if(aiFeedback?.status !=2||feedbackText.isEmpty()){
+        if (aiFeedback?.status != 2 || feedbackText.isEmpty()) {
             feedbackMenu?.visibility = View.GONE
-        }else{
+        } else {
             feedbackMenu?.visibility = View.VISIBLE
         }
 
@@ -216,6 +229,43 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
             }
         } else {
             sessionContainer?.visibility = View.GONE
+        }
+
+        var imageUrl = t.message.stringForKey(Keys.ImageUrl)
+        var bibleText = aiFeedback?.feedback?.bible
+        if (imageUrl.isEmpty() || bibleText == null || bibleText.isEmpty()) {
+            imageContainer?.visibility = View.GONE
+            imageMenu?.visibility = View.GONE
+        } else {
+            imageContainer?.visibility = View.VISIBLE
+            imageMenu?.visibility = View.VISIBLE
+            bible?.text = bibleText
+            Glide.with(image!!)
+                .load(imageUrl)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .placeholder(R.drawable.icn_200_image_message_placeholder) // 占位图
+                .error(R.drawable.icn_200_image_message_error) // 错误图
+                .addListener(object : RequestListener<Drawable> {
+                    override fun onResourceReady(
+                        resource: Drawable,
+                        model: Any,
+                        target: com.bumptech.glide.request.target.Target<Drawable>,
+                        dataSource: DataSource,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        return false
+                    }
+
+                    override fun onLoadFailed(
+                        e: GlideException?,
+                        model: Any,
+                        target: Target<Drawable>,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        return false
+                    }
+                })
+                .into(image!!)
         }
     }
 
@@ -240,7 +290,6 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
                 it.text = value
             }
 
-            text?.setTextIsSelectable(true);
         } else {
             bubble?.visibility = View.GONE
         }
@@ -326,6 +375,112 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
                         bind(t)
                     }
                 })
+//        text?.setOnLongClickListener { v ->
+//            PopupMenuHelper(
+//                context = v.context,
+//                anchorView = v,
+//                onItemSelected = { v ->
+//                    when (v.id) {
+//                        R.id.delArticle -> {
+////                            changeTopic(-1)
+//                        }
+//
+//                        R.id.changeTopic -> {
+////                            menuPopup.show(true)
+//                        }
+//                    }
+//                },
+//            ).show()
+//            true
+//        }
+        text?.setCustomSelectionActionModeCallback(object : ActionMode.Callback {
+            private var verticalPopupMenu: PopupMenu? = null
+            public override fun onCreateActionMode(mode: ActionMode, menu: Menu?): Boolean {
+
+
+                // 创建垂直布局的PopupMenu
+                verticalPopupMenu = PopupMenu(text!!.context, text)
+
+
+                // 将系统菜单项复制到PopupMenu
+                for (i in 0..<menu!!.size) {
+                    val systemItem = menu[i]
+                    verticalPopupMenu?.getMenu()?.add(systemItem.getTitle())
+                        ?.setIcon(systemItem.getIcon())
+                        ?.setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener { item: MenuItem? ->
+                            mode.finish(); // 选择菜单项后结束ActionMode
+                            onActionItemClicked(
+                                mode,
+                                systemItem
+                            )
+                        })
+                }
+
+//
+//                // 取消系统默认的水平菜单
+//                mode.finish()
+
+
+                // 显示垂直菜单
+                verticalPopupMenu?.show()
+                return true
+
+//
+//                // Inflate your custom menu
+////                mode.menuInflater.inflate(R.menu.custom_text_selection_menu, menu)
+//
+////                menu?.add(0, R.id.like, 2, "自定义操作1")
+////                    ?.setIcon(R.mipmap.ic_like_black)
+////                    ?.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+//
+//                if (menu == null) {
+//                    return true
+//                }
+//
+//                val systemItems = (0 until menu.size()).mapNotNull { menu.getItem(it) }
+//
+//                menu.clear()
+//
+//                systemItems.forEachIndexed { index, item ->
+//                    if (index == 2) { // 在第三个位置插入自定义项
+//                        menu.add(0, R.id.like, index, "自定义操作")
+//                    }
+//                    menu.add(item.groupId, item.itemId, index, item.title)
+//                }
+//
+//                return true
+            }
+
+            public override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+                return false // Return false if nothing is done
+            }
+
+            public override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
+                val start: Int = text!!.getSelectionStart()
+                val end: Int = text!!.getSelectionEnd()
+                val selectedText: String? = text!!.getText().toString().substring(start, end)
+
+                when (item?.getItemId()) {
+                    R.id.custom_action -> {
+                        // Handle your custom action
+//                        Toast.makeText(
+//                            this@MainActivity,
+//                            "Selected: " + selectedText,
+//                            Toast.LENGTH_SHORT
+//                        ).show()
+                        mode?.finish()
+                        return true
+                    }
+
+                    else -> return false
+                }
+            }
+
+            public override fun onDestroyActionMode(mode: ActionMode?) {
+                // Action mode finished
+                verticalPopupMenu?.dismiss()
+            }
+        })
     }
 
     //    public Predicate<NetworkEvent> filter() {
@@ -349,99 +504,6 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
 //        }
     }
 
-    open fun applyIncomingStyle(style: MessagesListStyle) {
-
-        progressView?.let {
-            it.setTintColor(style.incomingTextColor, style.incomingDefaultBubbleColor)
-        }
-
-        bubble?.let {
-            it.setPadding(
-                style.incomingDefaultBubblePaddingLeft,
-                style.incomingDefaultBubblePaddingTop,
-                style.incomingDefaultBubblePaddingRight,
-                style.incomingDefaultBubblePaddingBottom
-            )
-            ViewCompat.setBackground(it, style.getIncomingBubbleDrawable())
-
-            it.background = DrawableUtil.getMessageSelector(
-                it.context,
-                R.attr.incomingDefaultBubbleColor,
-                R.attr.incomingDefaultBubbleSelectedColor,
-                R.attr.incomingDefaultBubblePressedColor,
-                R.attr.incomingBubbleDrawable
-            )
-        }
-
-        text?.let {
-            it.setTextColor(style.incomingTextColor)
-            it.setTextSize(0, style.incomingTextSize.toFloat())
-            it.setTypeface(it.typeface, style.incomingTextStyle)
-            it.autoLinkMask = style.textAutoLinkMask
-            it.setLinkTextColor(style.incomingTextLinkColor)
-            configureLinksBehavior(it)
-        }
-
-        time?.let {
-            it.setTextColor(style.incomingTimeTextColor)
-            it.setTextSize(
-                TypedValue.COMPLEX_UNIT_PX,
-                style.incomingTimeTextSize.toFloat()
-            )
-            it.setTypeface(it.typeface, style.incomingTimeTextStyle)
-        }
-
-        imageOverlay?.let {
-            ViewCompat.setBackground(it, style.getIncomingImageOverlayDrawable())
-        }
-    }
-
-    open fun applyOutgoingStyle(style: MessagesListStyle) {
-
-        progressView?.let {
-            it.setTintColor(style.outcomingTextColor, style.outcomingDefaultBubbleColor)
-        }
-
-//        bubble?.let {
-//            it.setPadding(
-//                style.outcomingDefaultBubblePaddingLeft,
-//                style.outcomingDefaultBubblePaddingTop,
-//                style.outcomingDefaultBubblePaddingRight,
-//                style.outcomingDefaultBubblePaddingBottom
-//            )
-//            ViewCompat.setBackground(it, style.getOutcomingBubbleDrawable())
-//
-//            it.background = DrawableUtil.getMessageSelector(
-//                it.context,
-//                R.attr.outcomingDefaultBubbleColor,
-//                R.attr.outcomingDefaultBubbleSelectedColor,
-//                R.attr.outcomingDefaultBubblePressedColor,
-//                R.attr.outcomingBubbleDrawable
-//            )
-//        }
-
-        text?.let {
-//            it.setTextColor(style.outcomingTextColor)
-//            it.setTextSize(0, style.outcomingTextSize.toFloat())
-            it.setTypeface(it.typeface, style.outcomingTextStyle)
-            it.autoLinkMask = style.textAutoLinkMask
-            it.setLinkTextColor(style.outcomingTextLinkColor)
-            configureLinksBehavior(it)
-        }
-
-        time?.let {
-            it.setTextColor(style.outcomingTimeTextColor)
-            it.setTextSize(
-                TypedValue.COMPLEX_UNIT_PX,
-                style.outcomingTimeTextSize.toFloat()
-            )
-            it.setTypeface(it.typeface, style.outcomingTimeTextStyle)
-        }
-
-        imageOverlay?.let {
-            ViewCompat.setBackground(it, style.getOutcomingImageOverlayDrawable())
-        }
-    }
 
     open fun actionButtonPressed(holder: T) {
         val payload = holder.payload
@@ -464,4 +526,5 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
     override fun accept(t: Throwable?) {
         t?.printStackTrace()
     }
+
 }

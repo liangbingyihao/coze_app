@@ -183,8 +183,7 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
                         view as TextView // 安全转换
                         threadHandler.sendExploreMessage(
                             view.text.toString().trim(),
-                            aiExplore.contextId ?: t.message.entityID,
-                            t.message.thread,
+                            t.message,
                             data.action,
                             data.params
                         ).subscribe();
@@ -457,20 +456,19 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
     }
 
     open fun loadImage(holder: T) {
-//        Logger.debug("ImageSize: " + holder.size.width + ", " + holder.size.height)
         val imageHolder: ImageHolder? = holder as? ImageHolder;
         if (imageHolder == null) {
             return
         }
         var action = imageHolder.action;
         var imageDaily: ImageDaily = imageHolder.getImageDaily()
-        if(action==GWThreadHandler.action_bible_pic){
+        if (action == GWThreadHandler.action_bible_pic) {
             bible?.text = imageDaily.scripture
-        }else if(action==GWThreadHandler.action_daily_gw){
+        } else if (action == GWThreadHandler.action_daily_gw) {
             var imageDaily: ImageDaily? = imageHolder.getImageDaily()
-            if(imageDaily!=null){
+            if (imageDaily != null) {
                 day?.text = imageDaily.date.substring(8)
-                month?.text = imageDaily.date.substring(0,7)
+                month?.text = imageDaily.date.substring(0, 7)
                 bible?.text = imageDaily.scripture
                 reference?.text = imageDaily.reference
             }

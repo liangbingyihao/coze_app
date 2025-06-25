@@ -24,4 +24,5 @@
     <string name="search">搜索</string>
     <string name="timeline">恩语时间轴</string>
     <string name="pending_image">处理图片中，请稍候</string>
+    <string name="copied">已复制到粘贴板</string>
 </resources>

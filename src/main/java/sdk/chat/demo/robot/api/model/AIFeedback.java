@@ -2,7 +2,10 @@ package sdk.chat.demo.robot.api.model;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import sdk.chat.demo.robot.handlers.GWThreadHandler;
 
 public class AIFeedback {
     @SerializedName("color_tag")

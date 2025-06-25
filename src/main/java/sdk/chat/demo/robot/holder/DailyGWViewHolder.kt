@@ -188,8 +188,7 @@ open class DailyGWViewHolder<T : ImageMessageHolder>(
                         view as TextView // 安全转换
                         threadHandler.sendExploreMessage(
                             view.text.toString().trim(),
-                            aiExplore.contextId ?: t.message.entityID,
-                            t.message.thread,
+                            t.message,
                             data.action,
                             data.params
                         ).subscribe();
