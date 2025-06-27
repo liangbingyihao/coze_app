@@ -5,43 +5,37 @@ import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+
+import org.json.JSONObject;
+import org.pmw.tinylog.Logger;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import okhttp3.HttpUrl;
-import sdk.chat.core.dao.Message;
 import io.reactivex.Single;
 import io.reactivex.SingleOnSubscribe;
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import sdk.chat.core.dao.User;
-import sdk.chat.core.events.NetworkEvent;
+import sdk.chat.core.dao.Message;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.AccountDetails;
 import sdk.chat.core.types.MessageSendStatus;
-import sdk.chat.core.types.MessageType;
-import sdk.chat.demo.robot.api.model.ImageTagList;
+import sdk.chat.demo.robot.api.model.FavoriteList;
 import sdk.chat.demo.robot.api.model.SystemConf;
 import sdk.chat.demo.robot.push.UpdateTokenWorker;
 import sdk.guru.common.RX;
-
-import com.google.gson.*;
-
-import org.json.JSONObject;
-import org.pmw.tinylog.Logger;
 
 //mysql -h 172.17.0.3 -u root coze_data -p
 
@@ -54,6 +48,10 @@ public class GWApiManager {
     private final static String URL_SESSION = URL + "session";
     private final static String URL_MESSAGE = URL + "message";
     private final static String URL_CONF = URL + "system/conf";
+    private final static String URL_FAVORITE = URL + "favorite";
+
+    public final static int contentTypeUser = 1;
+    public final static int contentTypeAI = 2;
 
     private final static GWApiManager instance = new GWApiManager();
 
@@ -277,9 +275,9 @@ public class GWApiManager {
                                 throw new Exception("setSession failed:" + responseBody);
                             }
                             JsonObject data = resp.getAsJsonObject("data");
-                            if(sessionId==-1){
+                            if (sessionId == -1) {
                                 emitter.onSuccess(-1L);
-                            }else{
+                            } else {
                                 emitter.onSuccess(data.get("session_id").getAsLong());
                             }
                         } catch (Exception e) {
@@ -297,10 +295,10 @@ public class GWApiManager {
         });
     }
 
-    public Single<JsonObject> askRobot(Message message,String prompt) {
+    public Single<JsonObject> askRobot(Message message, String prompt) {
         return Single.create(emitter -> {
             Map<String, String> params = message.getMetaValuesAsMap();
-            if(prompt!=null&&!prompt.isEmpty()){
+            if (prompt != null && !prompt.isEmpty()) {
                 params.put("prompt", prompt);
             }
             RequestBody body = RequestBody.create(
@@ -440,7 +438,7 @@ public class GWApiManager {
     }
 
 
-    public  Single<SystemConf> getConf() {
+    public Single<SystemConf> getConf() {
         return Single.create(emitter -> {
             HttpUrl url = Objects.requireNonNull(HttpUrl.parse(URL_CONF))
                     .newBuilder()
@@ -479,5 +477,90 @@ public class GWApiManager {
         });
     }
 
+    public Single<FavoriteList> listFavorite(int page, int limit) {
+        return Single.create(emitter -> {
 
+
+            HttpUrl url = Objects.requireNonNull(HttpUrl.parse(URL_FAVORITE))
+                    .newBuilder()
+                    .addQueryParameter("page", Integer.toString(page))
+                    .addQueryParameter("limit", Integer.toString(limit))
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url(url)
+//                    .header("Authorization", accessToken)
+                    .build();
+
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    emitter.onError(e); // 请求失败
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    try {
+                        if (!response.isSuccessful()) {
+                            emitter.onError(new IOException("HTTP error: " + response.code()));
+                            return;
+                        }
+                        String responseBody = response.body() != null ? response.body().string() : "";
+                        JsonObject data = gson.fromJson(responseBody, JsonObject.class).getAsJsonObject("data");
+                        FavoriteList res = gson.fromJson(data, FavoriteList.class);
+                        emitter.onSuccess(res); // 请求成功
+                    } catch (Exception e) {
+                        emitter.onError(e);
+                    } finally {
+                        response.close(); // 关闭 Response
+                    }
+                }
+            });
+        });
+    }
+
+    public Single<Integer> toggleFavorite(String messageId, int contentType) {
+        return Single.create(emitter -> {
+
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            params.put("message_id", messageId);
+            params.put("content_type", contentType);
+            RequestBody body = RequestBody.create(
+                    new JSONObject(params).toString(),
+                    MediaType.parse("application/json; charset=utf-8")
+            );
+
+            Request request = new Request.Builder()
+                    .url(URL_FAVORITE + "/toggle")
+                    .post(body)
+                    .build();
+
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    emitter.onError(e); // 请求失败
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    try {
+                        if (!response.isSuccessful()) {
+                            emitter.onError(new IOException("HTTP error: " + response.code()));
+                            return;
+                        }
+                        String responseBody = response.body() != null ? response.body().string() : "";
+                        Integer data = gson.fromJson(responseBody, JsonObject.class).getAsJsonPrimitive("data").getAsInt();
+//                        Integer data = gson.fromJson(responseBody, JsonObject.class).getAsJsonObject("data").getAsInt();
+                        emitter.onSuccess(data); // 请求成功
+                    } catch (Exception e) {
+                        emitter.onError(e);
+                    } finally {
+                        response.close(); // 关闭 Response
+                    }
+                }
+            });
+        });
+    }
 }

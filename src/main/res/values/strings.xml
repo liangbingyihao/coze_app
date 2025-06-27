@@ -24,4 +24,8 @@
     <string name="timeline">Timeline</string>
     <string name="pending_image">Processing image...</string>
     <string name="copied">Copied to clipboard.</string>
+    <string name="save">Save</string>
+    <string name="unsave">Unsave</string>
+    <string name="saved">Added to saved items</string>
+    <string name="unsaved">Removed from saved items</string>
   </resources>

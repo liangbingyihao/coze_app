@@ -86,9 +86,6 @@ open class DailyGWViewHolder<T : ImageMessageHolder>(
         itemView.findViewById(sdk.chat.demo.pre.R.id.session_container)
     open var sessionName: TextView? = itemView.findViewById(sdk.chat.demo.pre.R.id.session_name)
 
-    open val btnFavorite: IconicsImageView? =
-        itemView.findViewById(sdk.chat.demo.pre.R.id.btn_favorite)
-    open val btnDelete: IconicsImageView? = itemView.findViewById(sdk.chat.demo.pre.R.id.btn_delete)
     open var bible: TextView? = itemView.findViewById(sdk.chat.demo.pre.R.id.bible)
 
     open var format: DateFormat? = null

@@ -25,4 +25,8 @@
     <string name="timeline">恩语时间轴</string>
     <string name="pending_image">处理图片中，请稍候</string>
     <string name="copied">已复制到粘贴板</string>
+    <string name="save">收藏</string>
+    <string name="unsave">取消收藏</string>
+    <string name="saved">收藏成功</string>
+    <string name="unsaved">已取消收藏</string>
 </resources>

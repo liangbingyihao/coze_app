@@ -92,7 +92,7 @@
             style="@style/FeedOperator"
             android:src="@mipmap/ic_pic_black" />
         <ImageView
-            android:id="@+id/btn_like"
+            android:id="@+id/btn_like_ai"
             style="@style/FeedOperator"
             android:src="@mipmap/ic_like_black" />
         <ImageView

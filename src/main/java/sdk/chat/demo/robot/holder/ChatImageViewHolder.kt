@@ -78,9 +78,6 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
         itemView.findViewById(sdk.chat.demo.pre.R.id.session_container)
     open var sessionName: TextView? = itemView.findViewById(sdk.chat.demo.pre.R.id.session_name)
 
-    open val btnFavorite: IconicsImageView? =
-        itemView.findViewById(sdk.chat.demo.pre.R.id.btn_favorite)
-    open val btnDelete: IconicsImageView? = itemView.findViewById(sdk.chat.demo.pre.R.id.btn_delete)
     open var bible: TextView? = itemView.findViewById(sdk.chat.demo.pre.R.id.bible)
     open var reference: TextView? = itemView.findViewById(sdk.chat.demo.pre.R.id.reference)
     open var month: TextView? = itemView.findViewById(sdk.chat.demo.pre.R.id.month)
@@ -145,24 +142,9 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
 //        bindSendStatus(t)
 //        bindProgress(t)
 
-        btnFavorite?.setOnClickListener {
-            it.animate().scaleX(0.8f).scaleY(0.8f).setDuration(100).withEndAction {
-                it.animate().scaleX(1f).scaleY(1f).duration = 100
-                t.message.setMetaValue(
-                    keyIsGood,
-                    abs(t.message.integerForKey(keyIsGood) - 1)
-                )
-                setFavorite(t.message.integerForKey(keyIsGood))
-            }
-        }
-        btnDelete?.setOnClickListener {
-            val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
-            threadHandler.deleteMessage(t.message).subscribe();
-        }
         btnCopy?.setOnClickListener {
             ToastHelper.show(it.context, "copy....");
         }
-        setFavorite(t.message.integerForKey(keyIsGood))
 
 
         val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
@@ -210,14 +192,6 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
         }
     }
 
-    private fun setFavorite(isGood: Int) {
-        // 设置收藏按钮状态
-        if (isGood == 1) {
-            btnFavorite?.icon = IconUtils.favoriteFilled
-        } else {
-            btnFavorite?.icon = IconUtils.favoriteBorder
-        }
-    }
 
     open fun setText(value: String, linkify: Boolean) {
         if (!value.isEmpty()) {

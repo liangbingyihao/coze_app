@@ -147,7 +147,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
     }
 
     override fun getLayout(): Int {
-        return R.layout.activity_article_list;
+        return 0;
     }
 
     fun loadSessions() {

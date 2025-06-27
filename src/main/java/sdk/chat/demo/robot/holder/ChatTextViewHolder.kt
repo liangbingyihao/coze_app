@@ -9,21 +9,21 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.get
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
-import com.mikepenz.iconics.view.IconicsImageView
 import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessagesListAdapter
 import com.stfalcon.chatkit.messages.MessagesListStyle
 import io.noties.markwon.Markwon
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.functions.Consumer
 import io.reactivex.functions.Predicate
 import sdk.chat.core.dao.Keys
@@ -32,26 +32,22 @@ import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.manager.DownloadablePayload
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
-import sdk.chat.demo.robot.IconUtils
 import sdk.chat.demo.robot.api.model.MessageDetail
+import sdk.chat.demo.robot.extensions.StateStorage
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.ui.chat.model.MessageHolder
 import sdk.chat.ui.module.UIModule
+import sdk.chat.ui.utils.ToastHelper
 import sdk.chat.ui.view_holders.v2.MessageDirection
 import sdk.chat.ui.views.ProgressView
 import sdk.guru.common.DisposableMap
 import sdk.guru.common.RX
 import java.text.DateFormat
-import kotlin.math.abs
-import androidx.core.view.size
-import androidx.core.view.get
 
 open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: MessageDirection) :
     MessageHolders.BaseMessageViewHolder<T>(itemView, null),
     MessageHolders.DefaultMessageViewHolder,
     Consumer<Throwable> {
-
-    val keyIsGood: String = "is-good"
     open var root: View? = itemView.findViewById(sdk.chat.ui.R.id.root)
     open var bubble: ViewGroup? = itemView.findViewById(R.id.bubble)
 
@@ -77,11 +73,11 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
         itemView.findViewById(R.id.session_container)
     open var sessionName: TextView? = itemView.findViewById(R.id.session_name)
 
-    open val btnFavorite: IconicsImageView? =
-        itemView.findViewById(R.id.btn_favorite)
+//    open val btnFavorite: IconicsImageView? =
+//        itemView.findViewById(R.id.btn_favorite)
+//    open val btnDelete: IconicsImageView? = itemView.findViewById(R.id.btn_delete)
     open val btnPlay: ImageView? =
         itemView.findViewById(R.id.btn_play)
-    open val btnDelete: IconicsImageView? = itemView.findViewById(R.id.btn_delete)
     open val feedbackMenu: View? = itemView.findViewById(R.id.feedback_menu)
 
     open var format: DateFormat? = null
@@ -100,6 +96,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
         "explore1" to itemView.findViewById<TextView>(R.id.explore2),
         "explore2" to itemView.findViewById<TextView>(R.id.explore3)
     )
+    open var imageLikeAi: ImageView? = itemView.findViewById(R.id.btn_like_ai)
 
 //    open var userClickListener: MessagesListAdapter.UserClickListener? = null
 
@@ -136,22 +133,12 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
             UIModule.shared().iconBinder.bind(it, t)
         }
 
+        if(StateStorage.getStateB(t.message.status)){
+            imageLikeAi?.setImageResource(R.mipmap.ic_dislike_black)
+        }else{
+            imageLikeAi?.setImageResource(R.mipmap.ic_like_black)
+        }
 
-        btnFavorite?.setOnClickListener {
-            it.animate().scaleX(0.8f).scaleY(0.8f).setDuration(100).withEndAction {
-                it.animate().scaleX(1f).scaleY(1f).duration = 100
-                t.message.setMetaValue(
-                    keyIsGood,
-                    abs(t.message.integerForKey(keyIsGood) - 1)
-                )
-                setFavorite(t.message.integerForKey(keyIsGood))
-            }
-        }
-        btnDelete?.setOnClickListener {
-            val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
-            threadHandler.deleteMessage(t.message).subscribe();
-        }
-        setFavorite(t.message.integerForKey(keyIsGood))
         val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
         if (t.message.equals(threadHandler.playingMsg)) {
             btnPlay?.setImageResource(R.mipmap.ic_pause_black);
@@ -249,7 +236,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
                     override fun onResourceReady(
                         resource: Drawable,
                         model: Any,
-                        target: com.bumptech.glide.request.target.Target<Drawable>,
+                        target: Target<Drawable>,
                         dataSource: DataSource,
                         isFirstResource: Boolean
                     ): Boolean {
@@ -267,15 +254,124 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
                 })
                 .into(image!!)
         }
-    }
 
-    private fun setFavorite(isGood: Int) {
-        // 设置收藏按钮状态
-        if (isGood == 1) {
-            btnFavorite?.icon = IconUtils.favoriteFilled
-        } else {
-            btnFavorite?.icon = IconUtils.favoriteBorder
-        }
+
+        var saved=StateStorage.getStateA(t.message.status)
+        text?.setCustomSelectionActionModeCallback(object : ActionMode.Callback {
+            public override fun onCreateActionMode(mode: ActionMode, menu: Menu?): Boolean {
+                if (menu == null) {
+                    return true
+                }
+
+                val systemItems = (0 until menu.size()).mapNotNull { menu.getItem(it) }
+
+                menu.clear()
+
+//                menu.add(0, R.id.like, 0, R.string.like)
+//                    .setIcon(R.mipmap.ic_like_black)
+//                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+//                menu.add(0, R.id.remove, 0, R.string.remove)
+//                    .setIcon(R.mipmap.ic_del_black)
+//                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+                systemItems.forEachIndexed { index, item ->
+                    if (index == 0) {
+                        if(saved){
+                            menu.add(0, R.id.like, 0, R.string.unsave)
+                                .setIcon(R.mipmap.ic_dislike_black);
+                        }else{
+                            menu.add(0, R.id.like, 0, R.string.save)
+                                .setIcon(R.mipmap.ic_like_black);
+                        }
+                    }else if(index == 1){
+                        menu.add(0, R.id.remove, 0, R.string.remove)
+                            .setIcon(R.mipmap.ic_del_black)
+                    }
+                    menu.add(item.groupId, item.itemId, index, item.title)
+                }
+
+                return true
+            }
+
+            public override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+//                var saved = StateStorage.getStateA(t.message.status)
+//                menu?.findItem(R.id.like)?.apply {
+//                    if (saved) {
+//                        setTitle(R.string.unsave)
+//                        setIcon(R.mipmap.ic_dislike_black)
+//                    } else {
+//                        setTitle(R.string.save)
+//                        setIcon(R.mipmap.ic_like_black)
+//                    }
+//                }
+                return false
+            }
+
+            public override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
+                val start: Int = text!!.selectionStart
+                val end: Int = text!!.selectionEnd
+                val selectedText: String? = text!!.getText().toString().substring(start, end)
+
+                val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
+                when (item?.itemId) {
+                    R.id.remove -> {
+                        // Handle your custom action
+//                        Toast.makeText(
+//                            this@MainActivity,
+//                            "Selected: " + selectedText,
+//                            Toast.LENGTH_SHORT
+//                        ).show()
+
+                        threadHandler.clearUserText(t.message)
+                        mode?.finish()
+                        return true
+                    }
+                    R.id.like -> {
+
+                        val disposable =
+                            threadHandler.toggleContentLikeState(t.message)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(
+                                    Consumer { newState: Int? ->
+                                        if (newState == 0) {
+                                            ToastHelper.show(
+                                                text?.context,
+                                                text?.context?.getString(R.string.unsaved)
+                                            );
+                                        } else if (newState == 1) {
+                                            ToastHelper.show(
+                                                text?.context,
+                                                text?.context?.getString(R.string.saved)
+                                            );
+                                        }
+                                    },
+                                    Consumer { error: Throwable? ->
+                                        ToastHelper.show(text?.context, error?.message);
+                                    })
+                        dm.add(disposable)
+                        mode?.finish()
+
+//                        threadHandler.toggleContentLikeState(t.message)
+//                        if(saved){
+//                            ToastHelper.show(text?.context, text?.context?.getString(R.string.unsaved));
+//                        }else{
+//                            ToastHelper.show(text?.context, text?.context?.getString(R.string.saved));
+//                        }
+                        return true
+                    }
+                    android.R.id.copy ->{
+                        Toast.makeText(text?.context, selectedText, Toast.LENGTH_SHORT)
+                            .show()
+                        return false
+                    }
+
+                    else -> return false
+                }
+            }
+
+            public override fun onDestroyActionMode(mode: ActionMode?) {
+                // Action mode finished
+            }
+        })
     }
 
     open fun setText(value: String, linkify: Boolean) {
@@ -375,114 +471,59 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: Mess
                         bind(t)
                     }
                 })
-//        text?.setOnLongClickListener { v ->
-//            PopupMenuHelper(
-//                context = v.context,
-//                anchorView = v,
-//                onItemSelected = { v ->
-//                    when (v.id) {
-//                        R.id.delArticle -> {
-////                            changeTopic(-1)
-//                        }
-//
-//                        R.id.changeTopic -> {
-////                            menuPopup.show(true)
-//                        }
-//                    }
-//                },
-//            ).show()
-//            true
-//        }
-        text?.setCustomSelectionActionModeCallback(object : ActionMode.Callback {
-            private var verticalPopupMenu: PopupMenu? = null
-            public override fun onCreateActionMode(mode: ActionMode, menu: Menu?): Boolean {
 
 
-                // 创建垂直布局的PopupMenu
-                verticalPopupMenu = PopupMenu(text!!.context, text)
-
-
-                // 将系统菜单项复制到PopupMenu
-                for (i in 0..<menu!!.size) {
-                    val systemItem = menu[i]
-                    verticalPopupMenu?.getMenu()?.add(systemItem.getTitle())
-                        ?.setIcon(systemItem.getIcon())
-                        ?.setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener { item: MenuItem? ->
-                            mode.finish(); // 选择菜单项后结束ActionMode
-                            onActionItemClicked(
-                                mode,
-                                systemItem
-                            )
-                        })
-                }
-
-//
-//                // 取消系统默认的水平菜单
-//                mode.finish()
-
-
-                // 显示垂直菜单
-                verticalPopupMenu?.show()
-                return true
-
-//
-//                // Inflate your custom menu
-////                mode.menuInflater.inflate(R.menu.custom_text_selection_menu, menu)
-//
-////                menu?.add(0, R.id.like, 2, "自定义操作1")
-////                    ?.setIcon(R.mipmap.ic_like_black)
-////                    ?.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-//
-//                if (menu == null) {
-//                    return true
-//                }
-//
-//                val systemItems = (0 until menu.size()).mapNotNull { menu.getItem(it) }
-//
-//                menu.clear()
-//
-//                systemItems.forEachIndexed { index, item ->
-//                    if (index == 2) { // 在第三个位置插入自定义项
-//                        menu.add(0, R.id.like, index, "自定义操作")
-//                    }
-//                    menu.add(item.groupId, item.itemId, index, item.title)
-//                }
-//
-//                return true
-            }
-
-            public override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-                return false // Return false if nothing is done
-            }
-
-            public override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
-                val start: Int = text!!.getSelectionStart()
-                val end: Int = text!!.getSelectionEnd()
-                val selectedText: String? = text!!.getText().toString().substring(start, end)
-
-                when (item?.getItemId()) {
-                    R.id.custom_action -> {
-                        // Handle your custom action
-//                        Toast.makeText(
-//                            this@MainActivity,
-//                            "Selected: " + selectedText,
-//                            Toast.LENGTH_SHORT
-//                        ).show()
-                        mode?.finish()
-                        return true
-                    }
-
-                    else -> return false
-                }
-            }
-
-            public override fun onDestroyActionMode(mode: ActionMode?) {
-                // Action mode finished
-                verticalPopupMenu?.dismiss()
-            }
-        })
     }
 
+////                val now = System.currentTimeMillis()
+////                if (now - lastActionModeTime < ACTION_MODE_DEBOUNCE) {
+////                    return false
+////                }
+////
+////                if (isActionModeActive) {
+////                    return false
+////                }
+//
+////                lastActionModeTime = now
+//                mode?.setCustomView(View(text!!.context))
+//
+//                // 创建垂直布局的PopupMenu
+//                verticalPopupMenu = PopupMenu(text!!.context, text)
+//
+//
+//                // 将系统菜单项复制到PopupMenu
+//                for (i in 0..<menu!!.size) {
+//                    val systemItem = menu[i]
+//                    verticalPopupMenu?.getMenu()?.add(systemItem.getTitle())
+//                        ?.setIcon(systemItem.getIcon())
+//                        ?.setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener { item: MenuItem? ->
+////                            mode.finish(); // 选择菜单项后结束ActionMode
+//                            onActionItemClicked(
+//                                mode,
+//                                systemItem
+//                            )
+//                        })
+//                }
+//                // 监听PopupMenu关闭
+//                verticalPopupMenu?.setOnDismissListener {
+//                    mode?.finish() // 只在菜单关闭时结束ActionMode
+//                }
+////
+////                // 取消系统默认的水平菜单
+////                mode.finish()
+//
+//
+//                // 显示垂直菜单
+//                verticalPopupMenu?.show()
+//                return true
+
+
+    // Inflate your custom menu
+//                mode.menuInflater.inflate(R.menu.custom_text_selection_menu, menu)
+
+    //                menu?.add(0, R.id.like, 2, "自定义操作1")
+//                    ?.setIcon(R.mipmap.ic_like_black)
+//                    ?.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
     //    public Predicate<NetworkEvent> filter() {
     //        return new Predicate<NetworkEvent>() {
     //            @Override

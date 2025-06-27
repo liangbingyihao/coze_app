@@ -58,7 +58,7 @@
 
         <activity android:name="sdk.chat.demo.robot.activities.ArticleListActivity" />
 
-        <activity android:name="sdk.chat.demo.robot.activities.CollectionListActivity" />
+        <activity android:name="sdk.chat.demo.robot.activities.FavoriteListActivity" />
         <activity android:name="sdk.chat.demo.robot.activities.ImageViewerActivity" />
 
         <provider

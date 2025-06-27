@@ -15,6 +15,6 @@ class GWView {
     open class OutgoingImageViewHolder(itemView: View) :
         ChatImageViewHolder<ImageMessageHolder>(itemView, MessageDirection.Outcoming)
 
-    open class OutgoingDailyGWViewHolder(itemView: View) :
-        DailyGWViewHolder<ImageMessageHolder>(itemView, MessageDirection.Outcoming)
+//    open class OutgoingDailyGWViewHolder(itemView: View) :
+//        DailyGWViewHolder<ImageMessageHolder>(itemView, MessageDirection.Outcoming)
 }

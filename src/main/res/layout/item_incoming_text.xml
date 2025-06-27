@@ -80,24 +80,6 @@
         app:flexDirection="row"
         app:justifyContent="flex_start">
 
-        <!-- 收藏按钮（IconicsImageView） -->
-        <com.mikepenz.iconics.view.IconicsImageView
-            android:id="@+id/btn_favorite"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginStart="12dp"
-            app:iiv_size="18dp" />
-
-        <!-- 删除按钮（IconicsImageView） -->
-        <com.mikepenz.iconics.view.IconicsImageView
-            android:id="@+id/btn_delete"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginStart="12dp"
-            app:iiv_color="@color/gray_1"
-            app:iiv_icon="gmd_delete"
-            app:iiv_size="18dp" />
-
         <!-- 时间 -->
         <TextView
             android:id="@+id/messageTime"

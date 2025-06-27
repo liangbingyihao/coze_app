@@ -53,6 +53,7 @@ import sdk.chat.demo.robot.api.model.ImageDaily;
 import sdk.chat.demo.robot.api.model.MessageDetail;
 import sdk.chat.demo.robot.api.model.SystemConf;
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil;
+import sdk.chat.demo.robot.extensions.StateStorage;
 import sdk.chat.demo.robot.holder.AIFeedbackType;
 import sdk.chat.demo.robot.holder.DailyGWRegistration;
 import sdk.chat.ui.ChatSDKUI;
@@ -335,18 +336,18 @@ public class GWThreadHandler extends AbstractThreadHandler {
 //    action_daily_pray = 4
             if (action == action_direct_msg) {
                 message.setMetaValue("feedback", params);
-            } else if (action == action_bible_pic) {
-                message.setType(MessageType.Image);
-                String[] parts = params.split("\\|"); // 需要转义 |
-                String tag, bible;
-                if (parts.length == 2) {
-                    tag = parts[0];    // 第一部分是 tag
-                    bible = parts[1];  // 第二部分是 bible
-                    String imageUrl = ImageApi.getRandomImageByTag(tag);
-                    message.setMetaValue(Keys.ImageUrl, imageUrl);
-                    message.setMetaValue("image-text", bible);
-                    inheritExplore(message);
-                }
+//            } else if (action == action_bible_pic) {
+//                message.setType(MessageType.Image);
+//                String[] parts = params.split("\\|"); // 需要转义 |
+//                String tag, bible;
+//                if (parts.length == 2) {
+//                    tag = parts[0];    // 第一部分是 tag
+//                    bible = parts[1];  // 第二部分是 bible
+//                    String imageUrl = ImageApi.getRandomImageByTag(tag);
+//                    message.setMetaValue(Keys.ImageUrl, imageUrl);
+//                    message.setMetaValue("image-text", bible);
+//                    inheritExplore(message);
+//                }
             } else if (action == action_daily_gw) {
                 message.setType(DailyGWRegistration.GWMessageType);
                 message.setMetaValue("image-date", params);
@@ -508,6 +509,54 @@ public class GWThreadHandler extends AbstractThreadHandler {
             data.addProperty("feedback_text", "");
         }
         updateMessage(message, data);
+    }
+
+
+    public Single<Integer> toggleAiLikeState(Message message) {
+        // 其他错误传递到UI层
+        return GWApiManager.shared().toggleFavorite(message.getEntityID(), GWApiManager.contentTypeAI)
+                .flatMap(result -> {
+                    if (result != 0 && result != 1) {
+                        return Single.error(new IllegalStateException("Invalid API response: " + result));
+                    }
+
+                    return Single.fromCallable(() -> {
+                        int newState = StateStorage.setStateB(message.getStatus(), result == 1);
+                        message.setStatus(newState);
+                        ChatSDK.db().update(message, false);
+                        ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
+                        return result;
+                    }).subscribeOn(RX.db());
+                }).onErrorResumeNext(Single::error);
+    }
+
+    public Single<Integer> toggleContentLikeState(Message message) {
+//        message.setStatus(StateStorage.toggleStateA(message.getStatus()));
+//        ChatSDK.db().update(message, false);
+//        ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
+
+        // 其他错误传递到UI层
+        return GWApiManager.shared().toggleFavorite(message.getEntityID(), GWApiManager.contentTypeUser)
+                .flatMap(result -> {
+                    if (result != 0 && result != 1) {
+                        return Single.error(new IllegalStateException("Invalid API response: " + result));
+                    }
+
+                    return Single.fromCallable(() -> {
+                        int newState = StateStorage.setStateA(message.getStatus(), result == 1);
+                        message.setStatus(newState);
+                        ChatSDK.db().update(message, false);
+                        ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
+                        return result;
+                    }).subscribeOn(RX.db());
+                }).onErrorResumeNext(Single::error);
+    }
+
+    public void clearUserText(Message message) {
+        //TODO 同步后端
+        message.setText("");
+        ChatSDK.db().update(message, false);
+        ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
     }
 
     public Completable deleteThread(Thread thread) {
