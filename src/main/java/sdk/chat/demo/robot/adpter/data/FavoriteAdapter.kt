@@ -1,20 +1,18 @@
 package sdk.chat.demo.robot.adpter.data
-
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.widget.ContentLoadingProgressBar
 import androidx.recyclerview.widget.RecyclerView
-import com.lassi.presentation.media.adapter.MediaAdapter
 import sdk.chat.demo.pre.R
-import sdk.chat.demo.robot.adpter.OnLoadMoreListener
 import sdk.chat.demo.robot.api.model.FavoriteList.FavoriteItem
 
 
-class FavoriteAdapter(
-    private val mOnLoadMoreListener: OnLoadMoreListener
-) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class FavoriteAdapter() : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private val listData: MutableList<FavoriteItem> = ArrayList<FavoriteItem>()
 
     companion object {
@@ -22,12 +20,27 @@ class FavoriteAdapter(
         private const val TYPE_FOOTER = 1
     }
 
-    override fun getItemViewType(position: Int): Int {
-        if (position == listData.size) {
-//            if (position == listData.size && mOnLoadMoreListener.isAllScreen) {
-            return TYPE_FOOTER
+    var isLoading = false
+        set(value) {
+            if (field != value) {
+                field = value
+                notifyItemChanged(itemCount-1)
+//                notifyDataSetChanged()
+//                if (value) {
+//                    notifyItemInserted(itemCount) // 显示加载项
+//                } else {
+//                    notifyItemRemoved(itemCount) // 隐藏加载项
+//                }
+            }
         }
-        return TYPE_ITEM
+
+    override fun getItemViewType(position: Int): Int {
+//        if (position == listData.size) {
+////            if (position == listData.size && mOnLoadMoreListener.isAllScreen) {
+//            return TYPE_FOOTER
+//        }
+//        return TYPE_ITEM
+        return if (position == listData.size) TYPE_FOOTER else TYPE_ITEM
     }
 
 
@@ -50,16 +63,22 @@ class FavoriteAdapter(
         holder: RecyclerView.ViewHolder,
         position: Int
     ) {
-        if (getItemViewType(position) != TYPE_FOOTER) {
-            if (position < listData.size) {
-                val viewHolder = holder as MyViewHolder
-                var data: FavoriteItem = listData[position]
-                viewHolder.textView.setText(data.content)
-            }else{
-                var a = 1;
+        when (holder) {
+            is MyViewHolder -> {
+                Log.w("getItemViewType","MyViewHolder,${position}")
+                if (position < listData.size) { // 关键修复点
+                    val item = listData[position]
+                    holder.textView.text = "${position},${item.content}"
+                } else {
+                    holder.textView.text = "" // 处理异常情况
+                }
             }
-        } else {
-            var a = 1;
+            is FootViewHolder -> {
+                Log.w("getItemViewType","FootViewHolder,${position}")
+                // 始终保留Footer空间，仅控制进度条显隐
+                holder.contentLoadingProgressBar.visibility =
+                    if (isLoading) View.VISIBLE else View.INVISIBLE
+            }
         }
 //        if (getItemViewType(position) === TYPE_FOOTER) {
 //        } else {
@@ -68,27 +87,25 @@ class FavoriteAdapter(
 //        }
     }
 
-    override fun getItemCount(): Int {
-        return listData.size + 1;
-    }
-
-    fun addItem(d: FavoriteItem) {
-        listData.add(d)
-    }
+    override fun getItemCount(): Int = listData.size + 1
 
     fun clear() {
         listData.clear()
     }
 
-    fun setItems(data: ArrayList<FavoriteItem>) {
-        listData.clear()
+    fun addItems(data: ArrayList<FavoriteItem>) {
+//        if (Looper.myLooper() != Looper.getMainLooper()) {
+//            Handler(Looper.getMainLooper()).post { updateData(newData) }
+//            return
+//        }
         listData.addAll(data)
         notifyDataSetChanged()
+//        notifyItemRangeInserted(startPos, data.size)
     }
 
 
     private class FootViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        var contentLoadingProgressBar: ContentLoadingProgressBar? = null
+        var contentLoadingProgressBar: ContentLoadingProgressBar = itemView.findViewById<ContentLoadingProgressBar?>(R.id.pb_progress)
     }
 
     private class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

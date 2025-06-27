@@ -1,14 +1,10 @@
 package sdk.chat.demo.robot.activities
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.widget.Toast
-import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.OnLoadMoreListener
@@ -16,14 +12,16 @@ import sdk.chat.demo.robot.adpter.data.FavoriteAdapter
 import sdk.chat.demo.robot.api.GWApiManager
 import sdk.chat.demo.robot.api.model.FavoriteList
 import sdk.chat.demo.robot.handlers.GWThreadHandler
+import sdk.chat.demo.robot.ui.LoadMoreSwipeRefreshLayout
 import sdk.chat.ui.activities.BaseActivity
 import sdk.guru.common.RX
 
 class FavoriteListActivity : BaseActivity(), View.OnClickListener {
     private lateinit var myAdapter: FavoriteAdapter
-    private var layoutManager: LinearLayoutManager? = null
-    private lateinit var refreshLayout: SwipeRefreshLayout
-    private var recyclerView: RecyclerView? = null
+    private lateinit var layoutManager: LinearLayoutManager
+    private lateinit var swipeRefreshLayout: LoadMoreSwipeRefreshLayout
+    private lateinit var recyclerView: RecyclerView
+    private var currentPage = 1
 
     //    private var handler: Handler? = null
     private var count = 0
@@ -33,80 +31,47 @@ class FavoriteListActivity : BaseActivity(), View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_collection_list)
-
-        init()
-    }
-
-    private fun init() {
-        mOnLoadMoreListener = object : OnLoadMoreListener() {
-            override fun onLoading(countItem: Int, lastItem: Int) {
-                Handler(Looper.getMainLooper()).postDelayed(object : Runnable {
-                    override fun run() {
-                        getData("loadMore")
-                    }
-                }, 3000)
-            }
-        }
-        myAdapter = FavoriteAdapter(mOnLoadMoreListener!!)
         findViewById<View?>(R.id.home).setOnClickListener(this)
-        layoutManager = LinearLayoutManager(this)
+        setupRecyclerView()
+        setupRefreshLayout()
+        listFavorite(currentPage)
+    }
 
-        refreshLayout = findViewById<SwipeRefreshLayout?>(R.id.swiperefreshlayout)
+    private fun setupRecyclerView() {
         recyclerView = findViewById<RecyclerView?>(R.id.recyclerview)
+        myAdapter = FavoriteAdapter()
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = myAdapter
+    }
 
-        recyclerView!!.setLayoutManager(layoutManager)
-        recyclerView!!.setItemAnimator(DefaultItemAnimator())
-        recyclerView!!.setAdapter(myAdapter)
-
-        //设置下拉时圆圈的颜色（可以尤多种颜色拼成）
-        refreshLayout.setColorSchemeResources(
-            android.R.color.holo_blue_light,
-            android.R.color.holo_red_light,
-            android.R.color.holo_orange_light
-        )
-        //设置下拉时圆圈的背景颜色（这里设置成白色）
-        refreshLayout.setProgressBackgroundColorSchemeResource(android.R.color.white)
-
-        refreshLayout.setOnRefreshListener(object : SwipeRefreshLayout.OnRefreshListener {
-            override fun onRefresh() {
-                getData("refresh")
+    private fun setupRefreshLayout() {
+        swipeRefreshLayout = findViewById<LoadMoreSwipeRefreshLayout?>(R.id.swiperefreshlayout)
+        swipeRefreshLayout.apply {
+            // 下拉刷新监听
+            setOnRefreshListener {
+                currentPage = 1
+                myAdapter.isLoading = false
+                myAdapter.clear()
+                setLoadingMore(false)
+                listFavorite(currentPage)
             }
-        })
-        recyclerView!!.addOnScrollListener(mOnLoadMoreListener!!)
 
-        getData("reset")
-    }
+            // 绑定RecyclerView
+            setupWithRecyclerView(recyclerView)
 
-
-    private fun getData(type: String?) {
-        if ("reset" == type) {
-            listFavorite()
-//        } else if ("refresh" == type) {
-//            myAdapter.clear()
-//            count = 0
-//            for (i in 0..12) {
-//                count += 1
-//                myAdapter.addItem(count)
-//            }
-        } else if ("loadMore" == type) {
-            var i=1;
-//            for (i in 0..2) {
-//                count += 1
-//                myAdapter.addItem(count)
-//            }
-        }
-
-//        myAdapter.notifyDataSetChanged()
-        if (refreshLayout.isRefreshing()) {
-            refreshLayout.setRefreshing(false)
-        }
-        if ("refresh" == type) {
-            Toast.makeText(getApplicationContext(), "刷新完毕", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(getApplicationContext(), "加载完毕", Toast.LENGTH_SHORT).show()
+            // 上拉加载监听
+            setOnLoadMoreListener(object : LoadMoreSwipeRefreshLayout.OnLoadMoreListener {
+                override fun onLoadMore() {
+                    if (!myAdapter.isLoading) {
+                        myAdapter.isLoading = true
+                        setLoadingMore(true)
+                        currentPage++
+                        listFavorite(currentPage)
+                    }
+                }
+            })
         }
     }
-
 
     override fun getLayout(): Int {
         return 0
@@ -118,49 +83,32 @@ class FavoriteListActivity : BaseActivity(), View.OnClickListener {
         }
     }
 
-    fun listFavorite() {
+    fun listFavorite(page: Int) {
+        Toast.makeText(applicationContext, "page:${page}", Toast.LENGTH_SHORT).show()
         dm.add(
-            GWApiManager.shared().listFavorite(1, 10)
-//                .flatMap(Function { messages: FavoriteList ->
-//                    var lastDay = "";
-//                    val articleList = messages.map { message ->
-//                        var dateStr = DateLocalizationUtil.dateStr(message.date)
-//                        val parts = dateStr.split(" ")
-//                        var thisDay = ""
-//                        var thisTime = ""
-//                        if (parts.size == 2) {
-//                            thisDay = parts[0];
-//                            thisTime = parts[1]
-//                        }
-//
-//                        var showDay = thisDay != lastDay
-//                        lastDay = thisDay
-//                        val aiFeedback: MessageDetail? = GWMsgHandler.getAiFeedback(message)
-//                        Article(
-//                            id = message.entityID,
-//                            content = message.text,
-//                            day = thisDay,
-//                            time = thisTime,
-//                            title = aiFeedback?.summary ?: message.stringForKey("summary"),
-//                            colorTag = runCatching {
-//                                aiFeedback?.feedback?.colorTag?.toColorInt()
-//                                    ?: message.stringForKey("colorTag").toColorInt()
-//                            }
-//                                .getOrElse { exception ->
-//                                    "#FFFBE8".toColorInt()
-//                                },
-//                            showDay = showDay
-//                        )
-//                    }
-//                    Single.just(articleList)
-//                } as Function<List<Message?>?, SingleSource<List<Article?>?>?>)
+            GWApiManager.shared().listFavorite(page, 3)
                 .observeOn(RX.main())
                 .subscribe(
                     { messages ->
-                        myAdapter.setItems(messages.items as ArrayList<FavoriteList.FavoriteItem>)
-                        recyclerView?.scrollToPosition(0);
+                        myAdapter.isLoading = false
+                        if (page == 1) {
+                            myAdapter.clear()
+//                            recyclerView.scrollToPosition(0);
+                            swipeRefreshLayout.isRefreshing = false
+                        } else {
+                            swipeRefreshLayout.setLoadingMore(false)
+                        }
+                        if (messages.items == null || messages.items.isEmpty()) {
+                            swipeRefreshLayout.setCanLoadMore(false)
+                        }else{
+                            swipeRefreshLayout.setCanLoadMore(true)
+                        }
+                        myAdapter.addItems(messages.items as ArrayList<FavoriteList.FavoriteItem>);
                     },
                     { error -> // onError
+                        myAdapter.isLoading = false
+                        swipeRefreshLayout.setLoadingMore(false)
+                        swipeRefreshLayout.isRefreshing = false
                         Toast.makeText(
                             this@FavoriteListActivity,
                             "加载失败: ${error.message}",
@@ -168,5 +116,11 @@ class FavoriteListActivity : BaseActivity(), View.OnClickListener {
                         ).show()
                     })
         )
+    }
+
+    override fun onDestroy() {
+        swipeRefreshLayout.setOnRefreshListener(null)
+        swipeRefreshLayout.setOnLoadMoreListener(null)
+        super.onDestroy()
     }
 }

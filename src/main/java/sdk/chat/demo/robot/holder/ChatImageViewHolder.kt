@@ -441,8 +441,8 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
         } else if (action == GWThreadHandler.action_daily_gw) {
             var imageDaily: ImageDaily? = imageHolder.getImageDaily()
             if (imageDaily != null) {
-                day?.text = imageDaily.date.substring(8)
-                month?.text = imageDaily.date.substring(0, 7)
+                day?.text = if(imageDaily.date!=null) imageDaily.date.substring(8) else ""
+                month?.text = if(imageDaily.date!=null) imageDaily.date.substring(0, 7) else ""
                 bible?.text = imageDaily.scripture
                 reference?.text = imageDaily.reference
             }

@@ -425,7 +425,6 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
 //            }
 
             R.id.menu_favorites -> {
-                Toast.makeText(this, "menu_favorites", Toast.LENGTH_SHORT).show()
                 startActivity(
                     Intent(
                         this@MainDrawerActivity,
