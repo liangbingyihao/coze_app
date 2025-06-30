@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.OnLoadMoreListener
-import sdk.chat.demo.robot.adpter.data.FavoriteAdapter
+import sdk.chat.demo.robot.adpter.FavoriteAdapter
 import sdk.chat.demo.robot.api.GWApiManager
 import sdk.chat.demo.robot.api.model.FavoriteList
 import sdk.chat.demo.robot.handlers.GWThreadHandler
@@ -18,15 +18,14 @@ import sdk.guru.common.RX
 
 class FavoriteListActivity : BaseActivity(), View.OnClickListener {
     private lateinit var myAdapter: FavoriteAdapter
-    private lateinit var layoutManager: LinearLayoutManager
     private lateinit var swipeRefreshLayout: LoadMoreSwipeRefreshLayout
     private lateinit var recyclerView: RecyclerView
     private var currentPage = 1
 
     //    private var handler: Handler? = null
-    private var count = 0
-    private var mOnLoadMoreListener: OnLoadMoreListener? = null
-    private val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
+//    private var count = 0
+//    private var mOnLoadMoreListener: OnLoadMoreListener? = null
+//    private val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,9 +83,9 @@ class FavoriteListActivity : BaseActivity(), View.OnClickListener {
     }
 
     fun listFavorite(page: Int) {
-        Toast.makeText(applicationContext, "page:${page}", Toast.LENGTH_SHORT).show()
+//        Toast.makeText(applicationContext, "page:${page}", Toast.LENGTH_SHORT).show()
         dm.add(
-            GWApiManager.shared().listFavorite(page, 3)
+            GWApiManager.shared().listFavorite(page, 20)
                 .observeOn(RX.main())
                 .subscribe(
                     { messages ->

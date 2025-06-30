@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import android.view.View
 import android.widget.TextView
+import androidx.core.widget.ContentLoadingProgressBar
 import androidx.recyclerview.widget.DiffUtil
 import sdk.chat.demo.robot.adpter.data.Article
 import sdk.chat.demo.pre.R;
@@ -117,6 +118,8 @@ class ArticleAdapter(
     }
 
     inner class FooterViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        var contentLoadingProgressBar: ContentLoadingProgressBar = itemView.findViewById<ContentLoadingProgressBar?>(
+            R.id.pb_progress)
     }
 
 
@@ -138,6 +141,7 @@ class ArticleAdapter(
         if (holder is ViewHolder && position < currentList.size) {
             holder.bind(getItem(position))
         } else if (holder is FooterViewHolder) {
+            holder.contentLoadingProgressBar.visibility = View.INVISIBLE
         }
     }
 

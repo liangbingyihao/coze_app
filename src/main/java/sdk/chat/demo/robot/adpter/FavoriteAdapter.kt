@@ -1,6 +1,5 @@
-package sdk.chat.demo.robot.adpter.data
-import android.os.Handler
-import android.os.Looper
+package sdk.chat.demo.robot.adpter
+
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -9,11 +8,10 @@ import android.widget.TextView
 import androidx.core.widget.ContentLoadingProgressBar
 import androidx.recyclerview.widget.RecyclerView
 import sdk.chat.demo.pre.R
-import sdk.chat.demo.robot.api.model.FavoriteList.FavoriteItem
-
+import sdk.chat.demo.robot.api.model.FavoriteList
 
 class FavoriteAdapter() : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-    private val listData: MutableList<FavoriteItem> = ArrayList<FavoriteItem>()
+    private val listData: MutableList<FavoriteList.FavoriteItem> = ArrayList<FavoriteList.FavoriteItem>()
 
     companion object {
         private const val TYPE_ITEM = 0
@@ -93,7 +91,7 @@ class FavoriteAdapter() : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         listData.clear()
     }
 
-    fun addItems(data: ArrayList<FavoriteItem>) {
+    fun addItems(data: ArrayList<FavoriteList.FavoriteItem>) {
 //        if (Looper.myLooper() != Looper.getMainLooper()) {
 //            Handler(Looper.getMainLooper()).post { updateData(newData) }
 //            return
@@ -105,7 +103,8 @@ class FavoriteAdapter() : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
 
     private class FootViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        var contentLoadingProgressBar: ContentLoadingProgressBar = itemView.findViewById<ContentLoadingProgressBar?>(R.id.pb_progress)
+        var contentLoadingProgressBar: ContentLoadingProgressBar = itemView.findViewById<ContentLoadingProgressBar?>(
+            R.id.pb_progress)
     }
 
     private class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

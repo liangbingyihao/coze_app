@@ -726,7 +726,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
 
     @SuppressLint("CheckResult")
     public void triggerNetworkSync() {
-        GWApiManager.shared().listSession(1, 50)
+        GWApiManager.shared().listSession(1, 100)
                 .subscribeOn(RX.io())
 //                .observeOn(RX.io())
                 .subscribe(
@@ -799,7 +799,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
             entity.setType(ThreadType.None);
             modified = true;
         }
-        if (updateAt != null && (entity.getLastMessageDate() == null || entity.getLastMessageDate().before(updateAt))) {
+        if (updateAt != null && (entity.getLastMessageDate() == null || entity.getLastMessageDate().after(updateAt))) {
             entity.setLastMessageDate(updateAt);
             modified = true;
         }
