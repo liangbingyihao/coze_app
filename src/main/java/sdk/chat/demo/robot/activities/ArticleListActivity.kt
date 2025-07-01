@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Single
 import io.reactivex.SingleSource
 import io.reactivex.functions.Function
+import sdk.chat.core.dao.Message
 import sdk.chat.core.dao.Thread
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
@@ -26,6 +27,8 @@ import sdk.chat.demo.robot.adpter.data.Article
 import sdk.chat.demo.robot.adpter.data.ArticleSession
 import sdk.chat.demo.robot.api.GWApiManager
 import sdk.chat.demo.robot.api.model.MessageDetail
+import sdk.chat.demo.robot.extensions.DateLocalizationUtil
+import sdk.chat.demo.robot.handlers.GWMsgHandler
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.demo.robot.ui.LoadMoreSwipeRefreshLayout
 import sdk.chat.demo.robot.ui.PopupMenuHelper
@@ -118,22 +121,23 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
             setOnRefreshListener {
                 articleAdapter.isLoading = false
                 setLoadingMore(false)
-                loadArticles(1)
+                loadArticles()
             }
 
             // 绑定RecyclerView
             setupWithRecyclerView(recyclerView)
 
-            // 上拉加载监听
-            setOnLoadMoreListener(object : LoadMoreSwipeRefreshLayout.OnLoadMoreListener {
-                override fun onLoadMore() {
-                    if (!articleAdapter.isLoading) {
-                        articleAdapter.isLoading = true
-                        setLoadingMore(true)
-                        loadArticles(++currentPage)
-                    }
-                }
-            })
+//            // 上拉加载监听
+//            setOnLoadMoreListener(object : LoadMoreSwipeRefreshLayout.OnLoadMoreListener {
+//                override fun onLoadMore() {
+//                    if (!articleAdapter.isLoading) {
+//                        articleAdapter.isLoading = true
+//                        setLoadingMore(true)
+//                        loadArticles(++currentPage)
+//                    }
+//                }
+//            })
+            setCanLoadMore(false)
         }
     }
 
@@ -166,7 +170,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                         tvTitle.text = item.title
                         sessionId = item.id
                         menuPopup.setTitle(item.title)
-                        loadArticles(1)
+                        loadArticles()
                     }
                 } else {
                     isEditingSummary = false
@@ -200,7 +204,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                     { articleSessions ->
 //                        menuPopup.updateMenuItems(articleSessions, 0)
                         initMenuPopup(articleSessions)
-                        loadArticles(1)
+                        loadArticles()
                     },
                     { error -> // onError
                         Toast.makeText(
@@ -212,64 +216,66 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         )
     }
 
-//    fun loadArticles() {
-//        dm.add(
-//            threadHandler.loadMessagesBySession(sessionId)
-//                .flatMap(Function { messages: List<Message> ->
-//                    var lastDay = "";
-//                    val articleList = messages.map { message ->
-//                        var dateStr = DateLocalizationUtil.dateStr(message.date)
-//                        val parts = dateStr.split(" ")
-//                        var thisDay = ""
-//                        var thisTime = ""
-//                        if (parts.size == 2) {
-//                            thisDay = parts[0];
-//                            thisTime = parts[1]
-//                        }
-//
-//                        var showDay = thisDay != lastDay
-//                        lastDay = thisDay
-//                        val aiFeedback: MessageDetail? = GWMsgHandler.getAiFeedback(message)
-//                        Article(
-//                            id = message.entityID,
-//                            content = message.text,
-//                            day = thisDay,
-//                            time = thisTime,
-//                            title = aiFeedback?.summary ?: message.stringForKey("summary"),
-//                            colorTag = runCatching {
-//                                aiFeedback?.feedback?.colorTag?.toColorInt()
-//                                    ?: message.stringForKey("colorTag").toColorInt()
-//                            }
-//                                .getOrElse { exception ->
-//                                    "#FFFBE8".toColorInt()
-//                                },
-//                            showDay = showDay
-//                        )
-//                    }
-//                    Single.just(articleList)
-//                } as Function<List<Message?>?, SingleSource<List<Article?>?>?>)
-//                .observeOn(RX.main())
-//                .subscribe(
-//                    { messages ->
-//                        articleAdapter.submitList(messages)
-//                        if (messages != null && !messages.isEmpty()) {
-//                            setEmptyRecord(false)
-//                        } else {
-//                            setEmptyRecord(true)
-//                        }
-//                        recyclerView.scrollToPosition(0);
-//                    },
-//                    { error -> // onError
-//                        Toast.makeText(
-//                            this@ArticleListActivity,
-//                            "加载失败: ${error.message}",
-//                            Toast.LENGTH_SHORT
-//                        ).show()
-//                    })
-//        )
-//    }
+    fun loadArticles() {
+        dm.add(
+            threadHandler.loadMessagesBySession(sessionId)
+                .flatMap(Function { messages: List<Message> ->
+                    var lastDay = "";
+                    val articleList = messages.map { message ->
+                        var dateStr = DateLocalizationUtil.dateStr(message.date)
+                        val parts = dateStr.split(" ")
+                        var thisDay = ""
+                        var thisTime = ""
+                        if (parts.size == 2) {
+                            thisDay = parts[0];
+                            thisTime = parts[1]
+                        }
 
-    fun loadArticles(page: Int) {
+                        var showDay = thisDay != lastDay
+                        lastDay = thisDay
+                        val aiFeedback: MessageDetail? = GWMsgHandler.getAiFeedback(message)
+                        Article(
+                            id = message.entityID,
+                            content = message.text,
+                            day = thisDay,
+                            time = thisTime,
+                            title = aiFeedback?.summary ?: message.stringForKey("summary"),
+                            colorTag = runCatching {
+                                aiFeedback?.feedback?.colorTag?.toColorInt()
+                                    ?: message.stringForKey("colorTag").toColorInt()
+                            }
+                                .getOrElse { exception ->
+                                    "#FFFBE8".toColorInt()
+                                },
+                            showDay = showDay
+                        )
+                    }
+                    Single.just(articleList)
+                } as Function<List<Message?>?, SingleSource<List<Article?>?>?>)
+                .observeOn(RX.main())
+                .subscribe(
+                    { messages ->
+                        swipeRefreshLayout.isRefreshing = false
+                        articleAdapter.submitList(messages)
+                        if (messages != null && !messages.isEmpty()) {
+                            setEmptyRecord(false)
+                        } else {
+                            setEmptyRecord(true)
+                        }
+                        recyclerView.scrollToPosition(0);
+                    },
+                    { error -> // onError
+                        swipeRefreshLayout.isRefreshing = false
+                        Toast.makeText(
+                            this@ArticleListActivity,
+                            "加载失败: ${error.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    })
+        )
+    }
+
+    fun loadArticlesFromServer(page: Int) {
         currentPage = page
         if(page==1){
             articleAdapter.clearAll()

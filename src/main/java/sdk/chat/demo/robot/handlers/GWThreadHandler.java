@@ -230,8 +230,11 @@ public class GWThreadHandler extends AbstractThreadHandler {
 
                         Message message = ChatSDK.db().fetchMessageWithEntityID(msgId);
                         if (message != null) {
+                            Long oldSessionId=message.getThreadId();
                             message.setThreadId(newSessionId);
                             ChatSDK.db().update(message, false);
+                            updateThreadLastLastMessageDate(newSessionId);
+                            updateThreadLastLastMessageDate(oldSessionId);
                             ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
                             return newSessionId;
                         }
@@ -255,13 +258,15 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         return Single.just(0L);
                     }
                     return Single.fromCallable(() -> {
-                        if (newSessionId > 0) {
-                            updateThread(newSessionId.toString(), sessionName, new Date());
-                        }
                         Message message = ChatSDK.db().fetchMessageWithEntityID(msgId);
                         if (message != null) {
+                            Long oldSessionId=message.getThreadId();
                             message.setThreadId(newSessionId);
                             ChatSDK.db().update(message, false);
+                            updateThreadLastLastMessageDate(oldSessionId);
+                            if (newSessionId > 0) {
+                                updateThread(newSessionId.toString(), sessionName, message.getDate());
+                            }
                             ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
                             return newSessionId;
                         }
@@ -791,10 +796,29 @@ public class GWThreadHandler extends AbstractThreadHandler {
         return thread;
     }
 
+    public void updateThreadLastLastMessageDate(Long threadId){
+        DaoCore daoCore = ChatSDK.db().getDaoCore();
+        QueryBuilder<Message> qb = daoCore.getDaoSession().queryBuilder(Message.class);
+        qb.where(MessageDao.Properties.ThreadId.eq(threadId))
+                .orderDesc(MessageDao.Properties.Date)  // 关键修改：按时间降序
+                .limit(1);                               // 只取第一条
+        Message data = qb.unique();
+
+        Thread entity = ChatSDK.db().fetchOrCreateThreadWithEntityID(threadId.toString());
+        if(data!=null){
+            entity.setLastMessageDate(data.getDate());
+        }else{
+            entity.setLastMessageDate(new Date(1640995200000L));//给一个很小的时间，使得可以靠后
+        }
+        ChatSDK.db().update(entity);
+        sessionCache = null;
+        ChatSDK.events().source().accept(NetworkEvent.threadsUpdated());
+    }
+
     public boolean updateThread(String threadId, String sessionName, Date updateAt) {
         Thread entity = ChatSDK.db().fetchOrCreateThreadWithEntityID(threadId);
         boolean modified = false;
-        if (!sessionName.equals(entity.getName())) {
+        if (sessionName != null && !sessionName.isEmpty() && !sessionName.equals(entity.getName())) {
             entity.setName(sessionName);
             entity.setType(ThreadType.None);
             modified = true;
