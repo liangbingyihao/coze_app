@@ -42,8 +42,7 @@ import java.text.DateFormat
 import kotlin.math.abs
 
 open class ChatImageViewHolder<T : ImageMessageHolder>(
-    itemView: View,
-    direction: MessageDirection
+    itemView: View
 ) :
     MessageHolders.BaseMessageViewHolder<T>(itemView, null),
     MessageHolders.DefaultMessageViewHolder,
@@ -89,7 +88,6 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
         itemView.findViewById(sdk.chat.demo.pre.R.id.btn_copy)
 
     open val dm = DisposableMap()
-    open val direction: MessageDirection = direction
 
 
     //    open var explore1: View? = itemView.findViewById(sdk.chat.demo.pre.R.id.explore1)
@@ -306,11 +304,11 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
 
     override fun applyStyle(style: MessagesListStyle) {
 //        this.style = style
-        if (direction == MessageDirection.Incoming) {
-//            applyIncomingStyle(style)
-        } else {
-//            applyOutgoingStyle(style)
-        }
+//        if (direction == MessageDirection.Incoming) {
+////            applyIncomingStyle(style)
+//        } else {
+////            applyOutgoingStyle(style)
+//        }
     }
 
     open fun applyIncomingStyle(style: MessagesListStyle) {

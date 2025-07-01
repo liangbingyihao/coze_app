@@ -27,8 +27,6 @@ public class ChatSDKCoze  extends QuickStart {
 
     /**
      * @param context
-     * @param rootPath Firebase base path (can be any string, cannot contain special characters)
-     * @param googleMapsKey Google static maps key.
      * @param drawerEnabled Whether to use drawer or tabs (Default)
      * @param modules Optional modules
      * @throws Exception

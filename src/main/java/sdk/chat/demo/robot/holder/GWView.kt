@@ -7,13 +7,13 @@ import sdk.chat.ui.view_holders.v2.MessageDirection
 
 class GWView {
     open class IncomingMessageViewHolder(itemView: View) :
-        ChatTextViewHolder<MessageHolder>(itemView, MessageDirection.Incoming)
+        ChatTextViewHolder<MessageHolder>(itemView)
 
     open class OutgoingMessageViewHolder(itemView: View) :
-        ChatTextViewHolder<MessageHolder>(itemView, MessageDirection.Outcoming)
+        ChatTextViewHolder<MessageHolder>(itemView)
 
     open class OutgoingImageViewHolder(itemView: View) :
-        ChatImageViewHolder<ImageMessageHolder>(itemView, MessageDirection.Outcoming)
+        ChatImageViewHolder<ImageMessageHolder>(itemView)
 
 //    open class OutgoingDailyGWViewHolder(itemView: View) :
 //        DailyGWViewHolder<ImageMessageHolder>(itemView, MessageDirection.Outcoming)

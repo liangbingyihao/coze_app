@@ -44,7 +44,7 @@ import sdk.guru.common.DisposableMap
 import sdk.guru.common.RX
 import java.text.DateFormat
 
-open class ChatTextViewHolder<T : MessageHolder>(itemView: View, direction: MessageDirection) :
+open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
     MessageHolders.BaseMessageViewHolder<T>(itemView, null),
     MessageHolders.DefaultMessageViewHolder,
     Consumer<Throwable> {

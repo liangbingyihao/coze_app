@@ -11,7 +11,7 @@ import sdk.chat.demo.pre.R;
 import androidx.recyclerview.widget.ListAdapter
 import sdk.chat.ui.chat.model.MessageHolder
 
-class MessageDiffCallback : DiffUtil.ItemCallback<MessageHolder>() {
+class MessageDiffCallback1 : DiffUtil.ItemCallback<MessageHolder>() {
     override fun areItemsTheSame(oldItem: MessageHolder, newItem: MessageHolder): Boolean {
         return oldItem.id == newItem.id
     }
@@ -31,7 +31,7 @@ class MessageAdapter(
     private val onItemClick: (MessageHolder) -> Unit,
     private val onEditClick: (MessageHolder) -> Unit,
     private val onLongClick: (View,MessageHolder) -> Boolean,
-) : ListAdapter<MessageHolder, RecyclerView.ViewHolder>(MessageDiffCallback()) {
+) : ListAdapter<MessageHolder, RecyclerView.ViewHolder>(MessageDiffCallback1()) {
 
     private var _selectId: String? = null;
 
@@ -39,12 +39,13 @@ class MessageAdapter(
         get() = _selectId
 
     companion object {
-        private const val TYPE_ITEM = 0
+        private const val TYPE_TEXT = 0
+        private const val TYPE_IMAGE = 0
         private const val TYPE_FOOTER = 1
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (position == currentList.size) TYPE_FOOTER else TYPE_ITEM
+        return if (position == currentList.size) TYPE_FOOTER else TYPE_TEXT
     }
 
     override fun getItemCount(): Int = currentList.size + 1

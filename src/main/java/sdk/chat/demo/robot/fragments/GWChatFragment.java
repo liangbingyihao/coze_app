@@ -48,7 +48,6 @@ import sdk.chat.core.ui.Sendable;
 import sdk.chat.core.utils.StringChecker;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
-import sdk.chat.demo.robot.ui.CustomChatView;
 import sdk.chat.demo.robot.ui.GWChatView;
 import sdk.chat.demo.robot.ui.KeyboardOverlayHelper;
 import sdk.chat.demo.robot.ui.listener.GWClickListener;
