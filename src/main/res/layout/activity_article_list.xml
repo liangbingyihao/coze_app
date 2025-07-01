@@ -49,14 +49,19 @@
         android:background="@drawable/dashed_line_vertical"
         android:layerType="software" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
+    <sdk.chat.demo.robot.ui.LoadMoreSwipeRefreshLayout
+        android:id="@+id/swiperefreshlayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="?attr/actionBarSize"
-        android:clipToPadding="false"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
-    <!--    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>-->
+        android:layout_height="wrap_content"
+        android:layout_marginTop="?attr/actionBarSize">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+    </sdk.chat.demo.robot.ui.LoadMoreSwipeRefreshLayout>
 
     <LinearLayout
         android:id="@+id/empty_container"
@@ -70,26 +75,27 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="194dp"
             android:src="@mipmap/ic_empty" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
-            android:textColor="@color/item_text_normal"
             android:text="@string/hint_no_record"
-            />
+            android:textColor="@color/item_text_normal" />
+
         <com.google.android.material.button.MaterialButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
+            android:stateListAnimator="@null"
             android:text="@string/go_to_record"
+            android:textColor="@color/item_text_selected"
+            android:textSize="14sp"
+            app:backgroundTint="@color/white"
             app:cornerRadius="24dp"
             app:elevation="0dp"
-            android:textSize="14sp"
             app:strokeColor="@color/item_text_selected"
-            app:strokeWidth="1dp"
-            app:backgroundTint="@color/white"
-            android:stateListAnimator="@null"
-            android:textColor="@color/item_text_selected" />
+            app:strokeWidth="1dp" />
     </LinearLayout>
 
     <LinearLayout

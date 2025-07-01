@@ -3,15 +3,28 @@ package sdk.chat.demo.robot.api.model;
 import com.google.gson.annotations.SerializedName;
 
 public class MessageDetail {
+    private String id;
     private int status;
     private String summary;
     @SerializedName("session_id")
     private Long sessionId;
 
+    private String content;
+
     @SerializedName("feedback_text")
     private String feedbackText;
 
     private AIFeedback feedback;
+    @SerializedName("created_at")
+    private String createdAt;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public int getStatus() {
         return status;
@@ -51,5 +64,21 @@ public class MessageDetail {
 
     public void setFeedback(AIFeedback feedback) {
         this.feedback = feedback;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
     }
 }

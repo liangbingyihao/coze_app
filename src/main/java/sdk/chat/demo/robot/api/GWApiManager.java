@@ -14,6 +14,7 @@ import org.pmw.tinylog.Logger;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -33,6 +34,8 @@ import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.AccountDetails;
 import sdk.chat.core.types.MessageSendStatus;
 import sdk.chat.demo.robot.api.model.FavoriteList;
+import sdk.chat.demo.robot.api.model.MessageDetail;
+import sdk.chat.demo.robot.api.model.MessageList;
 import sdk.chat.demo.robot.api.model.SystemConf;
 import sdk.chat.demo.robot.push.UpdateTokenWorker;
 import sdk.guru.common.RX;
@@ -510,6 +513,50 @@ public class GWApiManager {
                         JsonObject data = gson.fromJson(responseBody, JsonObject.class).getAsJsonObject("data");
                         FavoriteList res = gson.fromJson(data, FavoriteList.class);
                         emitter.onSuccess(res); // 请求成功
+                    } catch (Exception e) {
+                        emitter.onError(e);
+                    } finally {
+                        response.close(); // 关闭 Response
+                    }
+                }
+            });
+        });
+    }
+
+    public Single<List<MessageDetail>> listMessage(String sessionId, int page, int limit) {
+        return Single.create(emitter -> {
+
+
+            HttpUrl url = Objects.requireNonNull(HttpUrl.parse(URL_MESSAGE))
+                    .newBuilder()
+                    .addQueryParameter("session_id", sessionId)
+                    .addQueryParameter("page", Integer.toString(page))
+                    .addQueryParameter("limit", Integer.toString(limit))
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url(url)
+//                    .header("Authorization", accessToken)
+                    .build();
+
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    emitter.onError(e); // 请求失败
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    try {
+                        if (!response.isSuccessful()) {
+                            emitter.onError(new IOException("HTTP error: " + response.code()));
+                            return;
+                        }
+                        String responseBody = response.body() != null ? response.body().string() : "";
+                        JsonObject data = gson.fromJson(responseBody, JsonObject.class).getAsJsonObject("data");
+                        MessageList res = gson.fromJson(data, MessageList.class);
+                        emitter.onSuccess(res.getItems()); // 请求成功
                     } catch (Exception e) {
                         emitter.onError(e);
                     } finally {

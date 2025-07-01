@@ -11,7 +11,8 @@ import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.api.model.FavoriteList
 
 class FavoriteAdapter() : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-    private val listData: MutableList<FavoriteList.FavoriteItem> = ArrayList<FavoriteList.FavoriteItem>()
+    private val listData: MutableList<FavoriteList.FavoriteItem> =
+        ArrayList<FavoriteList.FavoriteItem>()
 
     companion object {
         private const val TYPE_ITEM = 0
@@ -22,13 +23,7 @@ class FavoriteAdapter() : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         set(value) {
             if (field != value) {
                 field = value
-                notifyItemChanged(itemCount-1)
-//                notifyDataSetChanged()
-//                if (value) {
-//                    notifyItemInserted(itemCount) // 显示加载项
-//                } else {
-//                    notifyItemRemoved(itemCount) // 隐藏加载项
-//                }
+                notifyItemChanged(itemCount - 1)
             }
         }
 
@@ -61,22 +56,27 @@ class FavoriteAdapter() : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         holder: RecyclerView.ViewHolder,
         position: Int
     ) {
-        when (holder) {
-            is MyViewHolder -> {
-                Log.w("getItemViewType","MyViewHolder,${position}")
-                if (position < listData.size) { // 关键修复点
-                    val item = listData[position]
-                    holder.textView.text = "${position},${item.content}"
-                } else {
-                    holder.textView.text = "" // 处理异常情况
+        try {
+            when (holder) {
+                is MyViewHolder -> {
+                    Log.w("getItemViewType", "MyViewHolder,${position}")
+                    if (position < listData.size) { // 关键修复点
+                        val item = listData[position]
+                        holder.textView.text = "${position},${item.content}"
+                    } else {
+                        holder.textView.text = "" // 处理异常情况
+                    }
+                }
+
+                is FootViewHolder -> {
+                    Log.w("getItemViewType", "FootViewHolder,${position}")
+                    // 始终保留Footer空间，仅控制进度条显隐
+                    holder.contentLoadingProgressBar.visibility =
+                        if (isLoading) View.VISIBLE else View.INVISIBLE
                 }
             }
-            is FootViewHolder -> {
-                Log.w("getItemViewType","FootViewHolder,${position}")
-                // 始终保留Footer空间，仅控制进度条显隐
-                holder.contentLoadingProgressBar.visibility =
-                    if (isLoading) View.VISIBLE else View.INVISIBLE
-            }
+        } catch (e: Exception) {
+            Log.e("listFavorite1", "Binding error at pos $position", e)
         }
 //        if (getItemViewType(position) === TYPE_FOOTER) {
 //        } else {
@@ -89,6 +89,7 @@ class FavoriteAdapter() : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     fun clear() {
         listData.clear()
+        notifyDataSetChanged()
     }
 
     fun addItems(data: ArrayList<FavoriteList.FavoriteItem>) {
@@ -103,8 +104,10 @@ class FavoriteAdapter() : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
 
     private class FootViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        var contentLoadingProgressBar: ContentLoadingProgressBar = itemView.findViewById<ContentLoadingProgressBar?>(
-            R.id.pb_progress)
+        var contentLoadingProgressBar: ContentLoadingProgressBar =
+            itemView.findViewById<ContentLoadingProgressBar?>(
+                R.id.pb_progress
+            )
     }
 
     private class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

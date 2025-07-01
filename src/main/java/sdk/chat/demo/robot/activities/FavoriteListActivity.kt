@@ -1,5 +1,6 @@
 package sdk.chat.demo.robot.activities
 
+import android.util.Log
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -50,7 +51,6 @@ class FavoriteListActivity : BaseActivity(), View.OnClickListener {
             setOnRefreshListener {
                 currentPage = 1
                 myAdapter.isLoading = false
-                myAdapter.clear()
                 setLoadingMore(false)
                 listFavorite(currentPage)
             }
@@ -84,6 +84,9 @@ class FavoriteListActivity : BaseActivity(), View.OnClickListener {
 
     fun listFavorite(page: Int) {
 //        Toast.makeText(applicationContext, "page:${page}", Toast.LENGTH_SHORT).show()
+        if(page==1){
+            myAdapter.clear()
+        }
         dm.add(
             GWApiManager.shared().listFavorite(page, 20)
                 .observeOn(RX.main())
@@ -91,7 +94,6 @@ class FavoriteListActivity : BaseActivity(), View.OnClickListener {
                     { messages ->
                         myAdapter.isLoading = false
                         if (page == 1) {
-                            myAdapter.clear()
 //                            recyclerView.scrollToPosition(0);
                             swipeRefreshLayout.isRefreshing = false
                         } else {

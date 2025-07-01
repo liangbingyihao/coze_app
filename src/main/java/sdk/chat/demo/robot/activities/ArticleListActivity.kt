@@ -16,7 +16,6 @@ import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Single
 import io.reactivex.SingleSource
 import io.reactivex.functions.Function
-import sdk.chat.core.dao.Message
 import sdk.chat.core.dao.Thread
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
@@ -25,10 +24,10 @@ import sdk.chat.demo.robot.adpter.GenericMenuPopupWindow
 import sdk.chat.demo.robot.adpter.SessionPopupAdapter
 import sdk.chat.demo.robot.adpter.data.Article
 import sdk.chat.demo.robot.adpter.data.ArticleSession
+import sdk.chat.demo.robot.api.GWApiManager
 import sdk.chat.demo.robot.api.model.MessageDetail
-import sdk.chat.demo.robot.extensions.DateLocalizationUtil
-import sdk.chat.demo.robot.handlers.GWMsgHandler
 import sdk.chat.demo.robot.handlers.GWThreadHandler
+import sdk.chat.demo.robot.ui.LoadMoreSwipeRefreshLayout
 import sdk.chat.demo.robot.ui.PopupMenuHelper
 import sdk.chat.ui.activities.BaseActivity
 import sdk.guru.common.RX
@@ -37,6 +36,7 @@ import sdk.guru.common.RX
 class ArticleListActivity : BaseActivity(), View.OnClickListener {
     private val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
     private lateinit var articleAdapter: ArticleAdapter;
+    private lateinit var swipeRefreshLayout: LoadMoreSwipeRefreshLayout
     private lateinit var menuPopup: GenericMenuPopupWindow<ArticleSession, SessionPopupAdapter.SessionItemViewHolder>
     private var sessionId: String = ""
     private lateinit var tvTitle: TextView
@@ -46,6 +46,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
     private lateinit var vLineDash: View
     private lateinit var recyclerView: RecyclerView
     private var isEditingSummary = false
+    private var currentPage = 1
 
     companion object {
         private const val EXTRA_INITIAL_DATA = "initial_data"
@@ -70,8 +71,23 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         vEdSummary = findViewById(R.id.edSummary)
 
         // 设置RecyclerView
-        recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        setupRecyclerView()
+        setupRefreshLayout()
+
+        loadSessions()
+        findViewById<View>(R.id.home).setOnClickListener(this)
+        tvTitle = findViewById<View>(R.id.title) as TextView
+        tvTitle.setOnClickListener(this)
+        findViewById<View>(R.id.edSummaryExit).setOnClickListener(this)
+        findViewById<View>(R.id.edSummaryConfirm).setOnClickListener(this)
+
+        vEmptyContainer = findViewById<View>(R.id.empty_container)
+        vLineDash = findViewById<View>(R.id.dash_line)
+
+    }
+
+    private fun setupRecyclerView() {
+        recyclerView = findViewById<RecyclerView?>(R.id.recyclerView)
         articleAdapter = ArticleAdapter(
             onItemClick = { article ->
                 // 处理普通点击
@@ -92,16 +108,33 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                 true
             })
         recyclerView.adapter = articleAdapter
-        loadSessions()
-        findViewById<View>(R.id.home).setOnClickListener(this)
-        tvTitle = findViewById<View>(R.id.title) as TextView
-        tvTitle.setOnClickListener(this)
-        findViewById<View>(R.id.edSummaryExit).setOnClickListener(this)
-        findViewById<View>(R.id.edSummaryConfirm).setOnClickListener(this)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+    }
 
-        vEmptyContainer = findViewById<View>(R.id.empty_container)
-        vLineDash = findViewById<View>(R.id.dash_line)
+    private fun setupRefreshLayout() {
+        swipeRefreshLayout = findViewById<LoadMoreSwipeRefreshLayout?>(R.id.swiperefreshlayout)
+        swipeRefreshLayout.apply {
+            // 下拉刷新监听
+            setOnRefreshListener {
+                articleAdapter.isLoading = false
+                setLoadingMore(false)
+                loadArticles(1)
+            }
 
+            // 绑定RecyclerView
+            setupWithRecyclerView(recyclerView)
+
+            // 上拉加载监听
+            setOnLoadMoreListener(object : LoadMoreSwipeRefreshLayout.OnLoadMoreListener {
+                override fun onLoadMore() {
+                    if (!articleAdapter.isLoading) {
+                        articleAdapter.isLoading = true
+                        setLoadingMore(true)
+                        loadArticles(++currentPage)
+                    }
+                }
+            })
+        }
     }
 
     private fun setEmptyRecord(isEmpty: Boolean) {
@@ -133,7 +166,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                         tvTitle.text = item.title
                         sessionId = item.id
                         menuPopup.setTitle(item.title)
-                        loadArticles()
+                        loadArticles(1)
                     }
                 } else {
                     isEditingSummary = false
@@ -167,7 +200,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                     { articleSessions ->
 //                        menuPopup.updateMenuItems(articleSessions, 0)
                         initMenuPopup(articleSessions)
-                        loadArticles()
+                        loadArticles(1)
                     },
                     { error -> // onError
                         Toast.makeText(
@@ -179,14 +212,75 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         )
     }
 
-    fun loadArticles() {
+//    fun loadArticles() {
+//        dm.add(
+//            threadHandler.loadMessagesBySession(sessionId)
+//                .flatMap(Function { messages: List<Message> ->
+//                    var lastDay = "";
+//                    val articleList = messages.map { message ->
+//                        var dateStr = DateLocalizationUtil.dateStr(message.date)
+//                        val parts = dateStr.split(" ")
+//                        var thisDay = ""
+//                        var thisTime = ""
+//                        if (parts.size == 2) {
+//                            thisDay = parts[0];
+//                            thisTime = parts[1]
+//                        }
+//
+//                        var showDay = thisDay != lastDay
+//                        lastDay = thisDay
+//                        val aiFeedback: MessageDetail? = GWMsgHandler.getAiFeedback(message)
+//                        Article(
+//                            id = message.entityID,
+//                            content = message.text,
+//                            day = thisDay,
+//                            time = thisTime,
+//                            title = aiFeedback?.summary ?: message.stringForKey("summary"),
+//                            colorTag = runCatching {
+//                                aiFeedback?.feedback?.colorTag?.toColorInt()
+//                                    ?: message.stringForKey("colorTag").toColorInt()
+//                            }
+//                                .getOrElse { exception ->
+//                                    "#FFFBE8".toColorInt()
+//                                },
+//                            showDay = showDay
+//                        )
+//                    }
+//                    Single.just(articleList)
+//                } as Function<List<Message?>?, SingleSource<List<Article?>?>?>)
+//                .observeOn(RX.main())
+//                .subscribe(
+//                    { messages ->
+//                        articleAdapter.submitList(messages)
+//                        if (messages != null && !messages.isEmpty()) {
+//                            setEmptyRecord(false)
+//                        } else {
+//                            setEmptyRecord(true)
+//                        }
+//                        recyclerView.scrollToPosition(0);
+//                    },
+//                    { error -> // onError
+//                        Toast.makeText(
+//                            this@ArticleListActivity,
+//                            "加载失败: ${error.message}",
+//                            Toast.LENGTH_SHORT
+//                        ).show()
+//                    })
+//        )
+//    }
+
+    fun loadArticles(page: Int) {
+        currentPage = page
+        if(page==1){
+            articleAdapter.clearAll()
+        }
+//        Toast.makeText(applicationContext, "page:${page}", Toast.LENGTH_SHORT).show()
         dm.add(
-            threadHandler.loadMessagesBySession(sessionId)
-                .flatMap(Function { messages: List<Message> ->
+            GWApiManager.shared().listMessage(sessionId, page, 20)
+                .flatMap(Function { messages: List<MessageDetail> ->
                     var lastDay = "";
                     val articleList = messages.map { message ->
-                        var dateStr = DateLocalizationUtil.dateStr(message.date)
-                        val parts = dateStr.split(" ")
+                        val parts = message.createdAt.split("T")
                         var thisDay = ""
                         var thisTime = ""
                         if (parts.size == 2) {
@@ -196,37 +290,50 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
 
                         var showDay = thisDay != lastDay
                         lastDay = thisDay
-                        val aiFeedback: MessageDetail? = GWMsgHandler.getAiFeedback(message)
+//                        val aiFeedback: MessageDetail? = GWMsgHandler.getAiFeedback(message)
+
                         Article(
-                            id = message.entityID,
-                            content = message.text,
+                            id = message.id,
+                            content = message.content,
                             day = thisDay,
                             time = thisTime,
-                            title = aiFeedback?.summary ?: message.stringForKey("summary"),
-                            colorTag = runCatching {
-                                aiFeedback?.feedback?.colorTag?.toColorInt()
-                                    ?: message.stringForKey("colorTag").toColorInt()
-                            }
-                                .getOrElse { exception ->
-                                    "#FFFBE8".toColorInt()
-                                },
+                            title = message.summary,
+                            colorTag = message.feedback?.colorTag?.toColorInt()
+                                ?: "#FFFBE8".toColorInt(),
                             showDay = showDay
                         )
                     }
                     Single.just(articleList)
-                } as Function<List<Message?>?, SingleSource<List<Article?>?>?>)
+                } as Function<List<MessageDetail?>?, SingleSource<List<Article>>>)
                 .observeOn(RX.main())
                 .subscribe(
                     { messages ->
-                        articleAdapter.submitList(messages)
-                        if (messages != null && !messages.isEmpty()) {
-                            setEmptyRecord(false)
-                        } else {
-                            setEmptyRecord(true)
+                        articleAdapter.isLoading = false
+                        if (page == 1) {
+                            articleAdapter.clearAll()
+                            articleAdapter.appendItems(messages,Runnable {
+                                recyclerView.scrollToPosition(0);
+                            });
+                            swipeRefreshLayout.isRefreshing = false
+                            if (messages != null && !messages.isEmpty()) {
+                                setEmptyRecord(false)
+                            } else {
+                                setEmptyRecord(true)
+                            }
+                        }else{
+                            articleAdapter.appendItems(messages,null);
+                            swipeRefreshLayout.setLoadingMore(false)
                         }
-                        recyclerView.scrollToPosition(0);
+                        if (messages == null || messages.isEmpty()) {
+                            swipeRefreshLayout.setCanLoadMore(false)
+                        } else {
+                            swipeRefreshLayout.setCanLoadMore(true)
+                        }
                     },
                     { error -> // onError
+                        articleAdapter.isLoading = false
+                        swipeRefreshLayout.setLoadingMore(false)
+                        swipeRefreshLayout.isRefreshing = false
                         Toast.makeText(
                             this@ArticleListActivity,
                             "加载失败: ${error.message}",

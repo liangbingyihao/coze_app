@@ -1,6 +1,5 @@
 package sdk.chat.demo.robot.adpter
 
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -42,11 +41,30 @@ class ArticleAdapter(
         private const val TYPE_FOOTER = 1
     }
 
+    var isLoading = false
+        set(value) {
+            if (field != value) {
+                field = value
+                notifyItemChanged(itemCount-1)
+            }
+        }
+
     override fun getItemViewType(position: Int): Int {
         return if (position == currentList.size) TYPE_FOOTER else TYPE_ITEM
     }
 
     override fun getItemCount(): Int = currentList.size + 1
+
+    fun clearAll() {
+        submitList(emptyList()) // 清空并自动通知DiffUtil更新
+    }
+
+    fun appendItems(newItems: List<Article>, commitCallback: Runnable?) {
+        val updatedList = currentList.toMutableList().apply {
+            addAll(newItems)
+        }
+        submitList(updatedList,commitCallback)
+    }
 
     fun updateSummaryById(id: String?, newSummary: String): Boolean {
 
@@ -141,7 +159,8 @@ class ArticleAdapter(
         if (holder is ViewHolder && position < currentList.size) {
             holder.bind(getItem(position))
         } else if (holder is FooterViewHolder) {
-            holder.contentLoadingProgressBar.visibility = View.INVISIBLE
+            holder.contentLoadingProgressBar.visibility =
+                if (isLoading) View.VISIBLE else View.INVISIBLE
         }
     }
 
