@@ -6,6 +6,7 @@ import androidx.core.widget.NestedScrollView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import org.pmw.tinylog.Logger
 
 class LoadMoreSwipeRefreshLayout @JvmOverloads constructor(
     context: Context,
@@ -66,11 +67,13 @@ class LoadMoreSwipeRefreshLayout @JvmOverloads constructor(
 
         if (isAtBottom(view)) {
             triggerLoadMore()
+        } else {
+//            Logger.warn("onLoadIsAtBottom:false")
         }
     }
 
     private fun shouldIgnoreLoadMore(): Boolean {
-        return !canLoadMore||isLoadingMore ||
+        return !canLoadMore || isLoadingMore ||
                 System.currentTimeMillis() - lastLoadTime < loadMoreThrottleMs
     }
 
@@ -85,10 +88,13 @@ class LoadMoreSwipeRefreshLayout @JvmOverloads constructor(
     private fun isRecyclerViewAtBottom(recyclerView: RecyclerView): Boolean {
         val layoutManager = recyclerView.layoutManager as? LinearLayoutManager ?: return false
         return layoutManager.run {
+            if (reverseLayout) {
+                return findFirstVisibleItemPosition() == 0 && !recyclerView.canScrollVertically(1)
+            }
             val visibleItemCount = childCount
             val totalItemCount = itemCount
             val firstVisibleItem = findFirstVisibleItemPosition()
-            (firstVisibleItem + visibleItemCount) >= totalItemCount - 1 && // 最后一项
+            return (firstVisibleItem + visibleItemCount) >= totalItemCount - 1 && // 最后一项
                     !recyclerView.canScrollVertically(1) // 不能再上滑
         }
     }

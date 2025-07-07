@@ -24,6 +24,15 @@
             android:src="@drawable/ic_back" />
     </FrameLayout>
 
+    <ImageView
+        android:id="@+id/more_menus"
+        android:layout_width="wrap_content"
+        android:layout_height="?attr/actionBarSize"
+        android:layout_gravity="right"
+        android:paddingLeft="4dp"
+        android:paddingRight="4dp"
+        android:src="@drawable/ic_three_dots" />
+
     <TextView
         android:id="@+id/title"
         android:layout_width="wrap_content"
@@ -84,6 +93,7 @@
             android:textColor="@color/item_text_normal" />
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/conversations1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
@@ -146,6 +156,20 @@
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/conversations"
+        android:layout_width="316dp"
+        android:layout_height="42dp"
+        android:backgroundTint="@color/white"
+        app:strokeColor="#CF4B40"
+        app:strokeWidth="2dp"
+        app:cornerRadius="21dp"
+        android:textSize="14sp"
+        android:textColor="#CF4B40"
+        android:layout_marginBottom="48dp"
+        android:layout_gravity="center|bottom"
+        android:text="@string/conversations" />
 </FrameLayout>
 
 

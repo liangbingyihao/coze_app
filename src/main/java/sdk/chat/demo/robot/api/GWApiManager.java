@@ -610,4 +610,47 @@ public class GWApiManager {
             });
         });
     }
+
+    public Single<Boolean> deleteSession(String threadId) {
+        return Single.create(emitter -> {
+
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            params.put("session_id", threadId);
+            RequestBody body = RequestBody.create(
+                    new JSONObject(params).toString(),
+                    MediaType.parse("application/json; charset=utf-8")
+            );
+
+            Request request = new Request.Builder()
+                    .url(URL_SESSION + "/del")
+                    .post(body)
+                    .build();
+
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    emitter.onError(e); // 请求失败
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    try {
+                        if (!response.isSuccessful()) {
+                            emitter.onError(new IOException("HTTP error: " + response.code()));
+                            return;
+                        }
+                        String responseBody = response.body() != null ? response.body().string() : "";
+                        Boolean data = gson.fromJson(responseBody, JsonObject.class).getAsJsonPrimitive("success").getAsBoolean();
+//                        Integer data = gson.fromJson(responseBody, JsonObject.class).getAsJsonObject("data").getAsInt();
+                        emitter.onSuccess(data); // 请求成功
+                    } catch (Exception e) {
+                        emitter.onError(e);
+                    } finally {
+                        response.close(); // 关闭 Response
+                    }
+                }
+            });
+        });
+    }
 }

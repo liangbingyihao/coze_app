@@ -1,7 +1,24 @@
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/title_text"
-    style="@style/HistorySessionText"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/content"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:maxLines="2"
-    android:ellipsize="end"/>
+    android:layout_height="46dp"
+    android:background="#ffffff"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/title_text"
+        style="@style/HistorySessionText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxWidth="140dp"
+        android:ellipsize="end"
+        android:singleLine="true" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:src="@mipmap/ic_edit_tiny" />
+</LinearLayout>

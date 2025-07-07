@@ -5,6 +5,7 @@ import android.content.res.Configuration;
 import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -31,13 +32,14 @@ import io.reactivex.Single;
 import io.reactivex.SingleOnSubscribe;
 import io.reactivex.SingleSource;
 import io.reactivex.functions.Function;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.dao.Thread;
 import sdk.chat.core.events.EventType;
 import sdk.chat.core.events.NetworkEvent;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.Progress;
-import sdk.chat.core.utils.CurrentLocale;
 import sdk.chat.core.utils.TimeLog;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.adpter.ChatAdapter;
@@ -45,8 +47,6 @@ import sdk.chat.demo.robot.handlers.GWThreadHandler;
 import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.chat.model.MessageHolder;
 import sdk.chat.ui.module.UIModule;
-import sdk.chat.ui.performance.MessageHoldersDiffCallback;
-import sdk.chat.ui.provider.ChatDateProvider;
 import sdk.chat.ui.utils.ToastHelper;
 import sdk.chat.ui.views.ChatView;
 import sdk.guru.common.DisposableMap;
@@ -55,6 +55,7 @@ import sdk.guru.common.RX;
 public class GWChatContainer extends LinearLayout implements MessagesListAdapter.OnLoadMoreListener {
 
     protected RecyclerView messagesList;
+    private LoadMoreSwipeRefreshLayout swipeRefreshLayout;
     protected LinearLayout root;
     protected boolean listenersAdded = false;
 
@@ -64,6 +65,8 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
         void onClick(Message message);
 
         void onLongClick(Message message);
+
+        String getMessageId();
     }
 
     protected ChatAdapter messagesListAdapter;
@@ -73,8 +76,8 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
     protected DisposableMap dm = new DisposableMap();
 
 
-    protected ChatView.Delegate delegate;
-    protected boolean loadMoreEnabled = true;
+    protected Delegate delegate;
+//    protected boolean loadMoreEnabled = true;
 
     public GWChatContainer(Context context) {
         super(context);
@@ -88,7 +91,7 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
         super(context, attrs, defStyle);
     }
 
-    public void setDelegate(ChatView.Delegate delegate) {
+    public void setDelegate(Delegate delegate) {
         this.delegate = delegate;
     }
 
@@ -125,11 +128,37 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
 //        });
 
         messagesList.setAdapter(messagesListAdapter);
+        setupRefreshLayout();
 
         onLoadMore(0, 0);
 
     }
 
+    private void setupRefreshLayout() {
+        swipeRefreshLayout = findViewById(R.id.swiperefreshlayout);
+
+        // 下拉刷新监听
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            messagesListAdapter.setHeader(false);
+            swipeRefreshLayout.setLoadingMore(false);
+            loadElder();
+        });
+
+        // 绑定RecyclerView
+        swipeRefreshLayout.setupWithRecyclerView(messagesList);
+
+        // 上拉加载监听
+        swipeRefreshLayout.setOnLoadMoreListener(new LoadMoreSwipeRefreshLayout.OnLoadMoreListener() {
+            @Override
+            public void onLoadMore() {
+                if (!messagesListAdapter.getHeader()) {
+                    messagesListAdapter.setHeader(true);
+                    swipeRefreshLayout.setLoadingMore(true);
+                    loadLater();
+                }
+            }
+        });
+    }
 
     public void addListeners() {
         if (listenersAdded) {
@@ -145,17 +174,17 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
                     });
                 }));
 
-        dm.add(ChatSDK.events().sourceOnSingle()
-                .filter(NetworkEvent.filterType(EventType.MessageProgressUpdated))
-                .filter(NetworkEvent.filterThreadEntityID(delegate.getThread().getEntityID()))
-                .subscribe(networkEvent -> {
-                    Progress progress = networkEvent.getProgress();
-                    if (progress != null && progress.error != null) {
-                        messagesList.post(() -> {
-                            ToastHelper.show(getContext(), progress.error.getLocalizedMessage());
-                        });
-                    }
-                }));
+//        dm.add(ChatSDK.events().sourceOnSingle()
+//                .filter(NetworkEvent.filterType(EventType.MessageProgressUpdated))
+//                .filter(NetworkEvent.filterThreadEntityID(delegate.getThread().getEntityID()))
+//                .subscribe(networkEvent -> {
+//                    Progress progress = networkEvent.getProgress();
+//                    if (progress != null && progress.error != null) {
+//                        messagesList.post(() -> {
+//                            ToastHelper.show(getContext(), progress.error.getLocalizedMessage());
+//                        });
+//                    }
+//                }));
 
 //        dm.add(ChatSDK.events().sourceOnSingle()
 //                .filter(NetworkEvent.filterType(EventType.MessageRemoved))
@@ -177,38 +206,36 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
     }
 
 
-    @Override
-    public void onLoadMore(int page, int totalItemsCount) {
-
-        // There is an issue with Firebase whereby the message date is
-        // initially just estimated. When the message is added, the scrollview
-        // scrolls and that triggers the on-load-more which then does a database query
-        // while that is running the message date has been updated to a later date
-        // so a duplicate message comes back...
-        if (!loadMoreEnabled) {
-            return;
-        }
-
+    public void loadLater() {
         Long startId = 0L;
 
         // If there are already items in the list, load messages before oldest
         if (!messageHolders.isEmpty()) {
-            startId = messageHolders.get(messageHolders.size() - 1).getMessage().getId();
+            startId = messageHolders.get(0).getMessage().getId();
+//        } else {
+//            startId = (delegate.getMessageId() != null && delegate.getMessageId() > 0)
+//                    ? delegate.getMessageId() -1
+//                    : 0L;
         }
-        Logger.warn("onLoadMore:" + startId);
+        Logger.warn("onLoadLater:" + startId);
         GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
         dm.add(
-                // Changed this from before to after because it makes more sense...
-                handler.loadMessagesEarlier(startId, true)
+                handler.loadMessagesLater(startId, true)
                         .flatMap((Function<List<Message>, SingleSource<List<MessageHolder>>>) messages -> {
-                            return getMessageHoldersAsync(messages, false);
+                            return getMessageHoldersAsync(messages, true);
                         })
                         .observeOn(RX.main())
                         .subscribe(messages -> {
+                            messagesListAdapter.setHeader(false);
+                            swipeRefreshLayout.setRefreshing(false);
+                            swipeRefreshLayout.setLoadingMore(false);
                             synchronize(() -> {
-                                addMessageHoldersToEnd(messages, false);
+                                addMessageToStart(messages);
                             });
                         }, error -> {
+                            messagesListAdapter.setHeader(false);
+                            swipeRefreshLayout.setRefreshing(false);
+                            swipeRefreshLayout.setLoadingMore(false);
                             Context context = getContext(); // 获取Context
                             if (context != null) {
                                 Toast.makeText(
@@ -222,23 +249,120 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
 
     }
 
+    public void loadElder() {
+        Long startId;
+
+        // If there are already items in the list, load messages before oldest
+        if (!messageHolders.isEmpty()) {
+            startId = messageHolders.get(messageHolders.size() - 1).getMessage().getId();
+        } else {
+            startId = 0L;
+            String messageId = delegate.getMessageId();
+            if (messageId != null && !messageId.isEmpty()) {
+                Message msg = ChatSDK.db().fetchMessageWithEntityID(messageId);
+                if(msg!=null){
+                    startId = msg.getId()+1;
+                    Toast.makeText(
+                            getContext(),
+                            "准加载id: " + msg.getId(),
+                            Toast.LENGTH_SHORT
+                    ).show();
+                }
+            }
+        }
+        Logger.warn("onLoadElder:" + startId);
+        GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
+        dm.add(
+                handler.loadMessagesEarlier(startId, true)
+                        .flatMap((Function<List<Message>, SingleSource<List<MessageHolder>>>) messages -> {
+                            return getMessageHoldersAsync(messages, false);
+                        })
+                        .observeOn(RX.main())
+                        .subscribe(messages -> {
+                            synchronize(() -> {
+//                                messagesListAdapter.setHeader(false);
+                                swipeRefreshLayout.setRefreshing(false);
+                                swipeRefreshLayout.setLoadingMore(false);
+                                addMessageHoldersToEnd(messages, false);
+                            });
+                        }, error -> {
+//                            messagesListAdapter.setHeader(false);
+                            swipeRefreshLayout.setRefreshing(false);
+                            swipeRefreshLayout.setLoadingMore(false);
+                            Context context = getContext(); // 获取Context
+                            if (context != null) {
+                                Toast.makeText(
+                                        context,
+                                        "加载失败: " + error.getMessage(),
+                                        Toast.LENGTH_SHORT
+                                ).show();
+                            }
+                        }));
+
+
+    }
+
+    @Override
+    public void onLoadMore(int page, int totalItemsCount) {
+        loadElder();
+//        // There is an issue with Firebase whereby the message date is
+//        // initially just estimated. When the message is added, the scrollview
+//        // scrolls and that triggers the on-load-more which then does a database query
+//        // while that is running the message date has been updated to a later date
+//        // so a duplicate message comes back...
+//        if (!loadMoreEnabled) {
+//            return;
+//        }
+//
+//        Long startId = 0L;
+//
+//        // If there are already items in the list, load messages before oldest
+//        if (!messageHolders.isEmpty()) {
+//            startId = messageHolders.get(messageHolders.size() - 1).getMessage().getId();
+//        }
+//        Logger.warn("onLoadMore:" + startId);
+//        GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
+//        dm.add(
+//                // Changed this from before to after because it makes more sense...
+//                handler.loadMessagesEarlier(startId, true)
+//                        .flatMap((Function<List<Message>, SingleSource<List<MessageHolder>>>) messages -> {
+//                            return getMessageHoldersAsync(messages, false);
+//                        })
+//                        .observeOn(RX.main())
+//                        .subscribe(messages -> {
+//                            synchronize(() -> {
+//                                addMessageHoldersToEnd(messages, false);
+//                            });
+//                        }, error -> {
+//                            Context context = getContext(); // 获取Context
+//                            if (context != null) {
+//                                Toast.makeText(
+//                                        context,
+//                                        "加载失败: " + error.getMessage(),
+//                                        Toast.LENGTH_SHORT
+//                                ).show();
+//                            }
+//                        }));
+
+
+    }
+
     /**
      * Start means new messages to bottom of screen
      */
     protected void addMessageToStart(Message message) {
+        Logger.warn("onLoadNew:");
 
-        Logger.debug("Add Message to start " + message.getText());
-
-        boolean scroll = message.getSender().isMe();
-
-        int offset = messagesList.computeVerticalScrollOffset();
-        int extent = messagesList.computeVerticalScrollExtent();
-        int range = messagesList.computeVerticalScrollRange();
-        int distanceFromBottom = range - extent - offset;
-
-        if (distanceFromBottom < 400) {
-            scroll = true;
-        }
+//        boolean scroll = message.getSender().isMe();
+//
+//        int offset = messagesList.computeVerticalScrollOffset();
+//        int extent = messagesList.computeVerticalScrollExtent();
+//        int range = messagesList.computeVerticalScrollRange();
+//        int distanceFromBottom = range - extent - offset;
+//
+//        if (distanceFromBottom < 400) {
+//            scroll = true;
+//        }
 
         MessageHolder holder = ChatSDKUI.provider().holderProvider().getMessageHolder(message);
         if (!messageHolders.contains(holder)) {
@@ -247,17 +371,35 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
 
 //            updatePreviousMessage(holder);
             holder.updateReadStatus();
-
-            loadMoreEnabled = false;
-            messagesListAdapter.addNewMessage(holder);
+            messagesListAdapter.addNewMessage(holder, (Function0) () -> {
+                messagesList.scrollToPosition(0);
+                return Unit.INSTANCE;
+            });
 //            messagesListAdapter.addToStart(holder, scroll, true);
-            messagesList.post(() -> loadMoreEnabled = true);
         } else {
             Logger.debug("Exists already");
         }
 
     }
 
+    protected void addMessageToStart(List<MessageHolder> holders) {
+        List<MessageHolder> toAdd = new ArrayList<>();
+        for (MessageHolder holder : holders) {
+            if (!messageHolders.contains(holder)) {
+                messageHolders.add(0, holder);
+                toAdd.add(holder);
+            } else {
+                Logger.error("We have a duplicate");
+            }
+        }
+        messagesListAdapter.addNewMessage(toAdd, (Function0) () -> {
+//            messagesList.scrollToPosition(0);
+            LinearLayoutManager layoutManager = (LinearLayoutManager) messagesList.getLayoutManager();
+//            int position = layoutManager.findLastVisibleItemPosition();
+            layoutManager.scrollToPositionWithOffset(toAdd.size(), 600);
+            return Unit.INSTANCE;
+        });
+    }
 //    protected void updatePreviousMessage(MessageHolder holder) {
 //        if (holder != null) {
 //            MessageHolder previous = ChatSDKUI.provider().holderProvider().getMessageHolder(holder.previousMessage());
@@ -315,7 +457,26 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
         }
 
         // Reverse order because we are adding to end
-        messagesListAdapter.submitList(toAdd);
+        LinearLayoutManager layoutManager = (LinearLayoutManager) messagesList.getLayoutManager();
+        int position = layoutManager.findLastVisibleItemPosition();
+
+        messagesListAdapter.addHistoryMessages(toAdd, (Function0) () -> {
+////            messagesList.smoothScrollToPosition(olderSize+1);
+//            if (messagesList == null || messagesList.getLayoutManager() == null) {
+//                return Unit.INSTANCE;
+//            }
+//            // 检查LayoutManager类型
+//            if (!(messagesList.getLayoutManager() instanceof LinearLayoutManager)) {
+//                throw new IllegalArgumentException("Only LinearLayoutManager is supported");
+//            }
+//            LinearLayoutManager layoutManager = (LinearLayoutManager) messagesList.getLayoutManager();
+            // 执行滚动
+//            View view = layoutManager.findViewByPosition(position);
+//            int offset = (view != null) ? view.getBottom() : 0;
+            layoutManager.scrollToPositionWithOffset(position + 1, 600);
+
+            return Unit.INSTANCE;
+        });
 //        messagesListAdapter.addToEnd(toAdd, false, notify);
     }
 
@@ -402,7 +563,7 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
     public void clear() {
         if (messagesListAdapter != null) {
             messageHolders.clear();
-            messagesListAdapter.submitList(new ArrayList<IMessage>());
+            messagesListAdapter.submitList(new ArrayList<IMessage>(), null);
         }
     }
 
@@ -431,12 +592,15 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
 //        }
 //    }
 
-//    public void clearFilter() {
+    //    public void clearFilter() {
 //        synchronize(() -> {
 //            messagesListAdapter.getItems().clear();
 //            messagesListAdapter.addToEnd(messageHolders, false, false);
 //        });
 //    }
+    public ChatAdapter getMessagesListAdapter() {
+        return messagesListAdapter;
+    }
 
     public void removeListeners() {
         dm.dispose();

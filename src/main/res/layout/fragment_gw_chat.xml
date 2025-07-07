@@ -18,7 +18,7 @@
 <!--            android:layout_width="match_parent"-->
 <!--            android:layout_height="wrap_content" />-->
 
-        <sdk.chat.demo.robot.ui.GWChatView
+        <sdk.chat.demo.robot.ui.GWChatContainer
             android:id="@+id/chatView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

@@ -1,18 +1,28 @@
 package sdk.chat.demo.robot.adpter
 
+import android.annotation.SuppressLint
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
+import android.util.SparseArray
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.util.size
+import androidx.core.widget.ContentLoadingProgressBar
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.stfalcon.chatkit.commons.models.IMessage
+import io.reactivex.Single
+import org.pmw.tinylog.Logger
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.holder.ChatImageViewHolder
 import sdk.chat.demo.robot.holder.ChatTextViewHolder
 import sdk.chat.demo.robot.holder.ImageHolder
 import sdk.chat.demo.robot.holder.TextHolder
 import sdk.chat.demo.robot.holder.TimeHolder
+import sdk.guru.common.RX
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -33,8 +43,10 @@ class MessageDiffCallback(
             // 相同类型的消息才比较ID
             oldItem is TextHolder && newItem is TextHolder ->
                 oldItem.id == newItem.id
+
             oldItem is ImageHolder && newItem is ImageHolder ->
                 oldItem.id == newItem.id
+
             oldItem is TimeHolder && newItem is TimeHolder ->
                 oldItem.createdAt == newItem.createdAt // 时间分隔条用时间戳对比
             else -> false
@@ -73,26 +85,104 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     }
 
     private val items = mutableListOf<IMessage>()
-    private var header: Any? = null
+//    private var header: Any? = null
     private var footer: Any? = null
+    private val viewClickListenersArray =
+        SparseArray<OnMessageViewClickListener>()
 
-    fun submitList(newList: List<IMessage>) {
-        val diffResult = DiffUtil.calculateDiff(MessageDiffCallback(items, newList))
-        items.clear()
-        items.addAll(newList)
-        diffResult.dispatchUpdatesTo(this)
+    interface OnMessageViewClickListener {
+        /**
+         * Fires when message view is clicked.
+         *
+         * @param message clicked message.
+         */
+        fun onMessageViewClick(view: View?, message: IMessage?)
+    }
+
+    var header = false
+        set(value) {
+            if (field != value) {
+                field = false
+//                Handler(Looper.getMainLooper()).postDelayed({ notifyItemChanged(itemCount-1); },2)
+            }
+        }
+
+    fun registerViewClickListener(
+        viewId: Int,
+        onMessageViewClickListener: OnMessageViewClickListener
+    ) {
+        viewClickListenersArray.append(viewId, onMessageViewClickListener)
+    }
+
+    fun bindListeners(holder: RecyclerView.ViewHolder, item: IMessage) {
+        for (i in 0..<viewClickListenersArray.size) {
+            val key: Int = viewClickListenersArray.keyAt(i)
+            val view: View? = holder.itemView.findViewById<View?>(key)
+            view?.setOnClickListener(object : View.OnClickListener {
+                override fun onClick(v: View?) {
+                    viewClickListenersArray.get(key).onMessageViewClick(view, item)
+                }
+            })
+        }
+    }
+
+    @SuppressLint("CheckResult")
+    fun submitList(newList: List<IMessage>, onComplete: (() -> Unit)? = null) {
+//        val diffResult = DiffUtil.calculateDiff(MessageDiffCallback(items, newList))
+//        items.clear()
+//        items.addAll(newList)
+//        diffResult.dispatchUpdatesTo(this)
+//        onComplete?.invoke()
+        // 切换到后台线程计算Diff
+        Single.fromCallable {
+            DiffUtil.calculateDiff(MessageDiffCallback(items, newList))
+        }.subscribeOn(RX.computation())
+            .observeOn(RX.main())
+            .subscribe({ diffResult ->
+                items.clear()
+                items.addAll(newList)
+                diffResult.dispatchUpdatesTo(this@ChatAdapter)
+                onComplete?.invoke()
+            }, { error ->
+                Log.e("ChatAdapter", "DiffUtil计算失败", error)
+                // 降级方案：普通全量刷新
+                items.clear()
+                items.addAll(newList)
+                notifyDataSetChanged()
+                onComplete?.invoke()
+            })
     }
 
     // 添加新消息（自动插入到头部）
-    fun addNewMessage(item: IMessage) {
+    fun addNewMessage(item: IMessage, onComplete: (() -> Unit)? = null) {
         val newList = items.toMutableList().apply { add(0, item) }
-        submitList(newList)
+        submitList(newList, onComplete)
+    }
+
+    /**
+     * 添加多条新消息到列表头部（支持批量操作和DiffUtil优化）
+     * @param newMessages 要添加的消息集合
+     * @param onComplete 操作完成回调（可选，在主线程执行）
+     */
+    fun addNewMessage(newMessages: List<IMessage>, onComplete: (() -> Unit)? = null) {
+        if (newMessages.isEmpty()) {
+            onComplete?.invoke()
+            return
+        }
+
+        val newList = ArrayList<IMessage>(items.size + newMessages.size).apply {
+            addAll(newMessages) // 先添加新消息
+            addAll(items)       // 追加旧数据
+        }
+
+        submitList(newList, onComplete)
+
     }
 
     // 批量添加历史消息（追加到尾部）
-    fun addHistoryMessages(newItems: List<IMessage>) {
+    fun addHistoryMessages(newItems: List<IMessage>, onComplete: (() -> Unit)? = null) {
         val newList = items.toMutableList().apply { addAll(newItems) }
-        submitList(newList)
+        submitList(newList, onComplete)
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -109,11 +199,26 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        if(TYPE_HEADER==viewType){
+            Logger.warn("onLoadCreateView:" + viewType)
+        }
         return when (viewType) {
             TYPE_HEADER -> HeaderViewHolder(inflateView(R.layout.item_list_footer, parent))
-            TYPE_TEXT -> ChatTextViewHolder<TextHolder>(inflateView(R.layout.item_feed_text, parent))
-            TYPE_IMAGE -> ChatImageViewHolder<ImageHolder>(inflateView(R.layout.item_feed_bible_pic, parent))
-            TYPE_TIME -> TimeViewHolder(inflateView( R.layout.item_date_header, parent))
+            TYPE_TEXT -> ChatTextViewHolder<TextHolder>(
+                inflateView(
+                    R.layout.item_feed_text,
+                    parent
+                )
+            )
+
+            TYPE_IMAGE -> ChatImageViewHolder<ImageHolder>(
+                inflateView(
+                    R.layout.item_feed_daily_gw,
+                    parent
+                )
+            )
+
+            TYPE_TIME -> TimeViewHolder(inflateView(R.layout.item_date_header, parent))
             TYPE_FOOTER -> FooterViewHolder(inflateView(R.layout.item_list_footer, parent))
             else -> throw IllegalArgumentException("Unknown view type")
         }
@@ -135,26 +240,31 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 //        }
 //    }
 
+
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
             is ChatTextViewHolder<*> -> {
                 val item = getItem(position)
                 try {
                     @Suppress("UNCHECKED_CAST")
-                    (holder as ChatTextViewHolder<TextHolder>).bind(item as TextHolder)
+                    (holder as ChatTextViewHolder<TextHolder>).onBind(item as TextHolder)
+                    bindListeners(holder, item)
                 } catch (e: ClassCastException) {
 //                    holder.onError(e)
                 }
             }
+
             is ChatImageViewHolder<*> -> {
                 val item = getItem(position)
                 try {
                     @Suppress("UNCHECKED_CAST")
-                    (holder as ChatImageViewHolder<ImageHolder>).bind(item as ImageHolder)
+                    (holder as ChatImageViewHolder<ImageHolder>).onBind(item as ImageHolder)
+                    bindListeners(holder, item)
                 } catch (e: ClassCastException) {
 //                    holder.onError(e)
                 }
             }
+
             is TimeViewHolder -> holder.bind(getItem(position) as TimeHolder)
             is HeaderViewHolder -> holder.bind(header)
             is FooterViewHolder -> holder.bind(footer)
@@ -174,7 +284,7 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private fun isHeaderPosition(pos: Int) = hasHeader() && pos == 0
     private fun isFooterPosition(pos: Int) = hasFooter() && pos == itemCount - 1
-    private fun hasHeader() = header != null
+    private fun hasHeader() = header == true
     private fun hasFooter() = footer != null
     private fun headerOffset() = if (hasHeader()) 1 else 0
     private fun footerOffset() = if (hasFooter()) 1 else 0
@@ -190,8 +300,15 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     }
 
     inner class HeaderViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        fun bind(item: Any?) {
+        var contentLoadingProgressBar: ContentLoadingProgressBar =
+            itemView.findViewById<ContentLoadingProgressBar?>(
+                R.id.pb_progress
+            )
+
+        fun bind(header: Boolean) {
             // 根据header类型处理
+            contentLoadingProgressBar.visibility =
+                if (header) View.VISIBLE else View.INVISIBLE
         }
     }
 

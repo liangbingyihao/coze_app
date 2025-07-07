@@ -46,6 +46,7 @@
             </intent-filter>
         </activity>
 
+        <activity android:name="sdk.chat.demo.robot.activities.ChatActivity" />
         <activity android:name="sdk.chat.demo.robot.activities.MainDrawerActivity" />
         <activity android:name="sdk.chat.demo.robot.activities.CozeLoginActivity" />
 
@@ -60,6 +61,7 @@
 
         <activity android:name="sdk.chat.demo.robot.activities.FavoriteListActivity" />
         <activity android:name="sdk.chat.demo.robot.activities.ImageViewerActivity" />
+        <activity android:name="sdk.chat.demo.robot.activities.SearchActivity" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

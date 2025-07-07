@@ -16,6 +16,7 @@ import org.pmw.tinylog.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +71,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
     private SystemConf serverPrompt = null;
     private final static Gson gson = new Gson();
     public final static String KEY_AI_FEEDBACK = "ai_feedback";
+    public final static String headTopic = "信仰问答";
     //    action_daily_ai = 0
 //    action_bible_pic = 1
 //    action_daily_gw = 2
@@ -230,7 +232,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
 
                         Message message = ChatSDK.db().fetchMessageWithEntityID(msgId);
                         if (message != null) {
-                            Long oldSessionId=message.getThreadId();
+                            Long oldSessionId = message.getThreadId();
                             message.setThreadId(newSessionId);
                             ChatSDK.db().update(message, false);
                             updateThreadLastLastMessageDate(newSessionId);
@@ -260,7 +262,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                     return Single.fromCallable(() -> {
                         Message message = ChatSDK.db().fetchMessageWithEntityID(msgId);
                         if (message != null) {
-                            Long oldSessionId=message.getThreadId();
+                            Long oldSessionId = message.getThreadId();
                             message.setThreadId(newSessionId);
                             ChatSDK.db().update(message, false);
                             updateThreadLastLastMessageDate(oldSessionId);
@@ -277,7 +279,13 @@ public class GWThreadHandler extends AbstractThreadHandler {
 
     public Single<List<Message>> loadMessagesEarlier(@Nullable Long startId, boolean loadFromServer) {
         return Single.defer(() -> {
-            List<Message> messages = fetchMessagesEarlier(startId);
+            DaoCore daoCore = ChatSDK.db().getDaoCore();
+            QueryBuilder<Message> qb = daoCore.getDaoSession().queryBuilder(Message.class);
+            if (startId > 0) {
+                qb.where(MessageDao.Properties.Id.lt(startId));
+            }
+            qb.orderDesc(MessageDao.Properties.Date).limit(20);
+            List<Message> messages = qb.list();
             int i = 0;
             while (aiExplore == null && i < messages.size()) {
                 Message tmp = messages.get(i);
@@ -291,27 +299,57 @@ public class GWThreadHandler extends AbstractThreadHandler {
         }).subscribeOn(RX.db());
     }
 
-
-    @Override
-    public Single<List<Message>> loadMoreMessagesBefore(Thread thread, @Nullable Date before) {
-        return super.loadMoreMessagesBefore(thread, before);
+    public Single<List<Message>> loadMessagesLater(@Nullable Long startId, boolean loadFromServer) {
+        return Single.defer(() -> {
+            DaoCore daoCore = ChatSDK.db().getDaoCore();
+            QueryBuilder<Message> qb = daoCore.getDaoSession().queryBuilder(Message.class);
+            if (startId > 0) {
+                qb.where(MessageDao.Properties.Id.gt(startId));
+            }
+            qb.orderAsc(MessageDao.Properties.Date).limit(20);
+            List<Message> messages = qb.list();
+            int i = messages.size() - 1;
+            if (i >= 0) {
+                AIExplore newAiExplore = null;
+                while (newAiExplore == null && i < messages.size()) {
+                    Message tmp = messages.get(i);
+                    MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(tmp);
+                    if (aiFeedback != null && aiFeedback.getFeedback() != null) {
+                        newAiExplore = AIExplore.loads(tmp, aiFeedback.getFeedback().getFunction());
+                    }
+                    --i;
+                }
+                if (newAiExplore != null) {
+                    Message oldMsg = aiExplore != null ? aiExplore.getMessage() : null;
+                    aiExplore = newAiExplore;
+                    if (oldMsg != null) {
+                        ChatSDK.events().source().accept(NetworkEvent.messageUpdated(oldMsg));
+                    }
+                }
+            }
+            return Single.just(messages);
+        }).subscribeOn(RX.db());
     }
+//    @Override
+//    public Single<List<Message>> loadMoreMessagesBefore(Thread thread, @Nullable Date before) {
+//        return super.loadMoreMessagesBefore(thread, before);
+//    }
+//
+//    @Override
+//    public Single<List<Message>> loadMoreMessagesBefore(Thread thread, @Nullable Date before, boolean loadFromServer) {
+//        return super.loadMoreMessagesBefore(thread, before, loadFromServer);
+//    }
 
-    @Override
-    public Single<List<Message>> loadMoreMessagesBefore(Thread thread, @Nullable Date before, boolean loadFromServer) {
-        return super.loadMoreMessagesBefore(thread, before, loadFromServer);
-    }
+//    @Override
+//    public Single<List<Message>> loadMoreMessagesAfter(Thread thread, @Nullable Date after, boolean loadFromServer) {
 
-    @Override
-    public Single<List<Message>> loadMoreMessagesAfter(Thread thread, @Nullable Date after, boolean loadFromServer) {
-//        return super.loadMoreMessagesAfter(thread, after, loadFromServer);
-
-        return super.loadMoreMessagesAfter(thread, after, loadFromServer).flatMap(localMessages -> {
-            ArrayList<Message> mergedMessages = new ArrayList<>(localMessages);
-            return Single.just(mergedMessages);
-        });
-    }
-
+    /// /        return super.loadMoreMessagesAfter(thread, after, loadFromServer);
+//
+//        return super.loadMoreMessagesAfter(thread, after, loadFromServer).flatMap(localMessages -> {
+//            ArrayList<Message> mergedMessages = new ArrayList<>(localMessages);
+//            return Single.just(mergedMessages);
+//        });
+//    }
     public Completable removeUsersFromThread(final Thread thread, List<User> users) {
         return Completable.complete();
     }
@@ -564,9 +602,29 @@ public class GWThreadHandler extends AbstractThreadHandler {
         ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
     }
 
-    public Completable deleteThread(Thread thread) {
-        //FIXME
-        return Completable.complete();
+    public Single<Boolean> deleteSession(String sessionId) {
+        return GWApiManager.shared().deleteSession(sessionId)
+                .flatMap(result -> {
+                    if (!result) {
+                        return Single.error(new IllegalStateException("删除失败，稍后重试"));
+                    }
+
+                    return Single.fromCallable(() -> {
+
+                        DaoCore daoCore = ChatSDK.db().getDaoCore();
+
+                        String sql = "UPDATE MESSAGE SET THREAD_ID = -1 " +
+                                "WHERE THREAD_ID ="+sessionId;
+                        daoCore.getDaoSession().getDatabase().execSQL(sql);
+
+
+                        Thread thread = ChatSDK.db().fetchThreadWithEntityID(sessionId);
+                        ChatSDK.db().delete(thread);
+                        sessionCache = null;
+                        ChatSDK.events().source().accept(NetworkEvent.threadsUpdated());
+                        return result;
+                    }).subscribeOn(RX.db());
+                }).onErrorResumeNext(Single::error);
     }
 
     protected void pushForMessage(final Message message) {
@@ -690,7 +748,24 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 QueryBuilder<Thread> qb = daoCore.getDaoSession().queryBuilder(Thread.class);
                 qb.where(ThreadDao.Properties.Type.eq(ThreadType.None));
                 qb.orderDesc(ThreadDao.Properties.LastMessageDate);
-                List<Thread> data = qb.list();
+                List<Thread> threads = qb.list();
+
+                // 新增逻辑：将名为"信仰问答"的线程提到第一位
+                if (threads != null && !threads.isEmpty()) {
+                    // 查找名为"test"的线程
+                    Thread testThread = null;
+                    for (int i = 0; i < threads.size(); i++) {
+                        if (headTopic.equals(threads.get(i).getName())) {
+                            testThread = threads.remove(i); // 从原位置移除
+                            break;
+                        }
+                    }
+
+                    // 如果找到test线程，则插入到第一位
+                    if (testThread != null) {
+                        threads.add(0, testThread); // 添加到列表开头
+                    }
+                }
 
 //                List<Thread> data = ChatSDK.db().fetchThreadsWithType(ThreadType.None);
 //                Collections.sort(data, (a, b) -> {
@@ -700,8 +775,8 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 if (!hasSyncedWithNetwork.get()) {
                     triggerNetworkSync();
                 }
-                sessionCache = data;
-                return data;
+                sessionCache = threads;
+                return threads;
             } catch (Exception e) {
                 throw new IOException("Failed to get threads", e);
             }
@@ -770,9 +845,12 @@ public class GWThreadHandler extends AbstractThreadHandler {
         qb.where(MessageDao.Properties.Type.eq(MessageType.Image));
         List<Message> data = qb.list();
         for (Message d : data) {
-            if (d.integerForKey("action") == action_daily_gw) {
+            Integer action = d.integerForKey("action");
+            if (action == action_daily_gw) {
                 d.setType(DailyGWRegistration.GWMessageType);
                 daoCore.updateEntity(d);
+            } else if (action == action_bible_pic) {
+                daoCore.deleteEntity(d);
             }
 //            daoCore.deleteEntity(d);
         }
@@ -796,7 +874,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
         return thread;
     }
 
-    public void updateThreadLastLastMessageDate(Long threadId){
+    public void updateThreadLastLastMessageDate(Long threadId) {
         DaoCore daoCore = ChatSDK.db().getDaoCore();
         QueryBuilder<Message> qb = daoCore.getDaoSession().queryBuilder(Message.class);
         qb.where(MessageDao.Properties.ThreadId.eq(threadId))
@@ -805,9 +883,9 @@ public class GWThreadHandler extends AbstractThreadHandler {
         Message data = qb.unique();
 
         Thread entity = ChatSDK.db().fetchOrCreateThreadWithEntityID(threadId.toString());
-        if(data!=null){
+        if (data != null) {
             entity.setLastMessageDate(data.getDate());
-        }else{
+        } else {
             entity.setLastMessageDate(new Date(1640995200000L));//给一个很小的时间，使得可以靠后
         }
         ChatSDK.db().update(entity);
@@ -823,7 +901,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
             entity.setType(ThreadType.None);
             modified = true;
         }
-        if (updateAt != null && (entity.getLastMessageDate() == null || entity.getLastMessageDate().after(updateAt))) {
+        if (updateAt != null && (entity.getLastMessageDate() == null || entity.getLastMessageDate().before(updateAt))) {
             entity.setLastMessageDate(updateAt);
             modified = true;
         }

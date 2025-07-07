@@ -1,6 +1,7 @@
 package sdk.chat.demo.robot.push;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.work.OneTimeWorkRequest;
@@ -12,6 +13,8 @@ import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.concurrent.ExecutionException;
+
+import sdk.chat.demo.robot.api.GWApiManager;
 
 public class UpdateTokenWorker extends Worker {
 
@@ -26,12 +29,12 @@ public class UpdateTokenWorker extends Worker {
             // 获取新的 FCM Token
             String token = Tasks.await(FirebaseMessaging.getInstance().getToken());
 
+            saveTokenLocally(token);
             // 存储 Token 到服务器
             boolean storedSuccessfully = storeTokenToServer(token);
 
             if (storedSuccessfully) {
                 // 可选：将 Token 存储在本地 SharedPreferences
-                saveTokenLocally(token);
                 return Result.success();
             } else {
                 return Result.retry(); // 存储失败时重试
@@ -51,7 +54,8 @@ public class UpdateTokenWorker extends Worker {
             // YourApiClient client = RetrofitClient.getClient();
             // Response response = client.updateFcmToken(getUserId(), getDeviceId(), token).execute();
             // return response.isSuccessful();
-
+            Log.w("fcmtoken","storeTokenToServer:"+token);
+            GWApiManager.shared().refreshTokenSync();
             return true; // 假设总是成功
         } catch (Exception e) {
             return false;

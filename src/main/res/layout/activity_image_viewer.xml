@@ -42,7 +42,7 @@
         android:src="@mipmap/ic_download_white" />
 
     <ImageView
-        android:id="@+id/btn_share"
+        android:id="@+id/btn_share_image"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="right|top"

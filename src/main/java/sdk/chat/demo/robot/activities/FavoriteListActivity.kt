@@ -39,7 +39,10 @@ class FavoriteListActivity : BaseActivity(), View.OnClickListener {
 
     private fun setupRecyclerView() {
         recyclerView = findViewById<RecyclerView?>(R.id.recyclerview)
-        myAdapter = FavoriteAdapter()
+        myAdapter = FavoriteAdapter(onItemClick = { item ->
+            // 处理普通点击
+            ChatActivity.start(FavoriteListActivity@this, item.messageId);
+        })
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = myAdapter
     }
@@ -84,7 +87,7 @@ class FavoriteListActivity : BaseActivity(), View.OnClickListener {
 
     fun listFavorite(page: Int) {
 //        Toast.makeText(applicationContext, "page:${page}", Toast.LENGTH_SHORT).show()
-        if(page==1){
+        if (page == 1) {
             myAdapter.clear()
         }
         dm.add(
@@ -101,7 +104,7 @@ class FavoriteListActivity : BaseActivity(), View.OnClickListener {
                         }
                         if (messages.items == null || messages.items.isEmpty()) {
                             swipeRefreshLayout.setCanLoadMore(false)
-                        }else{
+                        } else {
                             swipeRefreshLayout.setCanLoadMore(true)
                         }
                         myAdapter.addItems(messages.items as ArrayList<FavoriteList.FavoriteItem>);

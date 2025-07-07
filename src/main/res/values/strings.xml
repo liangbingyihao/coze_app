@@ -10,7 +10,8 @@
     <string name="days_ago">%d days ago</string>
     <string name="this_year_format">MM-dd</string>
     <string name="default_format">yyyy-MM-dd</string>
-    <string name="confirm">confirm</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
     <string name="remove">Remove</string>
     <string name="change_topic">Change Topic</string>
     <string name="new_topic">New</string>
@@ -28,4 +29,8 @@
     <string name="unsave">Unsave</string>
     <string name="saved">Added to saved items</string>
     <string name="unsaved">Removed from saved items</string>
+    <string name="faith_qestion">Faith Q&amp;A</string>
+    <string name="delete_confirm">Confirm to delete?</string>
+    <string name="unfold">Unfold</string>
+    <string name="fold">Fold</string>
   </resources>

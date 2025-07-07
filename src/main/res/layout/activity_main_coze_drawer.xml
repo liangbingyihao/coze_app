@@ -4,6 +4,7 @@
     android:layout_height="match_parent"
     android:animateLayoutChanges="true"
     android:fitsSystemWindows="true">
+
     <androidx.drawerlayout.widget.DrawerLayout
         android:id="@+id/root"
         android:layout_width="match_parent"
@@ -15,73 +16,75 @@
             android:layout_height="match_parent"
             android:gravity="center"
             android:orientation="vertical">
+
             <include layout="@layout/app_bar_default" />
-<!--            <sdk.chat.demo.robot.ui.CozeChatActionBar-->
-<!--                android:id="@+id/chatActionBar"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="56dp" />-->
+            <!--            <sdk.chat.demo.robot.ui.CozeChatActionBar-->
+            <!--                android:id="@+id/chatActionBar"-->
+            <!--                android:layout_width="match_parent"-->
+            <!--                android:layout_height="56dp" />-->
             <FrameLayout
                 android:id="@+id/fragment_container"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                />
-<!--            <fragment-->
-<!--                android:id="@+id/myFragment"-->
-<!--                android:name="sdk.chat.demo.robot.fragments.GWChatFragment"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="match_parent"/>-->
+                android:layout_height="match_parent" />
+            <!--            <fragment-->
+            <!--                android:id="@+id/myFragment"-->
+            <!--                android:name="sdk.chat.demo.robot.fragments.GWChatFragment"-->
+            <!--                android:layout_width="match_parent"-->
+            <!--                android:layout_height="match_parent"/>-->
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="288dp"
             android:layout_height="match_parent"
             android:layout_gravity="start"
+            android:background="@color/gray_divider"
             android:orientation="vertical"
-            android:padding="20dp"
-            android:background="#FAFAFA">
+            android:padding="20dp">
 
-            <include layout="@layout/nav_header"/>
+            <include layout="@layout/nav_header" />
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:strokeColor="#6A6A6A"
-                android:background="#FFFFFF"
-                app:cardPreventCornerOverlap="false">
-            <!-- 动态菜单 (RecyclerView) -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/nav_recycler"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp"/>
-            </com.google.android.material.card.MaterialCardView>
+<!--            <com.google.android.material.card.MaterialCardView-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="match_parent"-->
+<!--                android:background="#FFFFFF"-->
+<!--                app:cardCornerRadius="16dp"-->
+<!--                app:cardElevation="0dp"-->
+<!--                app:cardPreventCornerOverlap="false"-->
+<!--                app:strokeColor="#6A6A6A">-->
+
+                <!-- 动态菜单 (RecyclerView) -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/nav_recycler"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp" />
+
+<!--            </com.google.android.material.card.MaterialCardView>-->
 
             <!-- 底部 -->
             <LinearLayout
                 android:id="@+id/settings"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="?attr/colorPrimary"
                 android:orientation="horizontal"
                 android:padding="16dp"
-                android:visibility="gone"
-                android:background="?attr/colorPrimary">
+                android:visibility="gone">
 
                 <com.mikepenz.iconics.view.IconicsImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-                    app:iiv_icon="faw_user"
-                    app:iiv_color="@android:color/white"/>
+                    app:iiv_color="@android:color/white"
+                    app:iiv_icon="faw_user" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
                     android:text="切换用户"
-                    android:textColor="@android:color/white"/>
+                    android:textColor="@android:color/white" />
             </LinearLayout>
         </LinearLayout>
 

@@ -73,7 +73,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
         itemView.findViewById(R.id.session_container)
     open var sessionName: TextView? = itemView.findViewById(R.id.session_name)
 
-//    open val btnFavorite: IconicsImageView? =
+    //    open val btnFavorite: IconicsImageView? =
 //        itemView.findViewById(R.id.btn_favorite)
 //    open val btnDelete: IconicsImageView? = itemView.findViewById(R.id.btn_delete)
     open val btnPlay: ImageView? =
@@ -123,7 +123,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
         }
 
 //        setText(t.message.id.toString()+","+t.message.entityID.toString()+","+t.text, t.enableLinkify())
-        setText(t.text, t.enableLinkify())
+        setText(t.message.id.toString() + "," + t.text, t.enableLinkify())
 
         time?.let {
             UIModule.shared().timeBinder.bind(it, t)
@@ -133,9 +133,9 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
             UIModule.shared().iconBinder.bind(it, t)
         }
 
-        if(StateStorage.getStateB(t.message.status)){
+        if (StateStorage.getStateB(t.message.status)) {
             imageLikeAi?.setImageResource(R.mipmap.ic_dislike_black)
-        }else{
+        } else {
             imageLikeAi?.setImageResource(R.mipmap.ic_like_black)
         }
 
@@ -256,7 +256,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
         }
 
 
-        var saved=StateStorage.getStateA(t.message.status)
+        var saved = StateStorage.getStateA(t.message.status)
         text?.setCustomSelectionActionModeCallback(object : ActionMode.Callback {
             public override fun onCreateActionMode(mode: ActionMode, menu: Menu?): Boolean {
                 if (menu == null) {
@@ -275,14 +275,14 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
 //                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_WITH_TEXT);
                 systemItems.forEachIndexed { index, item ->
                     if (index == 0) {
-                        if(saved){
+                        if (saved) {
                             menu.add(0, R.id.like, 0, R.string.unsave)
                                 .setIcon(R.mipmap.ic_dislike_black);
-                        }else{
+                        } else {
                             menu.add(0, R.id.like, 0, R.string.save)
                                 .setIcon(R.mipmap.ic_like_black);
                         }
-                    }else if(index == 1){
+                    } else if (index == 1) {
                         menu.add(0, R.id.remove, 0, R.string.remove)
                             .setIcon(R.mipmap.ic_del_black)
                     }
@@ -325,6 +325,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
                         mode?.finish()
                         return true
                     }
+
                     R.id.like -> {
 
                         val disposable =
@@ -358,7 +359,8 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
 //                        }
                         return true
                     }
-                    android.R.id.copy ->{
+
+                    android.R.id.copy -> {
                         Toast.makeText(text?.context, selectedText, Toast.LENGTH_SHORT)
                             .show()
                         return false

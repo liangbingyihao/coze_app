@@ -60,7 +60,7 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
 //        hideSystemBars() // 启动时立即隐藏
         findViewById<View>(R.id.back).setOnClickListener(this)
         findViewById<View>(R.id.btn_download).setOnClickListener(this)
-        findViewById<View>(R.id.btn_share).setOnClickListener(this)
+        findViewById<View>(R.id.btn_share_image).setOnClickListener(this)
         if (dateStr == null || dateStr!!.isEmpty()) {
             findViewById<View>(R.id.conversations).setOnClickListener(this)
         } else {
@@ -188,7 +188,7 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
                 finish()
             }
 
-            R.id.btn_download,R.id.btn_share -> {
+            R.id.btn_download,R.id.btn_share_image -> {
                 val currentPosition = viewPager.currentItem
                 var data = DailyGWHolder(GWThreadHandler.action_daily_gw, adapter.getUrlAt(currentPosition))
                 imageHandler.onMessageViewClick(v, data)

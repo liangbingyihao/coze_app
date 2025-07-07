@@ -29,17 +29,19 @@ import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.HistoryAdapter
 import sdk.chat.demo.robot.adpter.HistoryItem
 import sdk.chat.demo.robot.extensions.LanguageUtils
+import sdk.chat.demo.robot.extensions.dpToPx
 import sdk.chat.demo.robot.fragments.GWChatFragment
 import sdk.chat.demo.robot.handlers.GWThreadHandler
+import sdk.chat.demo.robot.push.UpdateTokenWorker
+import sdk.chat.demo.robot.ui.CustomDivider
 import sdk.chat.demo.robot.ui.listener.GWClickListener
-import sdk.chat.ui.ChatSDKUI
 import sdk.chat.ui.activities.MainActivity
 import sdk.guru.common.RX
 import java.util.Locale
 import kotlin.math.min
 
 
-class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnClickListener,GWClickListener.TTSSpeaker {
+class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener.TTSSpeaker {
     open lateinit var drawerLayout: DrawerLayout
     open lateinit var searchView: MaterialSearchView
     private lateinit var recyclerView: RecyclerView
@@ -49,7 +51,7 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
     private val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
     private val chatTag = "tag_chat";
     private var toReloadSessions = false
-    private lateinit var textToSpeech: TextToSpeech
+    private var textToSpeech: TextToSpeech? = null
     private lateinit var ttsCheckLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -73,6 +75,7 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
 //        searchView = findViewById(R.id.btn_search)
         findViewById<View>(R.id.menu_favorites).setOnClickListener(this)
         findViewById<View>(R.id.menu_gw_daily).setOnClickListener(this)
+        findViewById<View>(R.id.menu_search).setOnClickListener(this)
         findViewById<View>(R.id.settings).setOnClickListener(this)
 
 //        KeyboardDrawerHelper.setup(drawerLayout)
@@ -87,6 +90,8 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
                 if (toReloadSessions) {
                     threadHandler.triggerNetworkSync()
                 }
+                recyclerView.scrollToPosition(0);
+
             }
 
             override fun onDrawerClosed(drawerView: View) {
@@ -110,12 +115,15 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setHomeButtonEnabled(true)
 
+//        supportActionBar!!.setHomeAsUpIndicator(
+//            ChatSDKUI.icons().get(
+//                this,
+//                ChatSDKUI.icons().drawer,
+//                ChatSDKUI.icons().actionBarIconColor
+//            )
+//        )
         supportActionBar!!.setHomeAsUpIndicator(
-            ChatSDKUI.icons().get(
-                this,
-                ChatSDKUI.icons().drawer,
-                ChatSDKUI.icons().actionBarIconColor
-            )
+            R.drawable.icon_home
         )
         supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
@@ -135,15 +143,16 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
 
         // 检查 TTS 是否可用
         // 注册 ActivityResultLauncher
-        ttsCheckLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
-                initTTS() // TTS 可用，初始化
-            } else {
-                // 提示用户安装 TTS 数据
-                val installIntent = Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA)
-                startActivity(installIntent)
+        ttsCheckLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+                    initTTS() // TTS 可用，初始化
+                } else {
+                    // 提示用户安装 TTS 数据
+                    val installIntent = Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA)
+                    startActivity(installIntent)
+                }
             }
-        }
 
         // 检查 TTS 数据
         val checkIntent = Intent(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA)
@@ -158,16 +167,16 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
 //            handleNoTtsEngine()
             Toast.makeText(this, "暂不支持语音播放", Toast.LENGTH_SHORT).show()
 
-            AlertDialog.Builder(this)
-                .setTitle("需要语音支持")
-                .setMessage("您的设备缺少语音合成引擎，是否安装 Google TTS？")
-                .setPositiveButton("安装") { _, _ ->
-                    safeInstallTtsEngine()
-                }
-                .setNegativeButton("取消") { _, _ ->
-                    Toast.makeText(this, "部分功能将不可用", Toast.LENGTH_SHORT).show()
-                }
-                .show()
+//            AlertDialog.Builder(this)
+//                .setTitle("需要语音支持")
+//                .setMessage("您的设备缺少语音合成引擎，是否安装 Google TTS？")
+//                .setPositiveButton("安装") { _, _ ->
+//                    safeInstallTtsEngine()
+//                }
+//                .setNegativeButton("取消") { _, _ ->
+//                    Toast.makeText(this, "部分功能将不可用", Toast.LENGTH_SHORT).show()
+//                }
+//                .show()
         }
     }
 
@@ -229,13 +238,21 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
                                 toggleDrawer()
 //                                if (changed) {
 //                                    setCurrentSession(clickedItem)
-                                    ArticleListActivity.start(
-                                        this@MainDrawerActivity,
-                                        clickedItem.sessionId
-                                    )
+                                ArticleListActivity.start(
+                                    this@MainDrawerActivity,
+                                    clickedItem.sessionId
+                                )
 //                                }
                             }
                             recyclerView.adapter = sessionAdapter
+                            recyclerView.addItemDecoration(
+                                CustomDivider(
+                                    thickness = 1.dpToPx(this@MainDrawerActivity),  // 扩展函数转换 dp 到 px
+                                    colorResId = R.color.gray_divider,
+                                    insetStart = 12.dpToPx(this@MainDrawerActivity),
+                                    insetEnd = 12.dpToPx(this@MainDrawerActivity)
+                                )
+                            )
 //                            setCurrentSession(sessionAdapter.getSelectItem())
                         } else {
                             throw IllegalArgumentException("创建会话失败")
@@ -250,7 +267,7 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
     private fun initTTS() {
         textToSpeech = TextToSpeech(this) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                val result = textToSpeech.setLanguage(Locale.getDefault())
+                val result = textToSpeech?.setLanguage(Locale.getDefault())
                 if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                     Toast.makeText(this, "Language not supported", Toast.LENGTH_SHORT).show()
                 } else {
@@ -261,7 +278,7 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
                 Toast.makeText(this, "TTS initialization failed", Toast.LENGTH_SHORT).show()
             }
         }
-        textToSpeech.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+        textToSpeech?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onStart(utteranceId: String?) {
                 Toast.makeText(this@MainDrawerActivity, "onStart", Toast.LENGTH_SHORT).show()
             }
@@ -280,10 +297,10 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
         })
     }
 
-    override fun speek(text:String, msgId:String){
-        var rawText = text.replace("*","").replace("<br>|</br>|<br/>".toRegex(), "")
-        textToSpeech.language = LanguageUtils.getTextLanguage(rawText)
-        textToSpeech.speak(rawText, TextToSpeech.QUEUE_FLUSH, null, msgId)
+    override fun speek(text: String, msgId: String) {
+        var rawText = text.replace("*", "").replace("<br>|</br>|<br/>".toRegex(), "")
+        textToSpeech?.language = LanguageUtils.getTextLanguage(rawText)
+        textToSpeech?.speak(rawText, TextToSpeech.QUEUE_FLUSH, null, msgId)
     }
 
     override fun getCurrentUtteranceId(): String? {
@@ -291,8 +308,8 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
     }
 
     override fun stop() {
-        if(textToSpeech.isSpeaking){
-            textToSpeech.stop()
+        if (textToSpeech != null && textToSpeech!!.isSpeaking) {
+            textToSpeech!!.stop()
         }
     }
 
@@ -328,6 +345,7 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
 //                val intent = Intent(Intent.ACTION_PICK)
 //                intent.setType("image/*")
 //                pickImageLauncher!!.launch(intent)
+                UpdateTokenWorker.forceUpdateToken(this@MainDrawerActivity)
                 true
             }
 
@@ -347,9 +365,9 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
 
     override fun onResume() {
         super.onResume()
-        if(threadHandler.isCustomPrompt){
+        if (threadHandler.isCustomPrompt) {
             toolbar?.title = "自定义提示语中"
-        }else{
+        } else {
             toolbar?.title = getString(R.string.app_name)
         }
     }
@@ -401,9 +419,6 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
         }
     }
 
-    override fun getCurrentData(): Thread? {
-        return currentSession
-    }
 
     override fun onClick(v: View?) {
         toggleDrawer()
@@ -423,6 +438,15 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
 //                        }, this@MainDrawerActivity)
 //                )
 //            }
+
+            R.id.menu_search-> {
+                startActivity(
+                    Intent(
+                        this@MainDrawerActivity,
+                        SearchActivity::class.java
+                    )
+                )
+            }
 
             R.id.menu_favorites -> {
                 startActivity(
@@ -453,7 +477,9 @@ class MainDrawerActivity : MainActivity(), GWChatFragment.DataCallback, View.OnC
 
     override fun onDestroy() {
         super.onDestroy()
-        textToSpeech.stop()
-        textToSpeech.shutdown()
+        if (textToSpeech != null) {
+            textToSpeech!!.stop()
+            textToSpeech!!.shutdown()
+        }
     }
 }

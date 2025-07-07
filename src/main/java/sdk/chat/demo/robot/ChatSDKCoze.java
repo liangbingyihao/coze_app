@@ -72,6 +72,7 @@ public class ChatSDKCoze  extends QuickStart {
                 .build()
                 .activate(context, identifier);
 //        ChatSDKUI.setPrivateThreadsFragment(new CustomPrivateThreadsFragment());
+
         ChatSDKUI.shared().getMessageRegistrationManager().addMessageRegistration(new TextRegistration());
         ChatSDKUI.shared().getMessageRegistrationManager().addMessageRegistration(new ImageRegistration());
         ChatSDKUI.shared().getMessageRegistrationManager().addMessageRegistration(new DailyGWRegistration());

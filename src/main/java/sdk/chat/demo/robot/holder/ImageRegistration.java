@@ -23,7 +23,6 @@ public class ImageRegistration extends ImageMessageRegistration {
 
     @Override
     public MessageHolder onNewMessageHolder(Message message) {
-        int action = message.integerForKey("action");
         if (message.typeIs(MessageType.Image)) {
             return new ImageHolder(message);
         }

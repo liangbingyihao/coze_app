@@ -12,6 +12,7 @@
     <string name="default_format">yyyy-MM-dd</string>
     <string name="anonymous_login">游客登录</string>
     <string name="confirm">确认</string>
+    <string name="cancel">取消</string>
     <string name="remove">移除</string>
     <string name="change_topic">切换时间轴</string>
     <string name="new_topic">新建</string>
@@ -29,4 +30,7 @@
     <string name="unsave">取消收藏</string>
     <string name="saved">收藏成功</string>
     <string name="unsaved">已取消收藏</string>
+    <string name="delete_confirm">是否确认删除?</string>
+    <string name="unfold">全文</string>
+    <string name="fold">收起</string>
 </resources>

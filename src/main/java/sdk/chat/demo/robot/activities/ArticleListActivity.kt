@@ -1,5 +1,6 @@
 package sdk.chat.demo.robot.activities
 
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -10,14 +11,20 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.reactivex.Single
 import io.reactivex.SingleSource
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.functions.Consumer
 import io.reactivex.functions.Function
 import sdk.chat.core.dao.Message
 import sdk.chat.core.dao.Thread
+import sdk.chat.core.events.EventType
+import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.ArticleAdapter
@@ -25,7 +32,6 @@ import sdk.chat.demo.robot.adpter.GenericMenuPopupWindow
 import sdk.chat.demo.robot.adpter.SessionPopupAdapter
 import sdk.chat.demo.robot.adpter.data.Article
 import sdk.chat.demo.robot.adpter.data.ArticleSession
-import sdk.chat.demo.robot.api.GWApiManager
 import sdk.chat.demo.robot.api.model.MessageDetail
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil
 import sdk.chat.demo.robot.handlers.GWMsgHandler
@@ -33,6 +39,7 @@ import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.demo.robot.ui.LoadMoreSwipeRefreshLayout
 import sdk.chat.demo.robot.ui.PopupMenuHelper
 import sdk.chat.ui.activities.BaseActivity
+import sdk.chat.ui.utils.ToastHelper
 import sdk.guru.common.RX
 
 
@@ -44,6 +51,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
     private var sessionId: String = ""
     private lateinit var tvTitle: TextView
     private lateinit var vEdSummaryContainer: View
+    private lateinit var bConversations: View
     private lateinit var vEdSummary: EditText
     private lateinit var vEmptyContainer: View
     private lateinit var vLineDash: View
@@ -83,10 +91,21 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         tvTitle.setOnClickListener(this)
         findViewById<View>(R.id.edSummaryExit).setOnClickListener(this)
         findViewById<View>(R.id.edSummaryConfirm).setOnClickListener(this)
+        findViewById<View>(R.id.more_menus).setOnClickListener(this)
+        bConversations = findViewById<View>(R.id.conversations)
+        bConversations.setOnClickListener(this)
+        findViewById<View>(R.id.conversations1).setOnClickListener(this)
 
         vEmptyContainer = findViewById<View>(R.id.empty_container)
         vLineDash = findViewById<View>(R.id.dash_line)
 
+        dm.add(
+            ChatSDK.events().sourceOnSingle()
+                .filter(NetworkEvent.filterType(EventType.ThreadRemoved))
+                .subscribe(Consumer { networkEvent: NetworkEvent? ->
+                    finish()
+                })
+        )
     }
 
     private fun setupRecyclerView() {
@@ -94,7 +113,8 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         articleAdapter = ArticleAdapter(
             onItemClick = { article ->
                 // 处理普通点击
-                Toast.makeText(this, "点击了: ${article.title}", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(this, "点击了: ${article.localId}，${article.title}", Toast.LENGTH_SHORT).show()
+                ChatActivity.start(ArticleListActivity@ this, article.id);
             },
             onEditClick = { article ->
                 // 处理编辑点击
@@ -145,9 +165,11 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         if (isEmpty) {
             vEmptyContainer.visibility = View.VISIBLE
             vLineDash.visibility = View.INVISIBLE
+            bConversations.visibility = View.INVISIBLE
         } else {
             vEmptyContainer.visibility = View.INVISIBLE
             vLineDash.visibility = View.VISIBLE
+            bConversations.visibility = View.VISIBLE
         }
     }
 
@@ -236,6 +258,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                         val aiFeedback: MessageDetail? = GWMsgHandler.getAiFeedback(message)
                         Article(
                             id = message.entityID,
+                            localId = message.id,
                             content = message.text,
                             day = thisDay,
                             time = thisTime,
@@ -275,83 +298,83 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         )
     }
 
-    fun loadArticlesFromServer(page: Int) {
-        currentPage = page
-        if(page==1){
-            articleAdapter.clearAll()
-        }
-//        Toast.makeText(applicationContext, "page:${page}", Toast.LENGTH_SHORT).show()
-        dm.add(
-            GWApiManager.shared().listMessage(sessionId, page, 20)
-                .flatMap(Function { messages: List<MessageDetail> ->
-                    var lastDay = "";
-                    val articleList = messages.map { message ->
-                        val parts = message.createdAt.split("T")
-                        var thisDay = ""
-                        var thisTime = ""
-                        if (parts.size == 2) {
-                            thisDay = parts[0];
-                            thisTime = parts[1]
-                        }
-
-                        var showDay = thisDay != lastDay
-                        lastDay = thisDay
-//                        val aiFeedback: MessageDetail? = GWMsgHandler.getAiFeedback(message)
-
-                        Article(
-                            id = message.id,
-                            content = message.content,
-                            day = thisDay,
-                            time = thisTime,
-                            title = message.summary,
-                            colorTag = message.feedback?.colorTag?.toColorInt()
-                                ?: "#FFFBE8".toColorInt(),
-                            showDay = showDay
-                        )
-                    }
-                    Single.just(articleList)
-                } as Function<List<MessageDetail?>?, SingleSource<List<Article>>>)
-                .observeOn(RX.main())
-                .subscribe(
-                    { messages ->
-                        articleAdapter.isLoading = false
-                        if (page == 1) {
-                            articleAdapter.clearAll()
-                            articleAdapter.appendItems(messages,Runnable {
-                                recyclerView.scrollToPosition(0);
-                            });
-                            swipeRefreshLayout.isRefreshing = false
-                            if (messages != null && !messages.isEmpty()) {
-                                setEmptyRecord(false)
-                            } else {
-                                setEmptyRecord(true)
-                            }
-                        }else{
-                            articleAdapter.appendItems(messages,null);
-                            swipeRefreshLayout.setLoadingMore(false)
-                        }
-                        if (messages == null || messages.isEmpty()) {
-                            swipeRefreshLayout.setCanLoadMore(false)
-                        } else {
-                            swipeRefreshLayout.setCanLoadMore(true)
-                        }
-                    },
-                    { error -> // onError
-                        articleAdapter.isLoading = false
-                        swipeRefreshLayout.setLoadingMore(false)
-                        swipeRefreshLayout.isRefreshing = false
-                        Toast.makeText(
-                            this@ArticleListActivity,
-                            "加载失败: ${error.message}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    })
-        )
-    }
+//    fun loadArticlesFromServer(page: Int) {
+//        currentPage = page
+//        if(page==1){
+//            articleAdapter.clearAll()
+//        }
+////        Toast.makeText(applicationContext, "page:${page}", Toast.LENGTH_SHORT).show()
+//        dm.add(
+//            GWApiManager.shared().listMessage(sessionId, page, 20)
+//                .flatMap(Function { messages: List<MessageDetail> ->
+//                    var lastDay = "";
+//                    val articleList = messages.map { message ->
+//                        val parts = message.createdAt.split("T")
+//                        var thisDay = ""
+//                        var thisTime = ""
+//                        if (parts.size == 2) {
+//                            thisDay = parts[0];
+//                            thisTime = parts[1]
+//                        }
+//
+//                        var showDay = thisDay != lastDay
+//                        lastDay = thisDay
+////                        val aiFeedback: MessageDetail? = GWMsgHandler.getAiFeedback(message)
+//
+//                        Article(
+//                            id = message.id,
+//                            content = message.content,
+//                            day = thisDay,
+//                            time = thisTime,
+//                            title = message.summary,
+//                            colorTag = message.feedback?.colorTag?.toColorInt()
+//                                ?: "#FFFBE8".toColorInt(),
+//                            showDay = showDay
+//                        )
+//                    }
+//                    Single.just(articleList)
+//                } as Function<List<MessageDetail?>?, SingleSource<List<Article>>>)
+//                .observeOn(RX.main())
+//                .subscribe(
+//                    { messages ->
+//                        articleAdapter.isLoading = false
+//                        if (page == 1) {
+//                            articleAdapter.clearAll()
+//                            articleAdapter.appendItems(messages,Runnable {
+//                                recyclerView.scrollToPosition(0);
+//                            });
+//                            swipeRefreshLayout.isRefreshing = false
+//                            if (messages != null && !messages.isEmpty()) {
+//                                setEmptyRecord(false)
+//                            } else {
+//                                setEmptyRecord(true)
+//                            }
+//                        }else{
+//                            articleAdapter.appendItems(messages,null);
+//                            swipeRefreshLayout.setLoadingMore(false)
+//                        }
+//                        if (messages == null || messages.isEmpty()) {
+//                            swipeRefreshLayout.setCanLoadMore(false)
+//                        } else {
+//                            swipeRefreshLayout.setCanLoadMore(true)
+//                        }
+//                    },
+//                    { error -> // onError
+//                        articleAdapter.isLoading = false
+//                        swipeRefreshLayout.setLoadingMore(false)
+//                        swipeRefreshLayout.isRefreshing = false
+//                        Toast.makeText(
+//                            this@ArticleListActivity,
+//                            "加载失败: ${error.message}",
+//                            Toast.LENGTH_SHORT
+//                        ).show()
+//                    })
+//        )
+//    }
 
     override fun onClick(v: View?) {
         when (v?.id) {
-            R.id.home -> {
+            R.id.home, R.id.conversations, R.id.conversations1 -> {
                 finish()
             }
 
@@ -373,7 +396,83 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                 }
             }
 
+//            R.id.conversations -> {
+//                finish()
+//            }
+
+            R.id.more_menus -> {
+                PopupMenuHelper(
+                    context = this,
+                    anchorView = v,
+                    onItemSelected = { v ->
+                        when (v.id) {
+                            R.id.delTopic -> {
+                                showMaterialConfirmationDialog(
+                                    this@ArticleListActivity,
+                                    "",
+                                    getString(R.string.delete_confirm),
+                                    positiveAction = {
+                                        val disposable = threadHandler.deleteSession(sessionId)
+                                            .observeOn(AndroidSchedulers.mainThread())
+                                            .subscribe(
+                                                Consumer { newState: Boolean? ->
+                                                    ToastHelper.show(
+                                                        this@ArticleListActivity,
+                                                        getString(R.string.success)
+                                                    )
+                                                    finish()
+                                                },
+                                                Consumer { error: Throwable? ->
+                                                    ToastHelper.show(
+                                                        this@ArticleListActivity,
+                                                        error?.message
+                                                    );
+                                                })
+                                        dm.add(disposable)
+                                    })
+                            }
+
+                        }
+                    },
+                    menuResId = R.layout.menu_article_topic
+                ).show()
+            }
+
         }
+    }
+
+    fun showMaterialConfirmationDialog(
+        context: Context,
+        title: String?,
+        message: String,
+        positiveAction: () -> Unit
+    ) {
+        val dialog = MaterialAlertDialogBuilder(context)
+//            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton(getString(R.string.confirm)) { dialog, _ ->
+                positiveAction()
+                dialog.dismiss()
+            }
+            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setBackground(ContextCompat.getDrawable(context, R.drawable.dialog_background))
+            .create()
+
+        dialog.setOnShowListener {
+            // 获取按钮并自定义
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.apply {
+//                setBackgroundColor(ContextCompat.getColor(context, R.color.colorPrimary))
+                setTextColor(ContextCompat.getColor(context, R.color.item_text_selected))
+            }
+
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.apply {
+                setTextColor(ContextCompat.getColor(context, R.color.item_text_normal))
+            }
+        }
+
+        dialog.show()
     }
 
     // 在Activity/Fragment中使用
@@ -385,7 +484,13 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
             onItemSelected = { v ->
                 when (v.id) {
                     R.id.delArticle -> {
-                        changeTopic(-1)
+                        showMaterialConfirmationDialog(
+                            this@ArticleListActivity,
+                            "",
+                            getString(R.string.delete_confirm),
+                            positiveAction = {
+                                changeTopic(-1)
+                            })
                     }
 
                     R.id.changeTopic -> {

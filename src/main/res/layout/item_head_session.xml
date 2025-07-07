@@ -1,0 +1,35 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/gray_divider"
+    android:paddingBottom="16dp">
+    <!--    <TextView-->
+    <!--        android:id="@+id/title_text"-->
+    <!--        style="@style/HistorySessionText"-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:background="#ffffff"-->
+    <!--        android:ellipsize="end"-->
+    <!--        android:singleLine="true" />-->
+
+<!--    <com.google.android.material.card.MaterialCardView-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="46dp"-->
+<!--        app:cardCornerRadius="16dp"-->
+<!--        app:cardElevation="0dp"-->
+<!--        app:cardPreventCornerOverlap="false"-->
+<!--        app:strokeColor="#6A6A6A">-->
+
+        <TextView
+            android:id="@+id/title_text"
+            style="@style/HistorySessionText"
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:layout_gravity="center|left"
+            android:ellipsize="end"
+            android:singleLine="true" />
+
+
+<!--    </com.google.android.material.card.MaterialCardView>-->
+</FrameLayout>

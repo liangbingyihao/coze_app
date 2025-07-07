@@ -13,7 +13,8 @@ import sdk.chat.demo.pre.R
 class PopupMenuHelper(
     private val context: Context,
     private val anchorView: View,
-    private val onItemSelected: (v: View) -> Unit
+    private val onItemSelected: (v: View) -> Unit,
+    private val menuResId: Int = 0,
 ) {
 
     private lateinit var popupWindow: PopupWindow
@@ -25,16 +26,18 @@ class PopupMenuHelper(
 
     fun setPopupWindow(resId: Int) {
         val popupView = LayoutInflater.from(context).inflate(resId, null)
-        popupView.findViewById<View>(R.id.delArticle)
-            .setOnClickListener {
-                popupWindow.dismiss()
-                onItemSelected(it)
-            }
-        popupView.findViewById<View>(R.id.changeTopic)
-            .setOnClickListener {
-                popupWindow.dismiss()
-                onItemSelected(it)
-            }
+        popupView.findViewById<View>(R.id.delArticle)?.setOnClickListener {
+            popupWindow.dismiss()
+            onItemSelected(it)
+        }
+        popupView.findViewById<View>(R.id.changeTopic)?.setOnClickListener {
+            popupWindow.dismiss()
+            onItemSelected(it)
+        }
+        popupView.findViewById<View>(R.id.delTopic)?.setOnClickListener {
+            popupWindow.dismiss()
+            onItemSelected(it)
+        }
 
         // 3. 创建PopupWindow
         popupWindow = PopupWindow(
@@ -53,9 +56,13 @@ class PopupMenuHelper(
     fun show() {
         if (isShowing) return
         // 1. 创建内容视图
-
-
         // 确保视图已测量
+        if(menuResId>0){
+            setPopupWindow(menuResId)
+            popupWindow.showAsDropDown(anchorView, 0, 0, Gravity.END)
+            isShowing = true
+            return
+        }
 
         val anchorLocation = IntArray(2)
         anchorView.getLocationOnScreen(anchorLocation)

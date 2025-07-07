@@ -29,6 +29,7 @@ import sdk.chat.core.utils.PermissionRequestHandler;
 import sdk.chat.demo.MainApp;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.activities.ImageViewerActivity;
+import sdk.chat.demo.robot.adpter.ChatAdapter;
 import sdk.chat.demo.robot.api.model.AIFeedback;
 import sdk.chat.demo.robot.api.model.ImageDaily;
 import sdk.chat.demo.robot.extensions.ImageSaveUtils;
@@ -41,7 +42,7 @@ import sdk.chat.ui.activities.BaseActivity;
 import sdk.chat.ui.chat.model.MessageHolder;
 import sdk.chat.ui.utils.ToastHelper;
 
-public class GWClickListener<MESSAGE extends IMessage> implements MessagesListAdapter.OnMessageViewClickListener {
+public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.OnMessageViewClickListener {
     private final WeakReference<BaseActivity> weakContext;
     private WeakReference<TTSSpeaker> ttsSpeaker;
     private boolean pending = false;
@@ -61,7 +62,7 @@ public class GWClickListener<MESSAGE extends IMessage> implements MessagesListAd
         }
     }
 
-    public static void registerListener(BaseActivity activity, MessagesListAdapter<MessageHolder> adapter) {
+    public static void registerListener(BaseActivity activity, ChatAdapter adapter) {
         GWClickListener listener = new GWClickListener(activity);
         adapter.registerViewClickListener(R.id.image_container, listener);
         adapter.registerViewClickListener(R.id.btn_download, listener);

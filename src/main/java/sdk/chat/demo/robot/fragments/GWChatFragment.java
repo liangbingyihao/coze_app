@@ -48,6 +48,7 @@ import sdk.chat.core.ui.Sendable;
 import sdk.chat.core.utils.StringChecker;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
+import sdk.chat.demo.robot.ui.GWChatContainer;
 import sdk.chat.demo.robot.ui.GWChatView;
 import sdk.chat.demo.robot.ui.KeyboardOverlayHelper;
 import sdk.chat.demo.robot.ui.listener.GWClickListener;
@@ -65,7 +66,7 @@ import sdk.chat.ui.views.ReplyView;
 import sdk.guru.common.DisposableMap;
 import sdk.guru.common.RX;
 
-public class GWChatFragment extends AbstractChatFragment implements ChatView.Delegate, TextInputDelegate, ChatOptionsDelegate, KeyboardOverlayHandler {
+public class GWChatFragment extends AbstractChatFragment implements GWChatContainer.Delegate, TextInputDelegate, ChatOptionsDelegate, KeyboardOverlayHandler {
 
     protected View rootView;
 
@@ -76,7 +77,7 @@ public class GWChatFragment extends AbstractChatFragment implements ChatView.Del
     // this should be set to no
     protected boolean removeUserFromChatOnExit = true;
     protected static boolean enableTrace = false;
-    protected GWChatView chatView;
+    protected GWChatContainer chatView;
     protected View divider;
     protected ReplyView replyView;
     protected MessageInput input;
@@ -92,8 +93,10 @@ public class GWChatFragment extends AbstractChatFragment implements ChatView.Del
 
     protected KeyboardOverlayHelper koh;
 
+    private String messageId;
+
     public interface DataCallback {
-        Thread getCurrentData();
+        Long getMessageId();
     }
 
     @Override
@@ -132,6 +135,12 @@ public class GWChatFragment extends AbstractChatFragment implements ChatView.Del
         }
     }
 
+    @Override
+    public String getMessageId() {
+        return messageId;
+//        return 0L;
+    }
+
 
     public void setThread(Thread thread) {
         if(true){
@@ -141,6 +150,17 @@ public class GWChatFragment extends AbstractChatFragment implements ChatView.Del
         Bundle bundle = new Bundle();
         bundle.putString(Keys.IntentKeyThreadEntityID, thread.getEntityID());
         setArguments(bundle);
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // 获取参数
+        Bundle args = getArguments();
+        if (args != null) {
+            messageId = args.getString("KEY_MESSAGE_ID", null);
+        }
     }
 
     @Override
@@ -186,10 +206,10 @@ public class GWChatFragment extends AbstractChatFragment implements ChatView.Del
 //        chatView.setLayoutParams(params);
 //    }
 
-    public void updateOptionsButton() {
-        input.findViewById(sdk.chat.ui.R.id.attachmentButton).setVisibility(chatView.getSelectedMessages().isEmpty() ? View.VISIBLE : View.GONE);
-        input.findViewById(sdk.chat.ui.R.id.attachmentButtonSpace).setVisibility(chatView.getSelectedMessages().isEmpty() ? View.VISIBLE : View.GONE);
-    }
+//    public void updateOptionsButton() {
+//        input.findViewById(sdk.chat.ui.R.id.attachmentButton).setVisibility(chatView.getSelectedMessages().isEmpty() ? View.VISIBLE : View.GONE);
+//        input.findViewById(sdk.chat.ui.R.id.attachmentButtonSpace).setVisibility(chatView.getSelectedMessages().isEmpty() ? View.VISIBLE : View.GONE);
+//    }
 
     public void hideTextInput() {
         input.setVisibility(View.GONE);
@@ -203,15 +223,15 @@ public class GWChatFragment extends AbstractChatFragment implements ChatView.Del
         updateChatViewMargins(true);
     }
 
-    public void hideReplyView() {
-        if (audioBinder != null) {
-            audioBinder.hideReplyView();
-        }
-        chatView.clearSelection();
-        replyView.hide();
-        updateOptionsButton();
-        updateChatViewMargins(true);
-    }
+//    public void hideReplyView() {
+//        if (audioBinder != null) {
+//            audioBinder.hideReplyView();
+//        }
+//        chatView.clearSelection();
+//        replyView.hide();
+//        updateOptionsButton();
+//        updateChatViewMargins(true);
+//    }
 
     public void updateChatViewMargins(boolean post) {
         Runnable runnable = () -> {
@@ -246,16 +266,16 @@ public class GWChatFragment extends AbstractChatFragment implements ChatView.Del
         return bottomMargin;
     }
 
-    public void showReplyView(String title, String imageURL, String text) {
-        koh.hideKeyboardOverlayAndShowKeyboard();
-        updateOptionsButton();
-        if (audioBinder != null) {
-            audioBinder.showReplyView();
-        }
-        replyView.show(title, imageURL, text);
-
-        updateChatViewMargins(true);
-    }
+//    public void showReplyView(String title, String imageURL, String text) {
+//        koh.hideKeyboardOverlayAndShowKeyboard();
+//        updateOptionsButton();
+//        if (audioBinder != null) {
+//            audioBinder.showReplyView();
+//        }
+//        replyView.show(title, imageURL, text);
+//
+//        updateChatViewMargins(true);
+//    }
 
     protected void initViews() {
         chatView = rootView.findViewById(sdk.chat.ui.R.id.chatView);
@@ -271,12 +291,12 @@ public class GWChatFragment extends AbstractChatFragment implements ChatView.Del
         chatView.initViews();
 
         GWClickListener.registerListener((BaseActivity)getActivity(),chatView.getMessagesListAdapter());
-
-        if (UIModule.config().messageSelectionEnabled) {
-            chatView.enableSelectionMode(count -> {
-                updateOptionsButton();
-            });
-        }
+//
+//        if (UIModule.config().messageSelectionEnabled) {
+//            chatView.enableSelectionMode(count -> {
+//                updateOptionsButton();
+//            });
+//        }
 
         if (!hasVoice(ChatSDK.currentUser())) {
             hideTextInput();
@@ -296,7 +316,7 @@ public class GWChatFragment extends AbstractChatFragment implements ChatView.Del
 
         input.setAttachmentsListener(this::toggleOptions);
 
-        replyView.setOnCancelListener(v -> hideReplyView());
+//        replyView.setOnCancelListener(v -> hideReplyView());
 
         setChatState(TypingIndicatorHandler.State.active);
 
@@ -387,9 +407,9 @@ public class GWChatFragment extends AbstractChatFragment implements ChatView.Del
         }
 
         if (replyView.isVisible()) {
-            MessageHolder holder = chatView.getSelectedMessages().get(0);
-            handleMessageSend(ChatSDK.thread().replyToMessage(thread, holder.getMessage(), text.trim()));
-            hideReplyView();
+//            MessageHolder holder = chatView.getSelectedMessages().get(0);
+//            handleMessageSend(ChatSDK.thread().replyToMessage(thread, holder.getMessage(), text.trim()));
+//            hideReplyView();
         } else {
             handleMessageSend(ChatSDK.thread().sendMessageWithText(text.trim(), thread));
         }
@@ -511,8 +531,8 @@ public class GWChatFragment extends AbstractChatFragment implements ChatView.Del
     }
 
     public void clearSelection() {
-        chatView.clearSelection();
-        updateOptionsButton();
+//        chatView.clearSelection();
+//        updateOptionsButton();
     }
 
     /**
@@ -614,10 +634,10 @@ public class GWChatFragment extends AbstractChatFragment implements ChatView.Del
 
 
     public boolean onBackPressed() {
-        if (!chatView.getSelectedMessages().isEmpty()) {
-            chatView.clearSelection();
-            return true;
-        }
+//        if (!chatView.getSelectedMessages().isEmpty()) {
+//            chatView.clearSelection();
+//            return true;
+//        }
         // If the keyboard overlay is showing, we go back to the keyboard
         return koh.back();
     }

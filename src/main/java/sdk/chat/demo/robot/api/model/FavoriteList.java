@@ -20,10 +20,14 @@ public class FavoriteList {
         @SerializedName("message_id")
         private String messageId;
         @SerializedName("content_type")
-        private String contentType;
+        private Integer contentType;
+        @SerializedName("session_name")
+        private String sessionName;
         @SerializedName("created_at")
         private String createdAt;
         private String content;
+
+        private boolean isExpanded;
 
         public String getMessageId() {
             return messageId;
@@ -33,11 +37,11 @@ public class FavoriteList {
             this.messageId = messageId;
         }
 
-        public String getContentType() {
+        public Integer getContentType() {
             return contentType;
         }
 
-        public void setContentType(String contentType) {
+        public void setContentType(Integer contentType) {
             this.contentType = contentType;
         }
 
@@ -55,6 +59,22 @@ public class FavoriteList {
 
         public void setContent(String content) {
             this.content = content;
+        }
+
+        public boolean isExpanded() {
+            return isExpanded;
+        }
+
+        public void setExpanded(boolean expanded) {
+            isExpanded = expanded;
+        }
+
+        public String getSessionName() {
+            return sessionName;
+        }
+
+        public void setSessionName(String sessionName) {
+            this.sessionName = sessionName;
         }
     }
 }

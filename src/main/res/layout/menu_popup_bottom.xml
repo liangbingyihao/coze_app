@@ -11,6 +11,6 @@
         android:layout_gravity="center_horizontal|bottom"
         android:src="@drawable/ic_arrow_up" />
 
-    <include layout="@layout/menu_popup" />
+    <include layout="@layout/menu_article_popup" />
 
 </LinearLayout>

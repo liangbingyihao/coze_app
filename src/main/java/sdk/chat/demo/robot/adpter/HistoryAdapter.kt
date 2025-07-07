@@ -1,34 +1,44 @@
 package sdk.chat.demo.robot.adpter
 
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import sdk.chat.demo.MainApp
 import sdk.chat.demo.pre.R
+import sdk.chat.demo.robot.extensions.dpToPx
+import sdk.chat.demo.robot.handlers.GWThreadHandler.headTopic
 
-sealed class HistoryItem  {
+sealed class HistoryItem {
     data class DateItem(val date: String) : HistoryItem()
     data class SessionItem(val title: String, val sessionId: String) : HistoryItem()
 }
 
 
-class HistoryAdapter(private val items: MutableList<HistoryItem> = mutableListOf(),
-                     private val onItemClick: (Boolean,HistoryItem.SessionItem) -> Unit) :
+class HistoryAdapter(
+    private val items: MutableList<HistoryItem> = mutableListOf(),
+    private val onItemClick: (Boolean, HistoryItem.SessionItem) -> Unit
+) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-//    private var selectedPosition = if(items.isNotEmpty()) 1 else -1
+    //    private var selectedPosition = if(items.isNotEmpty()) 1 else -1
     private var selectedPosition = -1
 
     companion object {
         private const val TYPE_DATE = 0
         private const val TYPE_ARTICLE = 1
+        private const val TYPE_HEADER = 2
+        private var cornerSize = 16f.dpToPx(MainApp.getContext())
     }
 
 
     fun updateAll(newItems: List<HistoryItem>) {
         items.clear()
         items.addAll(newItems)
-        selectedPosition = if(items.isNotEmpty()) 1 else -1
+        selectedPosition = if (items.isNotEmpty()) 1 else -1
         notifyDataSetChanged() // 触发全局刷新
     }
 
@@ -44,10 +54,16 @@ class HistoryAdapter(private val items: MutableList<HistoryItem> = mutableListOf
     }
 
     override fun getItemViewType(position: Int): Int {
-        return when (items[position]) {
-            is HistoryItem.DateItem -> TYPE_DATE
-            is HistoryItem.SessionItem -> TYPE_ARTICLE
+        var item = items[position]
+        if (item is HistoryItem.DateItem) {
+            return TYPE_DATE
         }
+        if (item is HistoryItem.SessionItem) {
+            if (position == 0 && (item.title == headTopic)) {
+                return TYPE_HEADER
+            }
+        }
+        return TYPE_ARTICLE
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -56,6 +72,12 @@ class HistoryAdapter(private val items: MutableList<HistoryItem> = mutableListOf
                 LayoutInflater.from(parent.context)
                     .inflate(R.layout.item_history_date, parent, false)
             )
+
+            TYPE_HEADER -> ArticleViewHolder(
+                LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_head_session, parent, false)
+            )
+
             else -> ArticleViewHolder(
                 LayoutInflater.from(parent.context)
                     .inflate(R.layout.item_history_session, parent, false)
@@ -66,7 +88,7 @@ class HistoryAdapter(private val items: MutableList<HistoryItem> = mutableListOf
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (val item = items[position]) {
             is HistoryItem.DateItem -> (holder as DateViewHolder).bind(item)
-            is HistoryItem.SessionItem -> (holder as ArticleViewHolder).bind(item,position)
+            is HistoryItem.SessionItem -> (holder as ArticleViewHolder).bind(item, position)
         }
     }
 
@@ -85,10 +107,50 @@ class HistoryAdapter(private val items: MutableList<HistoryItem> = mutableListOf
 
         fun bind(item: HistoryItem.SessionItem, position: Int) {
             titleText.text = item.title
+            if (position == 0) {
+                val bg = GradientDrawable().apply {
+                    // 设置四角半径（顺序：左上,右上,右下,左下）
+                    cornerRadii = floatArrayOf(
+                        cornerSize, cornerSize,
+                        cornerSize, cornerSize,
+                        cornerSize, cornerSize,
+                        cornerSize, cornerSize,
+                    )
+                    setColor(Color.WHITE)
+                }
+                titleText.background = bg
+            } else if (position == 1 && items.size > 2 && (items[0] as HistoryItem.SessionItem).title == headTopic) {
+                val bg = GradientDrawable().apply {
+                    // 设置四角半径（顺序：左上,右上,右下,左下）
+                    cornerRadii = floatArrayOf(
+                        cornerSize, cornerSize,
+                        cornerSize, cornerSize,
+                        0f, 0f,
+                        0f, 0f,
+                    )
+                    setColor(Color.WHITE)
+                }
+                itemView.background = bg
+            } else if (position == items.size - 1) {
+                val bg = GradientDrawable().apply {
+                    // 设置四角半径（顺序：左上,右上,右下,左下）
+                    cornerRadii = floatArrayOf(
+                        0f, 0f,
+                        0f, 0f,
+                        cornerSize, cornerSize,
+                        cornerSize, cornerSize,
+                    )
+                    setColor(Color.WHITE)
+                }
+                itemView.background = bg
+            } else {
+                itemView.setBackgroundColor(Color.WHITE)
+            }
 //            itemView.isSelected = position == selectedPosition
             itemView.setOnClickListener {
-                val clickedPosition = absoluteAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }
-                    ?: return@setOnClickListener
+                val clickedPosition =
+                    absoluteAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }
+                        ?: return@setOnClickListener
                 // 更新选中状态
                 val previous = selectedPosition
                 selectedPosition = clickedPosition
@@ -98,7 +160,7 @@ class HistoryAdapter(private val items: MutableList<HistoryItem> = mutableListOf
                     .distinct()
                     .forEach { notifyItemChanged(it) }
 
-                onItemClick(previous!=selectedPosition,item)
+                onItemClick(previous != selectedPosition, item)
             }
         }
     }
