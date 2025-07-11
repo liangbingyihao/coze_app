@@ -88,6 +88,7 @@ class FavoriteAdapter(
                             .setMarkdown(holder.textView, item.content)
                         holder.tvTime.text = item.createdAt.replace("T", " ")
                         holder.itemView.setOnClickListener { onItemClick(item) }
+                        holder.textView.setOnClickListener { onItemClick(item) }
                         holder.topic?.text = item.sessionName
 
                         holder.textView.post {

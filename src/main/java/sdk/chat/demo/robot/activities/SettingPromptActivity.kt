@@ -10,9 +10,9 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
@@ -22,10 +22,6 @@ import com.google.android.material.tabs.TabLayoutMediator
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.handlers.GWThreadHandler
-import androidx.core.content.edit
-import sdk.chat.demo.robot.activities.EditTextFragment.Companion.actions
-import sdk.chat.demo.robot.activities.EditTextFragment.Companion.sharedPref
-import sdk.chat.demo.robot.api.model.SystemConf
 import sdk.guru.common.RX
 
 class EditTextPagerAdapter(

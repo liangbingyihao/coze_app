@@ -1,6 +1,7 @@
 package sdk.chat.demo.robot.handlers;
 
 import android.annotation.SuppressLint;
+import android.util.Log;
 
 import com.bumptech.glide.Glide;
 
@@ -76,6 +77,7 @@ public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
         return Completable.defer(() -> {
 //            String userId = details.getMetaValue("userId");
             String userId = "user_" + details.getMetaValue("userId");
+            Log.i("FATAL","loginSuccessful:"+userId);
             ChatSDK.db().openDatabase(userId);
             if (details.type == AccountDetails.Type.Username) {
                 ChatSDK.shared().getKeyStorage().save(details.username, details.password);

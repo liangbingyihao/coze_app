@@ -43,10 +43,6 @@ public class ChatSDKCoze  extends QuickStart {
                         .setMessageSelectionEnabled(false)
 //                        .setPublicRoomsEnabled(true)
                         .build(),
-
-//                FirebaseUploadModule.shared(),
-
-//                LocationMessageModule.shared(),
                 ImageMessageModule.shared(),
 
                 FirebasePushModule.shared(),

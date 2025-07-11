@@ -25,4 +25,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="停止录音" />
+
+    <Button
+        android:id="@+id/updateToken"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="更新推送token" />
+
+    <Button
+        android:id="@+id/clearCache"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="清缓存" />
 </LinearLayout>

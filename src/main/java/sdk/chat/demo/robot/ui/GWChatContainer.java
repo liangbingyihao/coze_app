@@ -186,14 +186,13 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
 //                    }
 //                }));
 
-//        dm.add(ChatSDK.events().sourceOnSingle()
-//                .filter(NetworkEvent.filterType(EventType.MessageRemoved))
-//                .filter(NetworkEvent.filterThreadEntityID(delegate.getThread().getEntityID()))
-//                .subscribe(networkEvent -> {
-//                    messagesList.post(() -> {
-//                        removeMessage(networkEvent.getMessage());
-//                    });
-//                }));
+        dm.add(ChatSDK.events().sourceOnSingle()
+                .filter(NetworkEvent.filterType(EventType.MessageRemoved))
+                .subscribe(networkEvent -> {
+                    messagesList.post(() -> {
+                        removeMessage(networkEvent.getMessage());
+                    });
+                }));
     }
 
     protected int maxImageWidth() {
@@ -428,16 +427,12 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
 //        }
 //    }
 
-//    protected void removeMessage(Message message) {
-//        MessageHolder holder = ChatSDKUI.provider().holderProvider().getMessageHolder(message);
-//        messageHolders.remove(holder);
-//        messagesListAdapter.delete(holder, true);
-//
-//        ChatSDKUI.provider().holderProvider().removeMessageHolder(message);
-//
-//        updateNextMessage(holder);
-//        updatePreviousMessage(holder);
-//    }
+    protected void removeMessage(Message message) {
+        MessageHolder holder = ChatSDKUI.provider().holderProvider().getMessageHolder(message);
+        messageHolders.remove(holder);
+        messagesListAdapter.delMessage(holder, null);
+        ChatSDKUI.provider().holderProvider().removeMessageHolder(message);
+    }
 
 
     /**

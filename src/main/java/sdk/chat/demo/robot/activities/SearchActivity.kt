@@ -1,106 +1,63 @@
 package sdk.chat.demo.robot.activities
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.view.LayoutInflater
+import android.util.SparseArray
+import android.view.KeyEvent
 import android.view.View
-import android.view.ViewGroup
-import android.widget.Button
-import android.widget.CheckBox
+import android.view.inputmethod.EditorInfo
 import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
+import com.google.android.flexbox.AlignItems
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexWrap
+import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.flexbox.JustifyContent
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
+import sdk.chat.demo.robot.adpter.SearchTextAdapter
+import sdk.chat.demo.robot.adpter.data.SearchText
+import sdk.chat.demo.robot.fragments.OnDataListener
+import sdk.chat.demo.robot.fragments.SearchResultFragment
+import sdk.chat.demo.robot.handlers.FrequencyCounter
 import sdk.chat.demo.robot.handlers.GWThreadHandler
-import androidx.core.content.edit
-import sdk.chat.demo.robot.activities.EditTextFragment.Companion.actions
-import sdk.chat.demo.robot.api.model.SystemConf
-import sdk.guru.common.RX
+import sdk.chat.ui.activities.BaseActivity
 
 class SearchResultPagerAdapter(
     fragmentActivity: FragmentActivity
 ) : FragmentStateAdapter(fragmentActivity) {
-
-    // 定义三个页面的提示文本
-    //    action_bible_pic = 1
-//    action_daily_gw = 2
-//    action_direct_msg = 3
-//    action_daily_ai = 0
-//    action_daily_pray = 4
+    private val fragments = SparseArray<SearchResultFragment>()
+    private val queryType = arrayOf("feed", "topic", "question", "favorite")
 
     override fun getItemCount(): Int = 4
 
     override fun createFragment(position: Int): Fragment {
-        return SearchResultFragment.newInstance(position, null)
-    }
-}
-
-class SearchResultFragment : Fragment() {
-
-    companion object {
-        private const val ARG_POSITION = "position"
-        private const val ARG_SERVER_PROMPT = "serverPrompt"
-        private var sharedPref: SharedPreferences? = null
-        val actions = listOf("", "0", "4")
-
-        fun newInstance(position: Int, prompt: String?): SearchResultFragment {
-            val args = Bundle().apply {
-                putInt(ARG_POSITION, position)
-                putString(ARG_SERVER_PROMPT, prompt) // 添加参数
-            }
-            return SearchResultFragment().apply { arguments = args }
+        return SearchResultFragment.newInstance(queryType[position]).also {
+            fragments.put(position, it)
         }
     }
 
-    private var position: Int = 0
-    private var localPrompt: String? = ""
-
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-//        sharedPref = activity?.getSharedPreferences(
-//            "ai_prompt", // 文件名（如不指定，则使用默认的 PreferenceManager.getDefaultSharedPreferences）
-//            Context.MODE_PRIVATE // 仅当前应用可访问
-//        )
-        // 加载布局
-        val view = inflater.inflate(R.layout.fragment_search_result, container, false)
-        val editText = view.findViewById<TextView>(R.id.editText)
-        position = arguments?.getInt(ARG_POSITION) ?: 0
-        editText.setText(position.toString())
-
-//        localPrompt = sharedPref?.getString("ai_prompt${actions[position]}", null)
-//
-//        if (localPrompt != null) {
-//        } else {
-//            editText.setText("")
-//        }
-
-//        // 按钮点击事件
-//        button.setOnClickListener {
-//            val text = editText.text.toString()
-//            sharedPref?.edit() { putString("ai_prompt${actions[position]}", text) }
-//        }
-
-        return view
+    // 获取指定位置的 Fragment
+    fun getFragment(position: Int): SearchResultFragment? {
+        return fragments[position]
     }
-
 }
 
-class SearchActivity : AppCompatActivity() {
+
+class SearchActivity : BaseActivity(), View.OnClickListener,OnDataListener {
     private lateinit var searchText: EditText
+    private lateinit var searchHistory: RecyclerView
+    private lateinit var viewPager: ViewPager2
+    private lateinit var tabLayout: TabLayout
+    private lateinit var searchHistoryAdapter: SearchTextAdapter
+    private lateinit var searchResultAdapter: SearchResultPagerAdapter
     val threadHandler = ChatSDK.thread() as GWThreadHandler
     private val hints = listOf("会话", "时间轴", "信仰问答", "收藏")
     private var sharedPref: SharedPreferences? = null
@@ -113,7 +70,8 @@ class SearchActivity : AppCompatActivity() {
             "search_text", // 文件名（如不指定，则使用默认的 PreferenceManager.getDefaultSharedPreferences）
             MODE_PRIVATE // 仅当前应用可访问
         )
-        searchText = findViewById(R.id.search_text)
+        findViewById<View>(R.id.back).setOnClickListener(this)
+        findViewById<View>(R.id.search).setOnClickListener(this)
 //        customPrompt.isChecked = threadHandler.isCustomPrompt
 //        customPrompt.setOnCheckedChangeListener { _, isChecked ->
 //            threadHandler.setCustomPrompt(isChecked)
@@ -126,46 +84,139 @@ class SearchActivity : AppCompatActivity() {
 //        val isDarkMode = sharedPref.getBoolean("dark_mode", false)
 //        val brightness = sharedPref.getFloat("brightness", 1.0f)
 
-        val viewPager: ViewPager2 = findViewById(R.id.viewPager)
-        val tabLayout: TabLayout = findViewById(R.id.tabLayout)
-//        viewPager.isUserInputEnabled = false
+        viewPager = findViewById(R.id.viewPager)
+        tabLayout = findViewById(R.id.tabLayout)
+        viewPager.isUserInputEnabled = false
 
-//        var loadServer = findViewById<View>(R.id.loadServer)
-
-//        loadServer.setOnClickListener {
-//            threadHandler.serverPrompt
-//                .subscribeOn(RX.io())
-//                .observeOn(RX.main())
-//                .subscribe(
-//                    { data ->
-//                        if (data != null) {
-//                            sharedPref?.edit() { putString("ai_prompt", data.record) }
-//                            sharedPref?.edit() { putString("ai_prompt0", data.talk) }
-//                            sharedPref?.edit() { putString("ai_prompt4", data.pray) }
-//                            viewPager.adapter = SearchResultPagerAdapter(this)
-//                        } else {
-//                            Toast.makeText(this, "获取系统提示词失败", Toast.LENGTH_SHORT).show()
-//                        }
-//                    },
-//                    { error ->
-//                        // 统一错误处理
-//                        Toast.makeText(this, "获取系统提示词失败:${error}", Toast.LENGTH_SHORT).show()
-//                    }
-//                )
-//        }
-
-
-        viewPager.adapter = SearchResultPagerAdapter(this)
+        searchResultAdapter = SearchResultPagerAdapter(this)
+        viewPager.adapter = searchResultAdapter
         // 将 TabLayout 与 ViewPager2 关联
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             tab.text = hints[position]
         }.attach()
+//        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+//            override fun onPageSelected(position: Int) {
+//                viewPager.post { performSearch(false) }
+//            }
+//        })
 
+
+        initSearchHistoryView()
+
+        searchText = findViewById(R.id.search_text)
+        searchText.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                showHistory()
+            }
+        }
+        // 监听搜索按键
+        searchText.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                performSearch(true)
+                true
+            } else false
+        }
+        searchText.setOnKeyListener { _, keyCode, event ->
+            if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
+                performSearch(true)
+                true
+            } else false
+        }
+
+        showHistory()
     }
 
+    override fun getLayout(): Int {
+        return 0
+    }
+
+    fun initSearchHistoryView() {
+        searchHistory = findViewById<RecyclerView>(R.id.history_list)
+
+        // 初始化 FlexboxLayoutManager
+        val flexboxLayoutManager = FlexboxLayoutManager(this@SearchActivity).apply {
+            flexDirection = FlexDirection.ROW  // 主轴方向
+            flexWrap = FlexWrap.WRAP           // 允许换行
+            justifyContent = JustifyContent.FLEX_START    // 主轴对齐方式
+            alignItems = AlignItems.CENTER      // 交叉轴对齐
+        }
+
+        searchHistory.layoutManager = flexboxLayoutManager
+
+        searchHistoryAdapter = SearchTextAdapter() { clickedItem ->
+//            Toast.makeText(this, "Clicked: ${clickedItem.text}", Toast.LENGTH_SHORT).show()
+            searchText.setText(clickedItem.text)
+            performSearch(true)
+        }
+
+        searchHistory.adapter = searchHistoryAdapter
+    }
 
     override fun onDestroy() {
         super.onDestroy()
     }
 
+    override fun onClick(v: View?) {
+        when (v?.id) {
+
+            R.id.back -> {
+                finish()
+            }
+
+            R.id.search -> {
+                performSearch(true)
+            }
+
+        }
+    }
+
+    private fun showHistory() {
+        tabLayout.visibility = View.INVISIBLE
+        viewPager.visibility = View.INVISIBLE
+        searchHistory.visibility = View.VISIBLE
+
+        val sortedItems = FrequencyCounter.getSortedItems(this@SearchActivity)
+        var texts = sortedItems.take(20)
+            .map { it.key }  // 确保key不为null
+            .toTypedArray()
+        val testData = mutableListOf<SearchText>().apply {
+            // 添加Header
+            add(SearchText.Header("热门搜索"))
+            // 添加Tags
+            addAll(texts.mapIndexed { index, text ->
+                SearchText.Tag(
+                    id = index.toString(),
+                    text = text
+                )
+            })
+        }
+
+        searchHistoryAdapter.submitList(testData)
+    }
+
+    private fun showResults() {
+        tabLayout.visibility = View.VISIBLE
+        viewPager.visibility = View.VISIBLE
+        searchHistory.visibility = View.INVISIBLE
+        hideKeyboard()
+        searchText.clearFocus()
+    }
+
+
+    private fun performSearch(force: Boolean) {
+        val query = searchText.text.toString()
+        if (query.isNotEmpty()) {
+            var currentFragment: SearchResultFragment? =
+                searchResultAdapter.getFragment(viewPager.currentItem)
+            currentFragment?.performSearch(force)
+            // 模拟搜索请求
+//            val results = fetchSearchResults(query)
+//            resultsAdapter.submitList(results)
+            showResults()
+        }
+    }
+
+    override fun getSearchKeyword(): String {
+        return searchText.text.toString()
+    }
 }

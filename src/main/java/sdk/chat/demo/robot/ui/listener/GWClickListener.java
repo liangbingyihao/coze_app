@@ -72,6 +72,7 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
         adapter.registerViewClickListener(R.id.btn_copy, listener);
         adapter.registerViewClickListener(R.id.btn_pic, listener);
         adapter.registerViewClickListener(R.id.btn_del, listener);
+        adapter.registerViewClickListener(R.id.btn_redo, listener);
         adapter.registerViewClickListener(R.id.btn_like_ai, listener);
     }
 
@@ -235,7 +236,19 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
             if (imessage.getClass() == TextHolder.class) {
                 TextHolder t = (TextHolder) imessage;
                 GWThreadHandler threadHandler = (GWThreadHandler) ChatSDK.thread();
-                threadHandler.clearFeedbackText(t.message);
+                weakContext.get().onSubscribe(threadHandler.clearFeedbackText(t.message)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(result -> {
+                                    if (!result) {
+                                        ToastHelper.show(
+                                                weakContext.get(),
+                                                weakContext.get().getString(R.string.failed_and_retry)
+                                        );
+                                    }
+                                },
+                                error -> {
+                                    weakContext.get().onError(error);
+                                }));
             }
         } else if (id == R.id.btn_like_ai) {
             if (imessage.getClass() == TextHolder.class) {
@@ -261,6 +274,18 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
                                             weakContext.get().onError(error);
                                         });
                 weakContext.get().onSubscribe(disposable);
+            }
+        } else if (id == R.id.btn_redo) {
+            if (imessage.getClass() == TextHolder.class) {
+                TextHolder t = (TextHolder) imessage;
+                GWThreadHandler threadHandler = (GWThreadHandler) ChatSDK.thread();
+                weakContext.get().onSubscribe(threadHandler.renew(t.message)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(ret -> {
+                                },
+                                error -> {
+                                    weakContext.get().onError(error);
+                                }));
             }
         }
     }

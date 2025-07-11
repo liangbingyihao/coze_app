@@ -122,8 +122,23 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
             it.isSelected = isSelected
         }
 
-//        setText(t.message.id.toString()+","+t.message.entityID.toString()+","+t.text, t.enableLinkify())
-        setText(t.message.id.toString() + "," + t.text, t.enableLinkify())
+        val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
+        if (t.text != null && !t.text.isEmpty()) {
+            setText(t.message.id.toString() + "," + t.text, t.enableLinkify())
+            var topic = threadHandler.getSessionName(t.message.threadId)
+            if (topic != null) {
+                sessionContainer?.visibility = View.VISIBLE
+                sessionName?.let {
+                    it.text = topic
+                }
+            } else {
+                sessionContainer?.visibility = View.GONE
+            }
+
+        } else {
+            sessionContainer?.visibility = View.GONE
+            setText(t.message.id.toString() + ",原消息已删除", t.enableLinkify())
+        }
 
         time?.let {
             UIModule.shared().timeBinder.bind(it, t)
@@ -139,7 +154,6 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
             imageLikeAi?.setImageResource(R.mipmap.ic_like_black)
         }
 
-        val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
         if (t.message.equals(threadHandler.playingMsg)) {
             btnPlay?.setImageResource(R.mipmap.ic_pause_black);
         } else {
@@ -208,15 +222,6 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
             feedbackMenu?.visibility = View.VISIBLE
         }
 
-        var topic = threadHandler.getSessionName(t.message.threadId)
-        if (topic != null) {
-            sessionContainer?.visibility = View.VISIBLE
-            sessionName?.let {
-                it.text = topic
-            }
-        } else {
-            sessionContainer?.visibility = View.GONE
-        }
 
         var imageUrl = t.message.stringForKey(Keys.ImageUrl)
         var bibleText = aiFeedback?.feedback?.bible
@@ -320,8 +325,22 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
 //                            "Selected: " + selectedText,
 //                            Toast.LENGTH_SHORT
 //                        ).show()
-
-                        threadHandler.clearUserText(t.message)
+                        val disposable =
+                            threadHandler.clearUserText(t.message)
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(
+                                    Consumer { result: Boolean ->
+                                        if (!result) {
+                                            ToastHelper.show(
+                                                text?.context,
+                                                text?.context?.getString(R.string.failed_and_retry)
+                                            );
+                                        }
+                                    },
+                                    Consumer { error: Throwable? ->
+                                        ToastHelper.show(text?.context, error?.message);
+                                    })
+                        dm.add(disposable)
                         mode?.finish()
                         return true
                     }

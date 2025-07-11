@@ -1,18 +1,14 @@
 package sdk.chat.demo.robot.activities
 
-import android.util.Log
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
-import sdk.chat.demo.robot.adpter.OnLoadMoreListener
 import sdk.chat.demo.robot.adpter.FavoriteAdapter
 import sdk.chat.demo.robot.api.GWApiManager
 import sdk.chat.demo.robot.api.model.FavoriteList
-import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.demo.robot.ui.LoadMoreSwipeRefreshLayout
 import sdk.chat.ui.activities.BaseActivity
 import sdk.guru.common.RX

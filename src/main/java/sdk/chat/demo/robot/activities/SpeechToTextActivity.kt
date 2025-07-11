@@ -1,28 +1,37 @@
 package sdk.chat.demo.robot.activities
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
-import android.widget.Button
+import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import android.Manifest
+import androidx.core.content.edit
+import org.greenrobot.greendao.query.QueryBuilder
+import sdk.chat.core.dao.Message
+import sdk.chat.core.dao.MessageDao
+import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
-import android.content.pm.PackageManager
+import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.demo.robot.handlers.SpeechToTextHelper
+import sdk.chat.demo.robot.push.UpdateTokenWorker
 
-class SpeechToTextActivity  : AppCompatActivity() {
+class SpeechToTextActivity  : AppCompatActivity(), View.OnClickListener {
     private lateinit var speechToTextHelper: SpeechToTextHelper
     private lateinit var resultTextView: TextView
-    private lateinit var startButton: Button
-    private lateinit var stopButton: Button
+//    private lateinit var startButton: Button
+//    private lateinit var stopButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_speech_to_text)
 
         resultTextView = findViewById(R.id.resultTextView)
-        startButton = findViewById(R.id.startButton)
-        stopButton = findViewById(R.id.stopButton)
+        findViewById<View>(R.id.updateToken).setOnClickListener(this)
+        findViewById<View>(R.id.startButton).setOnClickListener(this)
+        findViewById<View>(R.id.stopButton).setOnClickListener(this)
+        findViewById<View>(R.id.clearCache).setOnClickListener(this)
 
         // 检查并请求录音权限
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
@@ -46,13 +55,6 @@ class SpeechToTextActivity  : AppCompatActivity() {
             }
         }
 
-        startButton.setOnClickListener {
-            speechToTextHelper.startListening()
-        }
-
-        stopButton.setOnClickListener {
-            speechToTextHelper.stopListening()
-        }
     }
 
     override fun onRequestPermissionsResult(
@@ -75,6 +77,37 @@ class SpeechToTextActivity  : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         speechToTextHelper.destroy()
+    }
+
+    override fun onClick(v: View?) {
+        when (v?.id) {
+
+            R.id.updateToken-> {
+                UpdateTokenWorker.forceUpdateToken(this@SpeechToTextActivity)
+            }
+
+            R.id.startButton -> {
+                speechToTextHelper.startListening()
+            }
+
+            R.id.stopButton -> {
+                speechToTextHelper.stopListening()
+            }
+
+            R.id.clearCache -> {
+
+                // 保存已经显示过引导页的状态
+                getSharedPreferences("app_prefs", MODE_PRIVATE)
+                    .edit() {
+                        putBoolean("has_shown_guide", false)
+                    }
+
+                val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
+                if(threadHandler.welcome!=null){
+                    ChatSDK.db().delete(threadHandler.welcome)
+                }
+            }
+        }
     }
 
     companion object {

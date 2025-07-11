@@ -185,6 +185,19 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         submitList(newList, onComplete)
     }
 
+
+    fun delMessage(message: IMessage, onComplete: (() -> Unit)? = null) {
+        // Create new list with items removed
+        val deletePos = items.indexOfFirst { it.id == message.id }
+
+        if (deletePos == -1) {
+            onComplete?.invoke()
+            return
+        }
+        val newList = ArrayList(items).apply { removeAt(deletePos) }
+        submitList(newList, onComplete)
+    }
+
     override fun getItemViewType(position: Int): Int {
         return when {
             isHeaderPosition(position) -> TYPE_HEADER

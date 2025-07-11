@@ -2,34 +2,27 @@ package sdk.chat.demo.robot.activities
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.os.Bundle
 import android.view.View
-import androidx.core.graphics.createBitmap
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
-import io.reactivex.Observable
+import com.gyf.immersionbar.ImmersionBar
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.launch
 import sdk.chat.core.session.ChatSDK
-import sdk.chat.core.utils.PermissionRequestHandler
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.ImagePagerAdapter
 import sdk.chat.demo.robot.api.ImageApi
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil.getDateBefore
-import sdk.chat.demo.robot.extensions.ImageSaveUtils
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.demo.robot.holder.DailyGWHolder
 import sdk.chat.demo.robot.holder.ImageHolder
 import sdk.chat.demo.robot.ui.listener.GWClickListener
 import sdk.chat.ui.activities.BaseActivity
-import sdk.chat.ui.utils.ToastHelper
 
 class ImageViewerActivity : BaseActivity(), View.OnClickListener {
     private lateinit var viewPager: ViewPager2
@@ -55,6 +48,7 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ImmersionBar.with(this).init()
         setContentView(layout)
         dateStr = intent.getStringExtra(EXTRA_INITIAL_DATA)
 //        hideSystemBars() // 启动时立即隐藏

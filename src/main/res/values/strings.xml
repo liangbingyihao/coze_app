@@ -22,6 +22,7 @@
     <string name="favorites">My Favorites</string>
     <string name="daily_gw">Daily Grace Word</string>
     <string name="search">Search</string>
+    <string name="search_history">History</string>
     <string name="timeline">Timeline</string>
     <string name="pending_image">Processing image...</string>
     <string name="copied">Copied to clipboard.</string>
@@ -33,4 +34,7 @@
     <string name="delete_confirm">Confirm to delete?</string>
     <string name="unfold">Unfold</string>
     <string name="fold">Fold</string>
+    <string name="next">Next</string>
+    <string name="enter">Enter</string>
+    <string name="failed_and_retry">Something went wrong. Please try again later.</string>
   </resources>

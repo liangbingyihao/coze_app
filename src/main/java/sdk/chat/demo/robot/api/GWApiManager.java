@@ -298,6 +298,51 @@ public class GWApiManager {
         });
     }
 
+    public Single<Boolean> renew(String messageId, String prompt) {
+        return Single.create(emitter -> {
+
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            params.put("message_id", messageId);
+            params.put("prompt", prompt);
+            RequestBody body = RequestBody.create(
+                    new JSONObject(params).toString(),
+                    MediaType.parse("application/json; charset=utf-8")
+            );
+
+            Request request = new Request.Builder()
+                    .url(URL_MESSAGE + "/renew")
+                    .post(body)
+                    .build();
+
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    emitter.onError(e); // 请求失败
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    try {
+                        if (!response.isSuccessful()) {
+                            emitter.onError(new IOException("HTTP error: " + response.code()));
+                            return;
+                        }
+                        String responseBody = response.body() != null ? response.body().string() : "";
+                        Boolean data = gson.fromJson(responseBody, JsonObject.class).getAsJsonPrimitive("success").getAsBoolean();
+//                        Integer data = gson.fromJson(responseBody, JsonObject.class).getAsJsonObject("data").getAsInt();
+                        emitter.onSuccess(data); // 请求成功
+                    } catch (Exception e) {
+                        emitter.onError(e);
+                    } finally {
+                        response.close(); // 关闭 Response
+                    }
+                }
+            });
+        });
+    }
+
+
     public Single<JsonObject> askRobot(Message message, String prompt) {
         return Single.create(emitter -> {
             Map<String, String> params = message.getMetaValuesAsMap();
@@ -523,13 +568,13 @@ public class GWApiManager {
         });
     }
 
-    public Single<List<MessageDetail>> listMessage(String sessionId, int page, int limit) {
+    public Single<FavoriteList> listMessage(String sessionType,String search, int page, int limit) {
         return Single.create(emitter -> {
 
-
-            HttpUrl url = Objects.requireNonNull(HttpUrl.parse(URL_MESSAGE))
+            HttpUrl url = Objects.requireNonNull(HttpUrl.parse(URL_MESSAGE+"/filter"))
                     .newBuilder()
-                    .addQueryParameter("session_id", sessionId)
+                    .addQueryParameter("session_type", sessionType)
+                    .addQueryParameter("search", search)
                     .addQueryParameter("page", Integer.toString(page))
                     .addQueryParameter("limit", Integer.toString(limit))
                     .build();
@@ -555,8 +600,8 @@ public class GWApiManager {
                         }
                         String responseBody = response.body() != null ? response.body().string() : "";
                         JsonObject data = gson.fromJson(responseBody, JsonObject.class).getAsJsonObject("data");
-                        MessageList res = gson.fromJson(data, MessageList.class);
-                        emitter.onSuccess(res.getItems()); // 请求成功
+                        FavoriteList res = gson.fromJson(data, FavoriteList.class);
+                        emitter.onSuccess(res); // 请求成功
                     } catch (Exception e) {
                         emitter.onError(e);
                     } finally {
@@ -599,6 +644,50 @@ public class GWApiManager {
                         }
                         String responseBody = response.body() != null ? response.body().string() : "";
                         Integer data = gson.fromJson(responseBody, JsonObject.class).getAsJsonPrimitive("data").getAsInt();
+//                        Integer data = gson.fromJson(responseBody, JsonObject.class).getAsJsonObject("data").getAsInt();
+                        emitter.onSuccess(data); // 请求成功
+                    } catch (Exception e) {
+                        emitter.onError(e);
+                    } finally {
+                        response.close(); // 关闭 Response
+                    }
+                }
+            });
+        });
+    }
+
+    public Single<Boolean> clearMsg(String messageId, int contentType) {
+        return Single.create(emitter -> {
+
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            params.put("message_id", messageId);
+            params.put("content_type", contentType);
+            RequestBody body = RequestBody.create(
+                    new JSONObject(params).toString(),
+                    MediaType.parse("application/json; charset=utf-8")
+            );
+
+            Request request = new Request.Builder()
+                    .url(URL_MESSAGE + "/del")
+                    .post(body)
+                    .build();
+
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    emitter.onError(e); // 请求失败
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    try {
+                        if (!response.isSuccessful()) {
+                            emitter.onError(new IOException("HTTP error: " + response.code()));
+                            return;
+                        }
+                        String responseBody = response.body() != null ? response.body().string() : "";
+                        Boolean data = gson.fromJson(responseBody, JsonObject.class).getAsJsonPrimitive("success").getAsBoolean();
 //                        Integer data = gson.fromJson(responseBody, JsonObject.class).getAsJsonObject("data").getAsInt();
                         emitter.onSuccess(data); // 请求成功
                     } catch (Exception e) {

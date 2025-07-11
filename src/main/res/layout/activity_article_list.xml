@@ -157,19 +157,29 @@
         </LinearLayout>
     </LinearLayout>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/conversations"
-        android:layout_width="316dp"
-        android:layout_height="42dp"
-        android:backgroundTint="@color/white"
-        app:strokeColor="#CF4B40"
-        app:strokeWidth="2dp"
-        app:cornerRadius="21dp"
-        android:textSize="14sp"
-        android:textColor="#CF4B40"
-        android:layout_marginBottom="48dp"
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_gravity="center|bottom"
-        android:text="@string/conversations" />
+        android:background="@color/white"
+        android:paddingTop="26dp"
+        android:paddingBottom="12dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/conversations"
+            android:layout_width="316dp"
+            android:layout_height="42dp"
+            android:layout_gravity="center"
+            android:backgroundTint="@color/white"
+            android:stateListAnimator="@null"
+            android:text="@string/conversations"
+            android:textColor="@color/item_text_selected"
+            android:textSize="14sp"
+            app:cornerRadius="21dp"
+            app:elevation="0dp"
+            app:strokeColor="@color/item_text_selected"
+            app:strokeWidth="1dp" />
+    </FrameLayout>
 </FrameLayout>
 
 

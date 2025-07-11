@@ -413,6 +413,8 @@ public class GWThreadHandler extends AbstractThreadHandler {
             ChatSDK.db().update(message, false);
             ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
             return Single.just(message);
+        }).onErrorResumeNext(throwable -> {
+            return Single.error(throwable);
         }).ignoreElement();
     }
 
@@ -476,6 +478,8 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         }
                     }
                     return Single.just(message);
+                }).onErrorResumeNext(throwable -> {
+                    return Single.error(throwable);
                 }).ignoreElement();
             }
         }
@@ -504,6 +508,8 @@ public class GWThreadHandler extends AbstractThreadHandler {
 //                    message.setMessageStatus(MessageSendStatus.Uploading,true);
 //                    ChatSDK.events().source().accept(NetworkEvent.messageProgressUpdated(message, new Progress(10,100)));
                     return Single.just(message);
+                }).onErrorResumeNext(throwable -> {
+                    return Single.error(throwable);
                 }).ignoreElement();
 
     }
@@ -545,15 +551,53 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 });
     }
 
-    public void clearFeedbackText(Message message) {
-        //TODO 同步后端
-        JsonObject data = gson.fromJson(message.stringForKey(KEY_AI_FEEDBACK), JsonObject.class);
-        if (data.has("feedback_text")) {
-            data.addProperty("feedback_text", "");
-        }
-        updateMessage(message, data);
+    public Single<Boolean> clearFeedbackText(Message message) {
+        return GWApiManager.shared().clearMsg(message.getEntityID(), GWApiManager.contentTypeAI)
+                .flatMap(result -> {
+                    if (!result) {
+                        return Single.error(new IllegalStateException("Invalid API response: " + result));
+                    }
+                    return Single.fromCallable(() -> {
+
+                        if (message.getText().isEmpty()) {
+                            message.cascadeDelete();
+                            ChatSDK.events().source().accept(NetworkEvent.messageRemoved(message));
+                        } else {
+                            JsonObject data = gson.fromJson(message.stringForKey(KEY_AI_FEEDBACK), JsonObject.class);
+                            if (data.has("feedback_text")) {
+                                data.addProperty("feedback_text", "");
+                            }
+                            updateMessage(message, data);
+                        }
+
+                        return result;
+                    }).subscribeOn(RX.db());
+                }).onErrorResumeNext(Single::error);
     }
 
+
+    public Single<Boolean> clearUserText(Message message) {
+        return GWApiManager.shared().clearMsg(message.getEntityID(), GWApiManager.contentTypeUser)
+                .flatMap(result -> {
+                    if (!result) {
+                        return Single.error(new IllegalStateException("Invalid API response"));
+                    }
+                    return Single.fromCallable(() -> {
+
+                        MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(message);
+                        if(aiFeedback==null||aiFeedback.getFeedbackText().isEmpty()){
+                            message.cascadeDelete();
+                            ChatSDK.events().source().accept(NetworkEvent.messageRemoved(message));
+                        }else{
+                            message.setText("");
+                            ChatSDK.db().update(message, false);
+                            ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
+                        }
+
+                        return result;
+                    }).subscribeOn(RX.db());
+                }).onErrorResumeNext(Single::error);
+    }
 
     public Single<Integer> toggleAiLikeState(Message message) {
         // 其他错误传递到UI层
@@ -595,11 +639,26 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 }).onErrorResumeNext(Single::error);
     }
 
-    public void clearUserText(Message message) {
-        //TODO 同步后端
-        message.setText("");
-        ChatSDK.db().update(message, false);
-        ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
+    public Single<Boolean> renew(Message message) {
+        Integer action = message.integerForKey("action");
+        String prompt = null;
+        if (isCustomPrompt) {
+            String k = "ai_prompt";
+            if (message.getMetaValuesAsMap().containsKey("action")) {
+                k = "ai_prompt" + action;
+            }
+            prompt = MainApp.getContext().getSharedPreferences(
+                    "ai_prompt",
+                    Context.MODE_PRIVATE // 仅当前应用可访问
+            ).getString(k, null);
+        }
+
+        // 其他错误传递到UI层
+        return GWApiManager.shared().renew(message.getEntityID(), prompt)
+                .subscribeOn(RX.io()).flatMap(data -> {
+                    startPolling(message.getEntityID());
+                    return Single.just(data);
+                }).onErrorResumeNext(Single::error);
     }
 
     public Single<Boolean> deleteSession(String sessionId) {
@@ -614,7 +673,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         DaoCore daoCore = ChatSDK.db().getDaoCore();
 
                         String sql = "UPDATE MESSAGE SET THREAD_ID = -1 " +
-                                "WHERE THREAD_ID ="+sessionId;
+                                "WHERE THREAD_ID =" + sessionId;
                         daoCore.getDaoSession().getDatabase().execSQL(sql);
 
 
@@ -842,16 +901,22 @@ public class GWThreadHandler extends AbstractThreadHandler {
     public Thread createChatSessions() {
         DaoCore daoCore = ChatSDK.db().getDaoCore();
         QueryBuilder<Message> qb = daoCore.getDaoSession().queryBuilder(Message.class);
-        qb.where(MessageDao.Properties.Type.eq(MessageType.Image));
+        qb.where(MessageDao.Properties.Type.eq(MessageType.Text));
         List<Message> data = qb.list();
         for (Message d : data) {
-            Integer action = d.integerForKey("action");
-            if (action == action_daily_gw) {
-                d.setType(DailyGWRegistration.GWMessageType);
-                daoCore.updateEntity(d);
-            } else if (action == action_bible_pic) {
-                daoCore.deleteEntity(d);
+            MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(d);
+            if(aiFeedback==null||aiFeedback.getFeedbackText().isEmpty()) {
+                if(d.getText().isEmpty()){
+                    d.cascadeDelete();
+                }
             }
+//            Integer action = d.integerForKey("action");
+//            if (action == action_daily_gw) {
+//                d.setType(DailyGWRegistration.GWMessageType);
+//                daoCore.updateEntity(d);
+//            } else if (action == action_bible_pic) {
+//                daoCore.deleteEntity(d);
+//            }
 //            daoCore.deleteEntity(d);
         }
 
@@ -950,7 +1015,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                                         Message message = new Message();
                                         message.setEntityID("welcome");
                                         message.setSender(ChatSDK.currentUser());
-                                        message.setDate(new Date());
+                                        message.setDate(new Date(1640995200000L));
                                         message.setType(MessageType.Text);
                                         message.setMessageStatus(MessageSendStatus.Initial, false);
                                         ChatSDK.db().insertOrReplaceEntity(message);
@@ -1025,6 +1090,10 @@ public class GWThreadHandler extends AbstractThreadHandler {
             Logger.warn(e.getMessage());
         }
 
+    }
+
+    public Message getWelcome() {
+        return welcome;
     }
 
     private final CompositeDisposable disposables = new CompositeDisposable();
