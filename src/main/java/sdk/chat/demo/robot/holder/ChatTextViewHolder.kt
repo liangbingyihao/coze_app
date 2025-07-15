@@ -12,7 +12,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.get
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -32,17 +31,18 @@ import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.manager.DownloadablePayload
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
+import sdk.chat.demo.robot.api.ImageApi
 import sdk.chat.demo.robot.api.model.MessageDetail
 import sdk.chat.demo.robot.extensions.StateStorage
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.ui.chat.model.MessageHolder
 import sdk.chat.ui.module.UIModule
 import sdk.chat.ui.utils.ToastHelper
-import sdk.chat.ui.view_holders.v2.MessageDirection
 import sdk.chat.ui.views.ProgressView
 import sdk.guru.common.DisposableMap
 import sdk.guru.common.RX
 import java.text.DateFormat
+import java.util.Random
 
 open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
     MessageHolders.BaseMessageViewHolder<T>(itemView, null),
@@ -57,6 +57,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
 
     open var text: TextView? = itemView.findViewById(R.id.messageText)
     open var feedback: TextView? = itemView.findViewById(R.id.feedback)
+    open var feedbackHint: TextView? = itemView.findViewById(R.id.feedbackHint)
     open var time: TextView? = itemView.findViewById(R.id.messageTime)
 
     open var readStatus: ImageView? = itemView.findViewById(R.id.readStatus)
@@ -79,6 +80,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
     open val btnPlay: ImageView? =
         itemView.findViewById(R.id.btn_play)
     open val feedbackMenu: View? = itemView.findViewById(R.id.feedback_menu)
+    open val contentMenu: View? = itemView.findViewById(R.id.user_text_menu)
 
     open var format: DateFormat? = null
 
@@ -97,6 +99,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
         "explore2" to itemView.findViewById<TextView>(R.id.explore3)
     )
     open var imageLikeAi: ImageView? = itemView.findViewById(R.id.btn_like_ai)
+    open var imageLikeContent: ImageView? = itemView.findViewById(R.id.btn_like_user_text)
 
 //    open var userClickListener: MessagesListAdapter.UserClickListener? = null
 
@@ -152,6 +155,11 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
             imageLikeAi?.setImageResource(R.mipmap.ic_dislike_black)
         } else {
             imageLikeAi?.setImageResource(R.mipmap.ic_like_black)
+        }
+        if (StateStorage.getStateA(t.message.status)) {
+            imageLikeContent?.setImageResource(R.mipmap.ic_dislike_black)
+        } else {
+            imageLikeContent?.setImageResource(R.mipmap.ic_like_black)
         }
 
         if (t.message.equals(threadHandler.playingMsg)) {
@@ -216,10 +224,32 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
                 .setMarkdown(it, feedbackText)
         }
 
-        if (aiFeedback?.status != 2 || feedbackText.isEmpty()) {
+
+        if (t.message.entityID.equals("welcome")) {
             feedbackMenu?.visibility = View.GONE
+            contentMenu?.visibility = View.GONE
         } else {
-            feedbackMenu?.visibility = View.VISIBLE
+            if (aiFeedback?.status != 2 || feedbackText.isEmpty()) {
+                feedbackMenu?.visibility = View.GONE
+            } else {
+                feedbackMenu?.visibility = View.VISIBLE
+            }
+            if (aiFeedback?.status == 1 && !feedbackText.isEmpty()) {
+                feedbackHint?.visibility = View.VISIBLE
+                val hints = ImageApi.getGwConfigs()?.configs?.generatingHint
+                feedbackHint?.text = if (!hints.isNullOrEmpty()) {
+                    hints.random()
+                } else {
+                    "种子正在发芽，新信息马上生长..." // 默认值
+                }
+            } else {
+                feedbackHint?.visibility = View.GONE
+            }
+            if (t.message.text.isEmpty()) {
+                contentMenu?.visibility = View.GONE
+            } else {
+                contentMenu?.visibility = View.VISIBLE
+            }
         }
 
 

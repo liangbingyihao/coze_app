@@ -1,6 +1,5 @@
 package sdk.chat.demo.robot.activities
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -17,7 +16,7 @@ import materialsearchview.MaterialSearchView
 import sdk.chat.core.dao.Thread
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
-import sdk.chat.demo.robot.adpter.HistoryAdapter
+import sdk.chat.demo.robot.adpter.SessionAdapter
 import sdk.chat.demo.robot.extensions.LanguageUtils
 import sdk.chat.demo.robot.fragments.GWChatFragment
 import sdk.chat.demo.robot.handlers.GWThreadHandler
@@ -33,7 +32,7 @@ class ChatActivity : BaseActivity(), View.OnClickListener,
     private lateinit var recyclerView: RecyclerView
     private lateinit var sessions: List<Thread>
     private var currentSession: Thread? = null
-    private lateinit var sessionAdapter: HistoryAdapter
+    private lateinit var sessionAdapter: SessionAdapter
     private val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
     private val chatTag = "tag_chat";
     private var toReloadSessions = false

@@ -16,7 +16,6 @@ import org.pmw.tinylog.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -214,7 +213,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 }).onErrorReturnItem(false);
     }
 
-    public Single<Long> setSession(String msgId, Long sessionId) {
+    public Single<Long> setMsgSession(String msgId, Long sessionId) {
         if (sessionId == null) {
             return Single.error(new IllegalArgumentException("SessionId ID cannot be null or empty"));
         }
@@ -222,7 +221,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
             return Single.error(new IllegalArgumentException("Message ID cannot be null or empty"));
         }
 
-        return GWApiManager.shared().setSession(msgId, sessionId, null)
+        return GWApiManager.shared().setMsgSession(msgId, sessionId, null)
                 .subscribeOn(RX.io())
                 .flatMap(newSessionId -> {
                     if (newSessionId == null) {
@@ -245,7 +244,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 }).onErrorReturnItem(0L);
     }
 
-    public Single<Long> newSession(String msgId, String sessionName) {
+    public Single<Long> newMsgSession(String msgId, String sessionName) {
         if (sessionName == null) {
             return Single.error(new IllegalArgumentException("SessionId ID cannot be null or empty"));
         }
@@ -253,7 +252,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
             return Single.error(new IllegalArgumentException("Message ID cannot be null or empty"));
         }
 
-        return GWApiManager.shared().setSession(msgId, 0L, sessionName)
+        return GWApiManager.shared().setMsgSession(msgId, 0L, sessionName)
                 .subscribeOn(RX.io())
                 .flatMap(newSessionId -> {
                     if (newSessionId == null) {
@@ -276,6 +275,29 @@ public class GWThreadHandler extends AbstractThreadHandler {
                     }).subscribeOn(RX.db()).map(updateResult -> updateResult);
                 }).onErrorReturnItem(0L);
     }
+
+    public Single<Boolean> setSessionName(Long sessionId, String sessionName) {
+        if (sessionName == null) {
+            return Single.error(new IllegalArgumentException("sessionName cannot be null or empty"));
+        }
+        if (sessionId == null || sessionId<=0) {
+            return Single.error(new IllegalArgumentException("sessionId ID must grater than 0"));
+        }
+
+        return GWApiManager.shared().setSessionName(sessionId, sessionName)
+                .subscribeOn(RX.io())
+                .flatMap(ret -> {
+                    if (!ret) {
+                        return Single.just(Boolean.FALSE);
+                    }
+                    return Single.fromCallable(() -> {
+                        updateThread(sessionId.toString(),sessionName,null);
+                        return Boolean.TRUE;
+                    }).subscribeOn(RX.db()).map(updateResult -> updateResult);
+                }).onErrorReturnItem(Boolean.FALSE);
+    }
+
+
 
     public Single<List<Message>> loadMessagesEarlier(@Nullable Long startId, boolean loadFromServer) {
         return Single.defer(() -> {
@@ -1073,8 +1095,6 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         }
                     }
                 }
-            } else if (messageDetail.getStatus() == 1 && aiFeedback != null) {
-                aiFeedback.setFeedbackText("(生成中)\n" + aiFeedback.getFeedbackText());
             }
 
             MessageHolder holder = ChatSDKUI.provider().holderProvider().getExitsMessageHolder(message);

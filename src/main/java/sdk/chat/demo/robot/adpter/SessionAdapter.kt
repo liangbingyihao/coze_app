@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import sdk.chat.demo.MainApp
 import sdk.chat.demo.pre.R
@@ -15,13 +14,14 @@ import sdk.chat.demo.robot.handlers.GWThreadHandler.headTopic
 
 sealed class HistoryItem {
     data class DateItem(val date: String) : HistoryItem()
-    data class SessionItem(val title: String, val sessionId: String) : HistoryItem()
+    data class SessionItem(var title: String, val sessionId: String) : HistoryItem()
 }
 
 
-class HistoryAdapter(
+class SessionAdapter(
     private val items: MutableList<HistoryItem> = mutableListOf(),
-    private val onItemClick: (Boolean, HistoryItem.SessionItem) -> Unit
+    private val onItemClick: (Boolean, HistoryItem.SessionItem) -> Unit,
+    private val onItemEdit: (HistoryItem.SessionItem) -> Unit
 ) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     //    private var selectedPosition = if(items.isNotEmpty()) 1 else -1
@@ -50,6 +50,14 @@ class HistoryAdapter(
             }
         } else {
             null
+        }
+    }
+
+    fun setSelectItemName(name:String) {
+        if (selectedPosition in items.indices) {
+            val item:HistoryItem.SessionItem = items[selectedPosition] as HistoryItem.SessionItem
+            item.title = name
+            notifyItemChanged(selectedPosition)
         }
     }
 
@@ -104,6 +112,7 @@ class HistoryAdapter(
 
     inner class ArticleViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val titleText: TextView = view.findViewById(R.id.title_text)
+        private val editTopic: View? = view.findViewById(R.id.edit_topic)
 
         fun bind(item: HistoryItem.SessionItem, position: Int) {
             titleText.text = item.title
@@ -161,6 +170,16 @@ class HistoryAdapter(
                     .forEach { notifyItemChanged(it) }
 
                 onItemClick(previous != selectedPosition, item)
+            }
+
+            editTopic?.setOnClickListener {
+                val clickedPosition =
+                    absoluteAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }
+                        ?: return@setOnClickListener
+                // 更新选中状态
+                selectedPosition = clickedPosition
+
+                onItemEdit(item)
             }
         }
     }

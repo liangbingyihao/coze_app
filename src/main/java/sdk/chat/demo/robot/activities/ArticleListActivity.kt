@@ -1,6 +1,5 @@
 package sdk.chat.demo.robot.activities
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -11,11 +10,9 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.reactivex.Single
 import io.reactivex.SingleSource
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -34,6 +31,7 @@ import sdk.chat.demo.robot.adpter.data.Article
 import sdk.chat.demo.robot.adpter.data.ArticleSession
 import sdk.chat.demo.robot.api.model.MessageDetail
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil
+import sdk.chat.demo.robot.extensions.showMaterialConfirmationDialog
 import sdk.chat.demo.robot.handlers.GWMsgHandler
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.demo.robot.ui.LoadMoreSwipeRefreshLayout
@@ -441,39 +439,39 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         }
     }
 
-    fun showMaterialConfirmationDialog(
-        context: Context,
-        title: String?,
-        message: String,
-        positiveAction: () -> Unit
-    ) {
-        val dialog = MaterialAlertDialogBuilder(context)
-//            .setTitle(title)
-            .setMessage(message)
-            .setPositiveButton(getString(R.string.confirm)) { dialog, _ ->
-                positiveAction()
-                dialog.dismiss()
-            }
-            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
-                dialog.dismiss()
-            }
-            .setBackground(ContextCompat.getDrawable(context, R.drawable.dialog_background))
-            .create()
-
-        dialog.setOnShowListener {
-            // 获取按钮并自定义
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.apply {
-//                setBackgroundColor(ContextCompat.getColor(context, R.color.colorPrimary))
-                setTextColor(ContextCompat.getColor(context, R.color.item_text_selected))
-            }
-
-            dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.apply {
-                setTextColor(ContextCompat.getColor(context, R.color.item_text_normal))
-            }
-        }
-
-        dialog.show()
-    }
+//    fun showMaterialConfirmationDialog(
+//        context: Context,
+//        title: String?,
+//        message: String,
+//        positiveAction: () -> Unit
+//    ) {
+//        val dialog = MaterialAlertDialogBuilder(context)
+////            .setTitle(title)
+//            .setMessage(message)
+//            .setPositiveButton(getString(R.string.confirm)) { dialog, _ ->
+//                positiveAction()
+//                dialog.dismiss()
+//            }
+//            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
+//                dialog.dismiss()
+//            }
+//            .setBackground(ContextCompat.getDrawable(context, R.drawable.dialog_background))
+//            .create()
+//
+//        dialog.setOnShowListener {
+//            // 获取按钮并自定义
+//            dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.apply {
+////                setBackgroundColor(ContextCompat.getColor(context, R.color.colorPrimary))
+//                setTextColor(ContextCompat.getColor(context, R.color.item_text_selected))
+//            }
+//
+//            dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.apply {
+//                setTextColor(ContextCompat.getColor(context, R.color.item_text_normal))
+//            }
+//        }
+//
+//        dialog.show()
+//    }
 
     // 在Activity/Fragment中使用
     fun showPopupMenu(anchorView: View, selectedArticle: Article) {
@@ -507,7 +505,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
             return
         }
         dm.add(
-            threadHandler.setSession(msgId, topicId)
+            threadHandler.setMsgSession(msgId, topicId)
                 .observeOn(RX.main())
                 .subscribe(
                     { result ->
@@ -564,7 +562,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         val newSummary = vEdSummary.text.toString()
         val msgId = articleAdapter.selectId
         dm.add(
-            threadHandler.newSession(msgId, newSummary)
+            threadHandler.newMsgSession(msgId, newSummary)
                 .observeOn(RX.main())
                 .subscribe(
                     { result ->

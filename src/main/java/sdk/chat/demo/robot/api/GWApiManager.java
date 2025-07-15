@@ -14,7 +14,6 @@ import org.pmw.tinylog.Logger;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -34,8 +33,6 @@ import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.AccountDetails;
 import sdk.chat.core.types.MessageSendStatus;
 import sdk.chat.demo.robot.api.model.FavoriteList;
-import sdk.chat.demo.robot.api.model.MessageDetail;
-import sdk.chat.demo.robot.api.model.MessageList;
 import sdk.chat.demo.robot.api.model.SystemConf;
 import sdk.chat.demo.robot.push.UpdateTokenWorker;
 import sdk.guru.common.RX;
@@ -241,7 +238,7 @@ public class GWApiManager {
     }
 
 
-    public Single<Long> setSession(String msgId, Long sessionId, String sessionName) {
+    public Single<Long> setMsgSession(String msgId, Long sessionId, String sessionName) {
 
         return Single.create(emitter -> {
             HashMap<String, Object> params = new HashMap<String, Object>();
@@ -297,6 +294,59 @@ public class GWApiManager {
 
         });
     }
+
+
+    public Single<Boolean> setSessionName(Long sessionId, String sessionName) {
+
+        return Single.create(emitter -> {
+            HashMap<String, Object> params = new HashMap<String, Object>();
+            params.put("session_name", sessionName);
+            RequestBody body = RequestBody.create(
+                    new JSONObject(params).toString(),
+                    MediaType.parse("application/json; charset=utf-8")
+            );
+
+            Request request = new Request.Builder()
+                    .url(URL_SESSION + "/" + sessionId)
+//                    .header("Authorization", accessToken)
+                    .post(body)
+                    .build();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException error) {
+                    emitter.onError(new Exception("call api failed"));
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    try {
+                        String responseBody = response.body() != null ? response.body().string() : "";
+                        if (!response.isSuccessful()) {
+                            emitter.onError(new IOException("HTTP error: " + response.code() + "," + responseBody));
+                            return;
+                        }
+                        JsonObject resp = gson.fromJson(responseBody, JsonObject.class);
+                        try {
+                            if (resp == null || !resp.get("success").getAsBoolean()) {
+                                emitter.onError(new Exception("set sessionname failed"));
+                            }
+                            emitter.onSuccess(Boolean.TRUE);
+                        } catch (Exception e) {
+                            emitter.onError(e);
+                        }
+                    } catch (Exception e) {
+                        emitter.onError(e);
+                    } finally {
+                        response.close(); // 关闭 Response
+                    }
+
+                }
+            });
+
+        });
+    }
+
 
     public Single<Boolean> renew(String messageId, String prompt) {
         return Single.create(emitter -> {

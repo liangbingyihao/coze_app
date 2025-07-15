@@ -94,6 +94,7 @@ public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
             handler.getWelcomeMsg().subscribe();
             handler.createChatSessions();
             ImageApi.listImageTags().subscribe();
+            ImageApi.getServerConfigs().subscribe();
 
             if (ChatSDK.hook() != null) {
                 HashMap<String, Object> data = new HashMap<>();

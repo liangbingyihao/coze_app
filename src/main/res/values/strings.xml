@@ -37,4 +37,5 @@
     <string name="next">Next</string>
     <string name="enter">Enter</string>
     <string name="failed_and_retry">Something went wrong. Please try again later.</string>
+    <string name="added_to_timeline">Added to your timeline</string>
   </resources>

@@ -17,10 +17,13 @@ import com.stfalcon.chatkit.messages.MessagesListAdapter;
 import java.lang.ref.WeakReference;
 
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 import sdk.chat.core.dao.Keys;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.events.NetworkEvent;
@@ -32,6 +35,7 @@ import sdk.chat.demo.robot.activities.ImageViewerActivity;
 import sdk.chat.demo.robot.adpter.ChatAdapter;
 import sdk.chat.demo.robot.api.model.AIFeedback;
 import sdk.chat.demo.robot.api.model.ImageDaily;
+import sdk.chat.demo.robot.extensions.ActivityExtensionsKt;
 import sdk.chat.demo.robot.extensions.ImageSaveUtils;
 import sdk.chat.demo.robot.handlers.CardGenerator;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
@@ -74,6 +78,11 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
         adapter.registerViewClickListener(R.id.btn_del, listener);
         adapter.registerViewClickListener(R.id.btn_redo, listener);
         adapter.registerViewClickListener(R.id.btn_like_ai, listener);
+        adapter.registerViewClickListener(R.id.btn_copy_user_text, listener);
+        adapter.registerViewClickListener(R.id.btn_like_user_text, listener);
+        adapter.registerViewClickListener(R.id.btn_share_user_text, listener);
+        adapter.registerViewClickListener(R.id.btn_del_user_text, listener);
+        adapter.registerViewClickListener(R.id.session_name, listener);
     }
 
     @Override
@@ -113,12 +122,13 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
             }
         }
 
-        if (id == R.id.btn_share_text) {
+        if (id == R.id.btn_share_text || id == R.id.btn_share_user_text) {
             if (imessage.getClass() == TextHolder.class) {
-                TextHolder t = (TextHolder) imessage;
+                TextHolder holder = (TextHolder) imessage;
+                String copyText = id == R.id.btn_share_text ? holder.getAiFeedback().getFeedbackText() : holder.getText();
                 Intent shareIntent = new Intent(Intent.ACTION_SEND);
                 shareIntent.setType("text/plain"); // 或具体类型如 "image/jpeg"
-                shareIntent.putExtra(Intent.EXTRA_TEXT, t.getAiFeedback().getFeedbackText());
+                shareIntent.putExtra(Intent.EXTRA_TEXT, copyText);
                 shareIntent.putExtra(Intent.EXTRA_SUBJECT, "恩语之声"); // 临时权限
 
                 weakContext.get().startActivity(Intent.createChooser(shareIntent, "分享到"));
@@ -212,11 +222,12 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
                     }
                 }
             }
-        } else if (id == R.id.btn_copy) {
+        } else if (id == R.id.btn_copy || id == R.id.btn_copy_user_text) {
             if (this.weakContext.get() != null && imessage.getClass() == TextHolder.class) {
                 ClipboardManager clipboard = (ClipboardManager) this.weakContext.get().getSystemService(Context.CLIPBOARD_SERVICE);
                 TextHolder holder = (TextHolder) imessage;
-                ClipData clip = ClipData.newPlainText("恩语", holder.getAiFeedback().getFeedbackText());
+                String copyText = id == R.id.btn_copy ? holder.getAiFeedback().getFeedbackText() : holder.getText();
+                ClipData clip = ClipData.newPlainText("恩语", copyText);
                 clipboard.setPrimaryClip(clip);
                 ToastHelper.show(getContext(), getContext().getString(R.string.copied));
             }
@@ -232,31 +243,35 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
                         feedback.getTag() + "|" + feedback.getBible()
                 ).subscribe();
             }
-        } else if (id == R.id.btn_del) {
+        } else if (id == R.id.btn_del || id == R.id.btn_del_user_text) {
             if (imessage.getClass() == TextHolder.class) {
-                TextHolder t = (TextHolder) imessage;
-                GWThreadHandler threadHandler = (GWThreadHandler) ChatSDK.thread();
-                weakContext.get().onSubscribe(threadHandler.clearFeedbackText(t.message)
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(result -> {
-                                    if (!result) {
-                                        ToastHelper.show(
-                                                weakContext.get(),
-                                                weakContext.get().getString(R.string.failed_and_retry)
-                                        );
-                                    }
-                                },
-                                error -> {
-                                    weakContext.get().onError(error);
-                                }));
+                Context context= this.weakContext.get();
+                ActivityExtensionsKt.showMaterialConfirmationDialog(context,"",context.getString(R.string.delete_confirm), () -> {
+                    TextHolder t = (TextHolder) imessage;
+                    GWThreadHandler threadHandler = (GWThreadHandler) ChatSDK.thread();
+                    Single<Boolean> r = id == R.id.btn_del ? threadHandler.clearFeedbackText(t.message) : threadHandler.clearUserText(t.message);
+                    weakContext.get().onSubscribe(r.observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(result -> {
+                                        if (!result) {
+                                            ToastHelper.show(
+                                                    weakContext.get(),
+                                                    weakContext.get().getString(R.string.failed_and_retry)
+                                            );
+                                        }
+                                    },
+                                    error -> {
+                                        weakContext.get().onError(error);
+                                    }));
+                    return Unit.INSTANCE;
+                });
+
             }
-        } else if (id == R.id.btn_like_ai) {
+        } else if (id == R.id.btn_like_ai||id==R.id.btn_like_user_text) {
             if (imessage.getClass() == TextHolder.class) {
                 TextHolder t = (TextHolder) imessage;
                 GWThreadHandler threadHandler = (GWThreadHandler) ChatSDK.thread();
-                Disposable disposable =
-                        threadHandler.toggleAiLikeState(t.message)
-                                .observeOn(AndroidSchedulers.mainThread())
+                Single<Integer> r = id == R.id.btn_like_ai ? threadHandler.toggleAiLikeState(t.message) : threadHandler.toggleContentLikeState(t.message);
+                Disposable disposable = r.observeOn(AndroidSchedulers.mainThread())
                                 .subscribe(newState -> {
                                             if (newState == 0) {
                                                 ToastHelper.show(

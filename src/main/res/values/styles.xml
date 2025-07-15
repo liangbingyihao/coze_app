@@ -108,4 +108,13 @@
         <item name="android:textColor">@color/item_text_normal</item>
         <item name="rippleColor">@color/item_text_normal</item>
     </style>
+
+    <style name="FullScreenDialog" parent="Theme.MaterialComponents.DayNight.Dialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowCloseOnTouchOutside">false</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
 </resources>

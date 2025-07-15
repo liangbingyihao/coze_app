@@ -108,6 +108,30 @@
             app:strokeWidth="1dp" />
     </LinearLayout>
 
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center|bottom"
+        android:background="@color/white"
+        android:paddingTop="26dp"
+        android:paddingBottom="12dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/conversations"
+            android:layout_width="316dp"
+            android:layout_height="42dp"
+            android:layout_gravity="center"
+            android:backgroundTint="@color/white"
+            android:stateListAnimator="@null"
+            android:text="@string/conversations"
+            android:textColor="@color/item_text_selected"
+            android:textSize="14sp"
+            app:cornerRadius="21dp"
+            app:elevation="0dp"
+            app:strokeColor="@color/item_text_selected"
+            app:strokeWidth="1dp" />
+    </FrameLayout>
+
     <LinearLayout
         android:id="@+id/edSummaryContainer"
         android:layout_width="match_parent"
@@ -157,29 +181,7 @@
         </LinearLayout>
     </LinearLayout>
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center|bottom"
-        android:background="@color/white"
-        android:paddingTop="26dp"
-        android:paddingBottom="12dp">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/conversations"
-            android:layout_width="316dp"
-            android:layout_height="42dp"
-            android:layout_gravity="center"
-            android:backgroundTint="@color/white"
-            android:stateListAnimator="@null"
-            android:text="@string/conversations"
-            android:textColor="@color/item_text_selected"
-            android:textSize="14sp"
-            app:cornerRadius="21dp"
-            app:elevation="0dp"
-            app:strokeColor="@color/item_text_selected"
-            app:strokeWidth="1dp" />
-    </FrameLayout>
 </FrameLayout>
 
 

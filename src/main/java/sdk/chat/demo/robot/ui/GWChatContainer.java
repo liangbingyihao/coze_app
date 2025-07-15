@@ -2,28 +2,21 @@ package sdk.chat.demo.robot.ui;
 
 import android.content.Context;
 import android.content.res.Configuration;
-import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import androidx.annotation.LayoutRes;
 import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.stfalcon.chatkit.commons.models.IMessage;
 import com.stfalcon.chatkit.messages.MessageHolders;
-import com.stfalcon.chatkit.messages.MessageWrapper;
-import com.stfalcon.chatkit.messages.MessagesList;
 import com.stfalcon.chatkit.messages.MessagesListAdapter;
 
 import org.pmw.tinylog.Logger;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -33,13 +26,11 @@ import io.reactivex.SingleOnSubscribe;
 import io.reactivex.SingleSource;
 import io.reactivex.functions.Function;
 import kotlin.Unit;
-import kotlin.jvm.functions.Function0;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.dao.Thread;
 import sdk.chat.core.events.EventType;
 import sdk.chat.core.events.NetworkEvent;
 import sdk.chat.core.session.ChatSDK;
-import sdk.chat.core.types.Progress;
 import sdk.chat.core.utils.TimeLog;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.adpter.ChatAdapter;
@@ -47,8 +38,6 @@ import sdk.chat.demo.robot.handlers.GWThreadHandler;
 import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.chat.model.MessageHolder;
 import sdk.chat.ui.module.UIModule;
-import sdk.chat.ui.utils.ToastHelper;
-import sdk.chat.ui.views.ChatView;
 import sdk.guru.common.DisposableMap;
 import sdk.guru.common.RX;
 
@@ -370,7 +359,7 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
 
 //            updatePreviousMessage(holder);
             holder.updateReadStatus();
-            messagesListAdapter.addNewMessage(holder, (Function0) () -> {
+            messagesListAdapter.addNewMessage(holder, () -> {
                 messagesList.scrollToPosition(0);
                 return Unit.INSTANCE;
             });
@@ -391,10 +380,11 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
                 Logger.error("We have a duplicate");
             }
         }
-        messagesListAdapter.addNewMessage(toAdd, (Function0) () -> {
+        messagesListAdapter.addNewMessage(toAdd, () -> {
 //            messagesList.scrollToPosition(0);
             LinearLayoutManager layoutManager = (LinearLayoutManager) messagesList.getLayoutManager();
 //            int position = layoutManager.findLastVisibleItemPosition();
+            assert layoutManager != null;
             layoutManager.scrollToPositionWithOffset(toAdd.size(), 600);
             return Unit.INSTANCE;
         });
@@ -453,9 +443,10 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
 
         // Reverse order because we are adding to end
         LinearLayoutManager layoutManager = (LinearLayoutManager) messagesList.getLayoutManager();
+        assert layoutManager != null;
         int position = layoutManager.findLastVisibleItemPosition();
 
-        messagesListAdapter.addHistoryMessages(toAdd, (Function0) () -> {
+        messagesListAdapter.addHistoryMessages(toAdd,  () -> {
 ////            messagesList.smoothScrollToPosition(olderSize+1);
 //            if (messagesList == null || messagesList.getLayoutManager() == null) {
 //                return Unit.INSTANCE;

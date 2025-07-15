@@ -1,11 +1,8 @@
 package sdk.chat.demo.robot.api;
 
-import android.os.Build;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,6 +21,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.OkHttpClient;
 import sdk.chat.demo.MainApp;
+import sdk.chat.demo.robot.api.model.GWConfigs;
 import sdk.chat.demo.robot.api.model.ImageDaily;
 import sdk.chat.demo.robot.api.model.ImageDailyList;
 import sdk.chat.demo.robot.api.model.ImageItem;
@@ -37,8 +35,11 @@ public class ImageApi {
     private final static String URL2 = "https://api-test.kolacdn.xyz/api/v1/app/";
     private final static String URL_IMAGE_TAG = URL2 + "scripture/background";
     private final static String URL_IMAGE_DAILY_GW = URL2 + "scripture/daily";
+    private final static String URL_CONFIGS = URL2 + "configs";
     private final static String KEY_CACHE_IMG_DAILY = "gwDaily";
+    private final static String KEY_CACHE_CONFIGS = "gwConfigs";
     private static String oldestImageDailyDate = null;
+    private static GWConfigs gwConfigs = null;
 //    private final static OkHttpClient client;
 //
 //    static {
@@ -53,7 +54,7 @@ public class ImageApi {
         String cachedData = JsonCacheManager.INSTANCE.get(MainApp.getContext(), KEY_CACHE_IMG_DAILY);
         ImageDailyList cachedImage = cachedData != null ? gson.fromJson(cachedData, ImageDailyList.class) : null;
         if (cachedImage != null) {
-            if(dateStr==null||dateStr.isEmpty()){
+            if (dateStr == null || dateStr.isEmpty()) {
                 return cachedImage.getImgs().get(0);
             }
             for (ImageDaily i : cachedImage.getImgs()) {
@@ -130,14 +131,6 @@ public class ImageApi {
             });
         });
     }
-
-//    public static Single<ImageDailyList> listImageDaily() {
-//        return imageDailyList != null
-//                ? Single.just(imageDailyList)
-//                : ImageApi.listImageDaily()
-//                .subscribeOn(RX.io())
-//                .doOnSuccess(tagList -> imageDailyList = tagList);
-//    }
 
     /**
      * 获取所有 date < endDate 的数据（保持降序）
@@ -277,5 +270,41 @@ public class ImageApi {
 
         // 5. 转换为 List 并返回
         return new ArrayList<>(mergedMap.values());
+    }
+
+    public static Single<GWConfigs> getServerConfigs() {
+        String cachedData = JsonCacheManager.INSTANCE.get(MainApp.getContext(), KEY_CACHE_CONFIGS);
+        gwConfigs = gson.fromJson(cachedData, GWConfigs.class);
+        return Single.create(emitter -> {
+            HttpUrl url = Objects.requireNonNull(HttpUrl.parse(URL_CONFIGS))
+                    .newBuilder()
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .build();
+
+            try (Response response = GWApiManager.shared().getClient().newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    emitter.onError(new IOException("HTTP error: " + response.code()));
+                    return;
+                }
+                String responseBody = response.body() != null ? response.body().string() : "";
+                JsonObject data = gson.fromJson(responseBody, JsonObject.class).getAsJsonObject("data");
+                GWConfigs newConfigs = gson.fromJson(data, GWConfigs.class);
+                if (newConfigs != null) {
+                    gwConfigs = newConfigs;
+                    JsonCacheManager.INSTANCE.save(MainApp.getContext(), KEY_CACHE_CONFIGS, data.toString());
+                    emitter.onSuccess(gwConfigs);
+                }
+                emitter.onSuccess(gwConfigs);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public static GWConfigs getGwConfigs() {
+        return gwConfigs;
     }
 }

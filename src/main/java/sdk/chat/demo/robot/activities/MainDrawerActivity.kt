@@ -1,6 +1,5 @@
 package sdk.chat.demo.robot.activities
 
-import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
@@ -20,19 +19,19 @@ import io.reactivex.functions.Action
 import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import materialsearchview.MaterialSearchView
-import sdk.chat.core.dao.Message
 import sdk.chat.core.dao.Thread
 import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
-import sdk.chat.demo.robot.adpter.HistoryAdapter
+import sdk.chat.demo.robot.activities.ArticleListActivity
+import sdk.chat.demo.robot.adpter.SessionAdapter
 import sdk.chat.demo.robot.adpter.HistoryItem
+import sdk.chat.demo.robot.dialog.DialogEditSingle
 import sdk.chat.demo.robot.extensions.LanguageUtils
 import sdk.chat.demo.robot.extensions.dpToPx
 import sdk.chat.demo.robot.fragments.GWChatFragment
 import sdk.chat.demo.robot.handlers.GWThreadHandler
-import sdk.chat.demo.robot.push.UpdateTokenWorker
 import sdk.chat.demo.robot.ui.CustomDivider
 import sdk.chat.demo.robot.ui.listener.GWClickListener
 import sdk.chat.ui.activities.MainActivity
@@ -47,7 +46,7 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
     private lateinit var recyclerView: RecyclerView
     private lateinit var sessions: List<Thread>
     private var currentSession: Thread? = null
-    private lateinit var sessionAdapter: HistoryAdapter
+    private lateinit var sessionAdapter: SessionAdapter
     private val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
     private val chatTag = "tag_chat";
     private var toReloadSessions = false
@@ -234,7 +233,7 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
                     { data ->
                         if (data != null) {
                             val sessionMenus: ArrayList<HistoryItem> = toMenuItems(data)
-                            sessionAdapter = HistoryAdapter(sessionMenus) { changed, clickedItem ->
+                            sessionAdapter = SessionAdapter(sessionMenus, { changed, clickedItem ->
                                 toggleDrawer()
 //                                if (changed) {
 //                                    setCurrentSession(clickedItem)
@@ -242,8 +241,13 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
                                     this@MainDrawerActivity,
                                     clickedItem.sessionId
                                 )
-//                                }
-                            }
+                            }, { clickedItem ->
+                                var item: HistoryItem.SessionItem? = sessionAdapter.getSelectItem()
+                                if (item != null && !dialogEditSingle.isShowing) {
+                                    dialogEditSingle.show()
+                                    dialogEditSingle.setEditDefault(item.title)
+                                }
+                            })
                             recyclerView.adapter = sessionAdapter
                             recyclerView.addItemDecoration(
                                 CustomDivider(
@@ -345,11 +349,50 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
 //                val intent = Intent(Intent.ACTION_PICK)
 //                intent.setType("image/*")
 //                pickImageLauncher!!.launch(intent)
-                UpdateTokenWorker.forceUpdateToken(this@MainDrawerActivity)
+//                UpdateTokenWorker.forceUpdateToken(this@MainDrawerActivity)
+                // 显示对话框
+//                val dialog = DialogEditSingle(this) { inputText ->
+//                    // 处理发送逻辑
+//                    Toast.makeText(this, "发送内容: $inputText", Toast.LENGTH_SHORT).show()
+//                }
+//                dialog.show()
+                if (!dialogEditSingle.isShowing) {
+                    dialogEditSingle.show()
+                }
                 true
             }
 
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private val dialogEditSingle by lazy {
+        DialogEditSingle(this) { inputText ->
+            // 处理发送逻辑
+            var item: HistoryItem.SessionItem? = sessionAdapter.getSelectItem()
+            if (item != null) {
+                Toast.makeText(this, "${item.title}: $inputText", Toast.LENGTH_SHORT).show()
+                dm.add(
+                    threadHandler.setSessionName(item.sessionId.toLong(), inputText)
+                        .observeOn(RX.main()).subscribe(
+                            { result ->
+                                if (!result) {
+                                    Toast.makeText(
+                                        this@MainDrawerActivity,
+                                        getString(R.string.failed_and_retry),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            },
+                            { error -> // onError
+                                Toast.makeText(
+                                    this@MainDrawerActivity,
+                                    "${getString(R.string.failed_and_retry)} ${error.message}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            })
+                )
+            }
         }
     }
 
@@ -400,24 +443,24 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
 
     }
 
-    private fun setCurrentSession(selected: HistoryItem.SessionItem?) {
-        currentSession = if (selected != null) {
-            sessions.firstOrNull { selected.sessionId == it.id.toString() }
-        } else {
-            null
-        }
-        if (currentSession != null) {
-            val fragment: GWChatFragment? =
-                supportFragmentManager.findFragmentByTag(chatTag) as? GWChatFragment;
-            if (fragment == null) {
-                supportFragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container, GWChatFragment(), chatTag).commit()
-            } else {
-//                fragment.onNewIntent(currentSession);
-            }
-            getToolbar()?.title = currentSession!!.name
-        }
-    }
+//    private fun setCurrentSession(selected: HistoryItem.SessionItem?) {
+//        currentSession = if (selected != null) {
+//            sessions.firstOrNull { selected.sessionId == it.id.toString() }
+//        } else {
+//            null
+//        }
+//        if (currentSession != null) {
+//            val fragment: GWChatFragment? =
+//                supportFragmentManager.findFragmentByTag(chatTag) as? GWChatFragment;
+//            if (fragment == null) {
+//                supportFragmentManager.beginTransaction()
+//                    .replace(R.id.fragment_container, GWChatFragment(), chatTag).commit()
+//            } else {
+////                fragment.onNewIntent(currentSession);
+//            }
+//            getToolbar()?.title = currentSession!!.name
+//        }
+//    }
 
 
     override fun onClick(v: View?) {
@@ -439,7 +482,7 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
 //                )
 //            }
 
-            R.id.menu_search-> {
+            R.id.menu_search -> {
                 startActivity(
                     Intent(
                         this@MainDrawerActivity,
