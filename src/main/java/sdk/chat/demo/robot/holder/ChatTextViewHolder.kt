@@ -234,7 +234,8 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
             } else {
                 feedbackMenu?.visibility = View.VISIBLE
             }
-            if (aiFeedback?.status == 1 && !feedbackText.isEmpty()) {
+            //FIXME
+            if (aiFeedback?.status == 1) {
                 feedbackHint?.visibility = View.VISIBLE
                 val hints = ImageApi.getGwConfigs()?.configs?.generatingHint
                 feedbackHint?.text = if (!hints.isNullOrEmpty()) {
@@ -291,138 +292,138 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
         }
 
 
-        var saved = StateStorage.getStateA(t.message.status)
-        text?.setCustomSelectionActionModeCallback(object : ActionMode.Callback {
-            public override fun onCreateActionMode(mode: ActionMode, menu: Menu?): Boolean {
-                if (menu == null) {
-                    return true
-                }
-
-                val systemItems = (0 until menu.size()).mapNotNull { menu.getItem(it) }
-
-                menu.clear()
-
-//                menu.add(0, R.id.like, 0, R.string.like)
-//                    .setIcon(R.mipmap.ic_like_black)
-//                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_WITH_TEXT);
-//                menu.add(0, R.id.remove, 0, R.string.remove)
-//                    .setIcon(R.mipmap.ic_del_black)
-//                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_WITH_TEXT);
-                systemItems.forEachIndexed { index, item ->
-                    if (index == 0) {
-                        if (saved) {
-                            menu.add(0, R.id.like, 0, R.string.unsave)
-                                .setIcon(R.mipmap.ic_dislike_black);
-                        } else {
-                            menu.add(0, R.id.like, 0, R.string.save)
-                                .setIcon(R.mipmap.ic_like_black);
-                        }
-                    } else if (index == 1) {
-                        menu.add(0, R.id.remove, 0, R.string.remove)
-                            .setIcon(R.mipmap.ic_del_black)
-                    }
-                    menu.add(item.groupId, item.itemId, index, item.title)
-                }
-
-                return true
-            }
-
-            public override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-//                var saved = StateStorage.getStateA(t.message.status)
-//                menu?.findItem(R.id.like)?.apply {
-//                    if (saved) {
-//                        setTitle(R.string.unsave)
-//                        setIcon(R.mipmap.ic_dislike_black)
-//                    } else {
-//                        setTitle(R.string.save)
-//                        setIcon(R.mipmap.ic_like_black)
-//                    }
+//        var saved = StateStorage.getStateA(t.message.status)
+//        text?.setCustomSelectionActionModeCallback(object : ActionMode.Callback {
+//            public override fun onCreateActionMode(mode: ActionMode, menu: Menu?): Boolean {
+//                if (menu == null) {
+//                    return true
 //                }
-                return false
-            }
-
-            public override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
-                val start: Int = text!!.selectionStart
-                val end: Int = text!!.selectionEnd
-                val selectedText: String? = text!!.getText().toString().substring(start, end)
-
-                val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
-                when (item?.itemId) {
-                    R.id.remove -> {
-                        // Handle your custom action
-//                        Toast.makeText(
-//                            this@MainActivity,
-//                            "Selected: " + selectedText,
-//                            Toast.LENGTH_SHORT
-//                        ).show()
-                        val disposable =
-                            threadHandler.clearUserText(t.message)
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe(
-                                    Consumer { result: Boolean ->
-                                        if (!result) {
-                                            ToastHelper.show(
-                                                text?.context,
-                                                text?.context?.getString(R.string.failed_and_retry)
-                                            );
-                                        }
-                                    },
-                                    Consumer { error: Throwable? ->
-                                        ToastHelper.show(text?.context, error?.message);
-                                    })
-                        dm.add(disposable)
-                        mode?.finish()
-                        return true
-                    }
-
-                    R.id.like -> {
-
-                        val disposable =
-                            threadHandler.toggleContentLikeState(t.message)
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe(
-                                    Consumer { newState: Int? ->
-                                        if (newState == 0) {
-                                            ToastHelper.show(
-                                                text?.context,
-                                                text?.context?.getString(R.string.unsaved)
-                                            );
-                                        } else if (newState == 1) {
-                                            ToastHelper.show(
-                                                text?.context,
-                                                text?.context?.getString(R.string.saved)
-                                            );
-                                        }
-                                    },
-                                    Consumer { error: Throwable? ->
-                                        ToastHelper.show(text?.context, error?.message);
-                                    })
-                        dm.add(disposable)
-                        mode?.finish()
-
-//                        threadHandler.toggleContentLikeState(t.message)
-//                        if(saved){
-//                            ToastHelper.show(text?.context, text?.context?.getString(R.string.unsaved));
-//                        }else{
-//                            ToastHelper.show(text?.context, text?.context?.getString(R.string.saved));
+//
+//                val systemItems = (0 until menu.size()).mapNotNull { menu.getItem(it) }
+//
+//                menu.clear()
+//
+////                menu.add(0, R.id.like, 0, R.string.like)
+////                    .setIcon(R.mipmap.ic_like_black)
+////                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+////                menu.add(0, R.id.remove, 0, R.string.remove)
+////                    .setIcon(R.mipmap.ic_del_black)
+////                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+//                systemItems.forEachIndexed { index, item ->
+//                    if (index == 0) {
+//                        if (saved) {
+//                            menu.add(0, R.id.like, 0, R.string.unsave)
+//                                .setIcon(R.mipmap.ic_dislike_black);
+//                        } else {
+//                            menu.add(0, R.id.like, 0, R.string.save)
+//                                .setIcon(R.mipmap.ic_like_black);
 //                        }
-                        return true
-                    }
-
-                    android.R.id.copy -> {
-                        Toast.makeText(text?.context, selectedText, Toast.LENGTH_SHORT)
-                            .show()
-                        return false
-                    }
-
-                    else -> return false
-                }
-            }
-
-            public override fun onDestroyActionMode(mode: ActionMode?) {
-                // Action mode finished
-            }
-        })
+//                    } else if (index == 1) {
+//                        menu.add(0, R.id.remove, 0, R.string.remove)
+//                            .setIcon(R.mipmap.ic_del_black)
+//                    }
+//                    menu.add(item.groupId, item.itemId, index, item.title)
+//                }
+//
+//                return true
+//            }
+//
+//            public override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+////                var saved = StateStorage.getStateA(t.message.status)
+////                menu?.findItem(R.id.like)?.apply {
+////                    if (saved) {
+////                        setTitle(R.string.unsave)
+////                        setIcon(R.mipmap.ic_dislike_black)
+////                    } else {
+////                        setTitle(R.string.save)
+////                        setIcon(R.mipmap.ic_like_black)
+////                    }
+////                }
+//                return false
+//            }
+//
+//            public override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
+//                val start: Int = text!!.selectionStart
+//                val end: Int = text!!.selectionEnd
+//                val selectedText: String? = text!!.getText().toString().substring(start, end)
+//
+//                val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
+//                when (item?.itemId) {
+//                    R.id.remove -> {
+//                        // Handle your custom action
+////                        Toast.makeText(
+////                            this@MainActivity,
+////                            "Selected: " + selectedText,
+////                            Toast.LENGTH_SHORT
+////                        ).show()
+//                        val disposable =
+//                            threadHandler.clearUserText(t.message)
+//                                .observeOn(AndroidSchedulers.mainThread())
+//                                .subscribe(
+//                                    Consumer { result: Boolean ->
+//                                        if (!result) {
+//                                            ToastHelper.show(
+//                                                text?.context,
+//                                                text?.context?.getString(R.string.failed_and_retry)
+//                                            );
+//                                        }
+//                                    },
+//                                    Consumer { error: Throwable? ->
+//                                        ToastHelper.show(text?.context, error?.message);
+//                                    })
+//                        dm.add(disposable)
+//                        mode?.finish()
+//                        return true
+//                    }
+//
+//                    R.id.like -> {
+//
+//                        val disposable =
+//                            threadHandler.toggleContentLikeState(t.message)
+//                                .observeOn(AndroidSchedulers.mainThread())
+//                                .subscribe(
+//                                    Consumer { newState: Int? ->
+//                                        if (newState == 0) {
+//                                            ToastHelper.show(
+//                                                text?.context,
+//                                                text?.context?.getString(R.string.unsaved)
+//                                            );
+//                                        } else if (newState == 1) {
+//                                            ToastHelper.show(
+//                                                text?.context,
+//                                                text?.context?.getString(R.string.saved)
+//                                            );
+//                                        }
+//                                    },
+//                                    Consumer { error: Throwable? ->
+//                                        ToastHelper.show(text?.context, error?.message);
+//                                    })
+//                        dm.add(disposable)
+//                        mode?.finish()
+//
+////                        threadHandler.toggleContentLikeState(t.message)
+////                        if(saved){
+////                            ToastHelper.show(text?.context, text?.context?.getString(R.string.unsaved));
+////                        }else{
+////                            ToastHelper.show(text?.context, text?.context?.getString(R.string.saved));
+////                        }
+//                        return true
+//                    }
+//
+//                    android.R.id.copy -> {
+//                        Toast.makeText(text?.context, selectedText, Toast.LENGTH_SHORT)
+//                            .show()
+//                        return false
+//                    }
+//
+//                    else -> return false
+//                }
+//            }
+//
+//            public override fun onDestroyActionMode(mode: ActionMode?) {
+//                // Action mode finished
+//            }
+//        })
     }
 
     open fun setText(value: String, linkify: Boolean) {

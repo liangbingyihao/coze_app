@@ -234,7 +234,7 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
                         if (data != null) {
                             val sessionMenus: ArrayList<HistoryItem> = toMenuItems(data)
                             sessionAdapter = SessionAdapter(sessionMenus, { changed, clickedItem ->
-                                toggleDrawer()
+//                                toggleDrawer()
 //                                if (changed) {
 //                                    setCurrentSession(clickedItem)
                                 ArticleListActivity.start(
@@ -249,15 +249,16 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
                                 }
                             })
                             recyclerView.adapter = sessionAdapter
-                            recyclerView.addItemDecoration(
-                                CustomDivider(
-                                    thickness = 1.dpToPx(this@MainDrawerActivity),  // 扩展函数转换 dp 到 px
-                                    colorResId = R.color.gray_divider,
-                                    insetStart = 12.dpToPx(this@MainDrawerActivity),
-                                    insetEnd = 12.dpToPx(this@MainDrawerActivity)
+                            if (recyclerView.itemDecorationCount == 0) {
+                                recyclerView.addItemDecoration(
+                                    CustomDivider(
+                                        thickness = 1.dpToPx(this@MainDrawerActivity),  // 扩展函数转换 dp 到 px
+                                        colorResId = R.color.gray_divider,
+                                        insetStart = 12.dpToPx(this@MainDrawerActivity),
+                                        insetEnd = 12.dpToPx(this@MainDrawerActivity)
+                                    )
                                 )
-                            )
-//                            setCurrentSession(sessionAdapter.getSelectItem())
+                            }
                         } else {
                             throw IllegalArgumentException("创建会话失败")
                         }

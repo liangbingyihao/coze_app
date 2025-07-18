@@ -85,7 +85,7 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
     open var format: DateFormat? = null
 
     open val btnCopy: ImageView? =
-        itemView.findViewById(sdk.chat.demo.pre.R.id.btn_copy)
+        itemView.findViewById(sdk.chat.demo.pre.R.id.btn_pray)
 
     open val dm = DisposableMap()
 

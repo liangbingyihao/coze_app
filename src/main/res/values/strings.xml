@@ -13,6 +13,7 @@
     <string name="confirm">Confirm</string>
     <string name="cancel">Cancel</string>
     <string name="remove">Remove</string>
+    <string name="remove_topic">Remove Topic</string>
     <string name="change_topic">Change Topic</string>
     <string name="new_topic">New</string>
     <string name="hint_no_record">No records found. Start by adding from the chat.</string>

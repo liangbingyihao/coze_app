@@ -17,7 +17,8 @@ import sdk.chat.demo.robot.api.model.FavoriteList
 import androidx.core.graphics.toColorInt
 
 class FavoriteAdapter(
-    private val onItemClick: (FavoriteList.FavoriteItem) -> Unit
+    private val onItemClick: (FavoriteList.FavoriteItem) -> Unit,
+    private val onLongClick: (View, FavoriteList.FavoriteItem) -> Boolean,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private val listData: MutableList<FavoriteList.FavoriteItem> =
         ArrayList<FavoriteList.FavoriteItem>()
@@ -43,11 +44,11 @@ class FavoriteAdapter(
 //            return TYPE_FOOTER
 //        }
 //        return TYPE_ITEM
-        if(position == listData.size){
+        if (position == listData.size) {
             return TYPE_FOOTER
         }
         var item = listData[position]
-        if(item.contentType==GWApiManager.contentTypeAI){
+        if (item.contentType == GWApiManager.contentTypeAI) {
             return TYPE_ITEM_AI
         }
         return TYPE_ITEM_USER
@@ -62,7 +63,7 @@ class FavoriteAdapter(
             val view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.item_list_footer, parent, false)
             return FootViewHolder(view)
-        } else if(viewType == TYPE_ITEM_AI) {
+        } else if (viewType == TYPE_ITEM_AI) {
             val view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.item_favorite_ai, parent, false)
             return MyViewHolder(view)
@@ -81,7 +82,7 @@ class FavoriteAdapter(
             when (holder) {
                 is MyViewHolder -> {
                     if (position < listData.size) {
-                        var context:Context = holder.textView.context
+                        var context: Context = holder.textView.context
                         val item = listData[position]
 
                         Markwon.create(context)
@@ -89,6 +90,8 @@ class FavoriteAdapter(
                         holder.tvTime.text = item.createdAt.replace("T", " ")
                         holder.itemView.setOnClickListener { onItemClick(item) }
                         holder.textView.setOnClickListener { onItemClick(item) }
+                        holder.itemView.setOnLongClickListener { v -> onLongClick(v, item) }
+                        holder.textView.setOnLongClickListener { v -> onLongClick(v, item) }
                         holder.topic?.text = item.sessionName
 
                         holder.textView.post {
@@ -184,6 +187,17 @@ class FavoriteAdapter(
 //        }
         listData.addAll(data)
         notifyDataSetChanged()
+//        notifyItemRangeInserted(startPos, data.size)
+    }
+    fun delItem(data: FavoriteList.FavoriteItem) {
+//        if (Looper.myLooper() != Looper.getMainLooper()) {
+//            Handler(Looper.getMainLooper()).post { updateData(newData) }
+//            return
+//        }
+        val removed = listData.removeIf { it.messageId == data.messageId&&it.contentType==data.contentType }
+        if (removed) {
+            notifyDataSetChanged() // 通知UI更新
+        }
 //        notifyItemRangeInserted(startPos, data.size)
     }
 

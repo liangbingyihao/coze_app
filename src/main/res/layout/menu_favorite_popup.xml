@@ -26,7 +26,41 @@
             android:padding="4dp">
 
             <TextView
-                android:id="@+id/delArticle"
+                android:id="@+id/copy"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="@string/copy"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                app:drawableEndCompat="@mipmap/ic_copy" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#7B7B7B" />
+
+            <TextView
+                android:id="@+id/share"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="@string/share"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                app:drawableEndCompat="@mipmap/ic_share" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#7B7B7B" />
+
+            <TextView
+                android:id="@+id/del"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:gravity="center_vertical"
@@ -37,22 +71,6 @@
                 android:textSize="14sp"
                 app:drawableEndCompat="@mipmap/ic_del" />
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#7B7B7B" />
-
-            <TextView
-                android:id="@+id/changeTopic"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:gravity="center_vertical"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:text="@string/change_topic"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                app:drawableEndCompat="@mipmap/ic_switch" />
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>

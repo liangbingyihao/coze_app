@@ -210,7 +210,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         }
                         return false;
                     }).subscribeOn(RX.db()).map(updateResult -> true);
-                }).onErrorReturnItem(false);
+                });
     }
 
     public Single<Long> setMsgSession(String msgId, Long sessionId) {
@@ -240,8 +240,8 @@ public class GWThreadHandler extends AbstractThreadHandler {
                             return newSessionId;
                         }
                         return 0L;
-                    }).subscribeOn(RX.db()).map(updateResult -> updateResult);
-                }).onErrorReturnItem(0L);
+                    }).subscribeOn(RX.db());
+                });
     }
 
     public Single<Long> newMsgSession(String msgId, String sessionName) {
@@ -280,7 +280,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
         if (sessionName == null) {
             return Single.error(new IllegalArgumentException("sessionName cannot be null or empty"));
         }
-        if (sessionId == null || sessionId<=0) {
+        if (sessionId == null || sessionId <= 0) {
             return Single.error(new IllegalArgumentException("sessionId ID must grater than 0"));
         }
 
@@ -291,12 +291,11 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         return Single.just(Boolean.FALSE);
                     }
                     return Single.fromCallable(() -> {
-                        updateThread(sessionId.toString(),sessionName,null);
+                        updateThread(sessionId.toString(), sessionName, null);
                         return Boolean.TRUE;
                     }).subscribeOn(RX.db()).map(updateResult -> updateResult);
                 }).onErrorReturnItem(Boolean.FALSE);
     }
-
 
 
     public Single<List<Message>> loadMessagesEarlier(@Nullable Long startId, boolean loadFromServer) {
@@ -607,10 +606,10 @@ public class GWThreadHandler extends AbstractThreadHandler {
                     return Single.fromCallable(() -> {
 
                         MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(message);
-                        if(aiFeedback==null||aiFeedback.getFeedbackText().isEmpty()){
+                        if (aiFeedback == null || aiFeedback.getFeedbackText().isEmpty()) {
                             message.cascadeDelete();
                             ChatSDK.events().source().accept(NetworkEvent.messageRemoved(message));
-                        }else{
+                        } else {
                             message.setText("");
                             ChatSDK.db().update(message, false);
                             ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
@@ -927,8 +926,8 @@ public class GWThreadHandler extends AbstractThreadHandler {
         List<Message> data = qb.list();
         for (Message d : data) {
             MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(d);
-            if(aiFeedback==null||aiFeedback.getFeedbackText().isEmpty()) {
-                if(d.getText().isEmpty()){
+            if (aiFeedback == null || aiFeedback.getFeedbackText().isEmpty()) {
+                if (d.getText().isEmpty()) {
                     d.cascadeDelete();
                 }
             }
@@ -988,7 +987,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
             entity.setType(ThreadType.None);
             modified = true;
         }
-        if (updateAt != null && (entity.getLastMessageDate() == null || entity.getLastMessageDate().before(updateAt))) {
+        if (updateAt != null) {
             entity.setLastMessageDate(updateAt);
             modified = true;
         }
@@ -1079,12 +1078,20 @@ public class GWThreadHandler extends AbstractThreadHandler {
             message.setMetaValue(KEY_AI_FEEDBACK, jsonStr);
             MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(message);
 
+            Long sid = messageDetail.getSessionId();
+            if (sid != null && sid > 0 && !sid.equals(message.getThreadId())) {
+                message.setThreadId(sid);
+                updateThread(Long.toString(sid), messageDetail.getFeedback().getTopic(), new Date());
+            }
+
             if (messageDetail.getStatus() == 2) {
                 disposables.clear();
-                if (messageDetail.getSessionId() != null && messageDetail.getSessionId() > 0) {
-                    message.setThreadId(messageDetail.getSessionId());
-                    updateThread(Long.toString(messageDetail.getSessionId()), messageDetail.getFeedback().getTopic(), new Date());
+
+                if (sid != null && sid > 0 && !sid.equals(message.getThreadId())) {
+                    message.setThreadId(sid);
+                    updateThread(Long.toString(sid), messageDetail.getFeedback().getTopic(), new Date());
                 }
+
                 if (aiFeedback != null && aiFeedback.getFeedback() != null) {
                     AIExplore newAIExplore = AIExplore.loads(message, aiFeedback.getFeedback().getFunction());
                     if (newAIExplore != null) {
@@ -1120,7 +1127,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
     private final AtomicInteger retryCount = new AtomicInteger(0);    // 配置参数
     private volatile boolean isPolling = false;
     private static final long INITIAL_DELAY = 0; // 立即开始
-    private static final long POLL_INTERVAL = 3; // 5秒间隔
+    private static final long POLL_INTERVAL = 2; // 5秒间隔
     private static final long REQUEST_TIMEOUT = 15; // 单个请求10秒超时
     private static final long OPERATION_TIMEOUT = 2; // 整体操作2分钟超时
     private static final int MAX_RETRIES = 3; // 最大重试次数
@@ -1169,7 +1176,10 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 .subscribe(() -> {
                             Logger.warn("success...");
                         },
-                        error -> Logger.warn("failed..." + error.getMessage()));
+                        error -> {
+                            Logger.warn("failed..." + error.getMessage());
+
+                        });
 
         disposables.add(disposable);
     }

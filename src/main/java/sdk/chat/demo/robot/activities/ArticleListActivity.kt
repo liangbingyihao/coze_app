@@ -432,7 +432,10 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
 
                         }
                     },
-                    menuResId = R.layout.menu_article_topic
+                    menuResId = R.layout.menu_article_topic,
+                    clickableResIds = intArrayOf(
+                        R.id.delTopic,
+                    )
                 ).show()
             }
 
@@ -496,6 +499,11 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                     }
                 }
             },
+            menuResId = R.layout.menu_article_popup,
+            clickableResIds = intArrayOf(
+                R.id.delArticle,
+                R.id.changeTopic,
+            )
         ).show()
     }
 
@@ -515,8 +523,9 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                             }
                             articleAdapter.deleteById(msgId)
                         } else {
-                            sessionId = topicId.toString()
+//                            sessionId = topicId.toString()
                             loadSessions()
+                            start(this@ArticleListActivity,topicId.toString())
                         }
                     },
                     { error -> // onError
@@ -567,7 +576,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                 .subscribe(
                     { result ->
                         if (result > 0) {
-                            sessionId = result.toString()
+//                            sessionId = result.toString()
                             loadSessions()
                         }
                         vEdSummary.requestFocus()

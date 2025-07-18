@@ -28,7 +28,7 @@
         android:background="@drawable/gradient_bible_image"
         android:orientation="vertical"
         android:paddingLeft="34dp"
-        android:paddingRight="34dp">
+        android:paddingRight="38dp">
 
 <!--        <View-->
 <!--            android:layout_width="1dp"-->

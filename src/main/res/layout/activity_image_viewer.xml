@@ -22,47 +22,51 @@
         app:tabIndicatorGravity="bottom"
         app:tabTextColor="@color/white" />
 
-    <ImageView
-        android:id="@+id/back"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="left|top"
-        android:layout_marginTop="60dp"
-        android:minWidth="48dp"
-        android:minHeight="48dp"
-        android:padding="20dp"
-        android:src="@mipmap/ic_back_white" />
 
-    <ImageView
-        android:id="@+id/btn_download"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="60dp"
-        android:layout_gravity="right|top"
-        android:layout_marginRight="100dp"
-        android:padding="20dp"
-        android:src="@mipmap/ic_download_white" />
+    <FrameLayout
+        android:id="@+id/title_bar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@android:color/transparent"
+        android:clickable="true"
+        android:focusable="true">
 
-    <ImageView
-        android:id="@+id/btn_share_image"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="60dp"
-        android:layout_gravity="right|top"
-        android:layout_marginRight="50dp"
-        android:padding="20dp"
-        android:src="@mipmap/ic_share_white" />
+        <ImageView
+            android:id="@+id/back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left|center_vertical"
+            android:layout_marginLeft="16dp"
+            android:padding="16dp"
+            android:src="@mipmap/ic_back_white" />
+
+        <ImageView
+            android:id="@+id/btn_download"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right|center_vertical"
+            android:layout_marginRight="88dp"
+            android:src="@mipmap/ic_download_white" />
+
+        <ImageView
+            android:id="@+id/btn_share_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right|center_vertical"
+            android:layout_marginRight="38dp"
+            android:src="@mipmap/ic_share_white" />
+    </FrameLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/conversations"
         android:layout_width="316dp"
         android:layout_height="42dp"
-        android:backgroundTint="@android:color/transparent"
-        app:strokeColor="#FFFFFF"
-        app:strokeWidth="2dp"
-        app:cornerRadius="21dp"
-        android:textSize="14sp"
-        android:layout_marginBottom="64dp"
         android:layout_gravity="center|bottom"
-        android:text="@string/conversations" />
+        android:layout_marginBottom="64dp"
+        android:backgroundTint="@android:color/transparent"
+        android:text="@string/conversations"
+        android:textSize="14sp"
+        app:cornerRadius="21dp"
+        app:strokeColor="#FFFFFF"
+        app:strokeWidth="2dp" />
 </FrameLayout>

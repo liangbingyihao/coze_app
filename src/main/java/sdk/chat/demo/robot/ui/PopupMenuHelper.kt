@@ -15,6 +15,7 @@ class PopupMenuHelper(
     private val anchorView: View,
     private val onItemSelected: (v: View) -> Unit,
     private val menuResId: Int = 0,
+    private val clickableResIds: IntArray = intArrayOf()
 ) {
 
     private lateinit var popupWindow: PopupWindow
@@ -24,8 +25,20 @@ class PopupMenuHelper(
         popupWindow.dismiss()
     }
 
-    fun setPopupWindow(resId: Int) {
+    fun setPopupWindow(pos:Int,resId: Int) {
+        //pos:0 在anchorView下方，1 在anchorView上方
         val popupView = LayoutInflater.from(context).inflate(resId, null)
+
+//        val viewStub = popupView.findViewById<ViewStub>(R.id.menu_stub)
+//        viewStub.layoutResource = resId // 或其他布局
+//        viewStub.inflate()
+        clickableResIds.forEach { resId ->
+            popupView.findViewById<View>(resId)?.setOnClickListener { view ->
+                onItemSelected(view)
+                popupWindow.dismiss()
+            }
+        }
+
         popupView.findViewById<View>(R.id.delArticle)?.setOnClickListener {
             popupWindow.dismiss()
             onItemSelected(it)
@@ -37,6 +50,12 @@ class PopupMenuHelper(
         popupView.findViewById<View>(R.id.delTopic)?.setOnClickListener {
             popupWindow.dismiss()
             onItemSelected(it)
+        }
+
+        if(pos==0){
+            popupView.findViewById<View>(R.id.arrow_bottom)?.visibility = View.GONE
+        }else{
+            popupView.findViewById<View>(R.id.arrow_top)?.visibility = View.GONE
         }
 
         // 3. 创建PopupWindow
@@ -51,33 +70,36 @@ class PopupMenuHelper(
             isOutsideTouchable = true
             setOnDismissListener { this@PopupMenuHelper.isShowing = false }
         }
+
     }
 
     fun show() {
         if (isShowing) return
         // 1. 创建内容视图
         // 确保视图已测量
-        if(menuResId>0){
-            setPopupWindow(menuResId)
-            popupWindow.showAsDropDown(anchorView, 0, 0, Gravity.END)
-            isShowing = true
-            return
-        }
-
+//        if (menuResId > 0) {
+//            setPopupWindow(menuResId)
+//            popupWindow.showAsDropDown(anchorView, 0, 0, Gravity.END)
+//            isShowing = true
+//            return
+//        }
         val anchorLocation = IntArray(2)
         anchorView.getLocationOnScreen(anchorLocation)
         val screenHeight = context.resources.displayMetrics.heightPixels
 
         if (anchorLocation[1] + anchorView.height + 150 > screenHeight) {
-            setPopupWindow(R.layout.menu_popup_top)
-            popupWindow.showAsDropDown(anchorView, 0, -anchorView.height - 150, Gravity.END)
+            setPopupWindow(1,menuResId)
+            anchorView.post { popupWindow.showAsDropDown(anchorView, 0, -anchorView.height - 150, Gravity.END) }
+
         } else {
             // 显示在下方
-            setPopupWindow(R.layout.menu_popup_bottom)
-            popupWindow.showAsDropDown(anchorView, 0, 0, Gravity.END)
+            setPopupWindow(0,menuResId)
+            anchorView.post { popupWindow.showAsDropDown(anchorView, 0, 0, Gravity.END) }
+
         }
 
         isShowing = true
+
     }
 
     private fun calculatePopupPosition(popupHeight: Int): Pair<Int, Int> {

@@ -18,7 +18,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="left|center"
             android:layout_marginLeft="16dp"
-            android:padding="8dp"
+            android:padding="16dp"
             android:src="@drawable/ic_back"
             tools:ignore="RtlHardcoded" />
 

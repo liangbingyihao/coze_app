@@ -84,7 +84,11 @@ public class MainApp extends Application implements Configuration.Provider, Appl
                             () -> {
                                 isInitialized = true;
                             },
-                            error -> { /* 错误处理 */Log.w("Fat",error.getMessage()); }
+                            error -> { /* 错误处理 */
+                                Log.w("Fat", error.getMessage());
+                                //FIXME
+                                isInitialized = true;
+                            }
                     ));
         } catch (Exception e) {
             assert (false);

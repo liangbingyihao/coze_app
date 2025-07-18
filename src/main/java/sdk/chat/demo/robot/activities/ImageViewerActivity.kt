@@ -48,10 +48,12 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        ImmersionBar.with(this).init()
         setContentView(layout)
         dateStr = intent.getStringExtra(EXTRA_INITIAL_DATA)
 //        hideSystemBars() // 启动时立即隐藏
+        ImmersionBar.with(this)
+            .titleBar(findViewById<View>(R.id.title_bar))
+            .init()
         findViewById<View>(R.id.back).setOnClickListener(this)
         findViewById<View>(R.id.btn_download).setOnClickListener(this)
         findViewById<View>(R.id.btn_share_image).setOnClickListener(this)
