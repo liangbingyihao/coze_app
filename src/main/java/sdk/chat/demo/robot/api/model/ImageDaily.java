@@ -15,6 +15,7 @@ public class ImageDaily {
     @SerializedName("background_url")
     private String backgroundUrl;
     private ArrayList<String> explore;
+    private ArrayList<String> prompt;
 
     public ImageDaily(String scripture, String backgroundUrl) {
         this.scripture = scripture;
@@ -85,5 +86,13 @@ public class ImageDaily {
         }
 
         return function;
+    }
+
+    public ArrayList<String> getPrompt() {
+        return prompt;
+    }
+
+    public void setPrompt(ArrayList<String> prompt) {
+        this.prompt = prompt;
     }
 }

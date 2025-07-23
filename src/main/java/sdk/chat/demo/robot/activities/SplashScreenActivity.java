@@ -86,14 +86,14 @@ public class SplashScreenActivity extends AppCompatActivity {
             boolean hasShownGuide = getSharedPreferences("app_prefs", MODE_PRIVATE)
                     .getBoolean("has_shown_guide", false);
             if (hasShownGuide) {
-                new Handler().postDelayed(this::proceedToMain, 1000);
+                new Handler().postDelayed(this::proceedToMain, 500);
             } else {
                 startActivity(new Intent(this, GuideActivity.class));
                 finish();
             }
         } else {
             // 每隔500ms检查一次
-            new Handler().postDelayed(this::checkInitializationStatus, 500);
+            new Handler().postDelayed(this::checkInitializationStatus, 200);
         }
     }
 

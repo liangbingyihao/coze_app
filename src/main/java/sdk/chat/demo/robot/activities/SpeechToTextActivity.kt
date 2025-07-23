@@ -1,18 +1,20 @@
 package sdk.chat.demo.robot.activities
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.View
+import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.edit
-import org.greenrobot.greendao.query.QueryBuilder
-import sdk.chat.core.dao.Message
-import sdk.chat.core.dao.MessageDao
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
+import sdk.chat.demo.robot.activities.MainDrawerActivity
+import sdk.chat.demo.robot.api.JsonCacheManager
+import sdk.chat.demo.robot.handlers.DailyTaskHandler
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.demo.robot.handlers.SpeechToTextHelper
 import sdk.chat.demo.robot.push.UpdateTokenWorker
@@ -20,6 +22,7 @@ import sdk.chat.demo.robot.push.UpdateTokenWorker
 class SpeechToTextActivity  : AppCompatActivity(), View.OnClickListener {
     private lateinit var speechToTextHelper: SpeechToTextHelper
     private lateinit var resultTextView: TextView
+    private lateinit var tvTaskIndex: EditText
 //    private lateinit var startButton: Button
 //    private lateinit var stopButton: Button
 
@@ -28,10 +31,13 @@ class SpeechToTextActivity  : AppCompatActivity(), View.OnClickListener {
         setContentView(R.layout.activity_speech_to_text)
 
         resultTextView = findViewById(R.id.resultTextView)
+        tvTaskIndex = findViewById(R.id.taskIndex)
         findViewById<View>(R.id.updateToken).setOnClickListener(this)
         findViewById<View>(R.id.startButton).setOnClickListener(this)
         findViewById<View>(R.id.stopButton).setOnClickListener(this)
         findViewById<View>(R.id.clearCache).setOnClickListener(this)
+        findViewById<View>(R.id.setTask).setOnClickListener(this)
+        findViewById<View>(R.id.setPrompt).setOnClickListener(this)
 
         // 检查并请求录音权限
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
@@ -94,6 +100,15 @@ class SpeechToTextActivity  : AppCompatActivity(), View.OnClickListener {
                 speechToTextHelper.stopListening()
             }
 
+            R.id.setPrompt -> {
+                startActivity(
+                    Intent(
+                        this@SpeechToTextActivity,
+                        SettingPromptActivity::class.java
+                    )
+                )
+            }
+
             R.id.clearCache -> {
 
                 // 保存已经显示过引导页的状态
@@ -106,6 +121,11 @@ class SpeechToTextActivity  : AppCompatActivity(), View.OnClickListener {
                 if(threadHandler.welcome!=null){
                     ChatSDK.db().delete(threadHandler.welcome)
                 }
+                JsonCacheManager.save(this@SpeechToTextActivity,"gwTaskProcess","")
+            }
+            R.id.setTask -> {
+                var taskIndex: Int = tvTaskIndex.text.toString().toInt()
+                DailyTaskHandler.testTaskDetail(taskIndex)
             }
         }
     }

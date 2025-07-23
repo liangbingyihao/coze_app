@@ -1,0 +1,20 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+
+    <!-- 调整后的圆环 -->
+    <path
+        android:pathData="M50,8 a42,42 0 1,1 0,84 a42,42 0 1,1 0,-84"
+        android:strokeWidth="10"
+        android:strokeColor="#59CF4B40"
+        android:fillColor="#ffCF4B40"/>
+
+    <!-- 对勾（位置同步调整） -->
+    <path
+        android:pathData="M32,50 L47,65 L72,35"
+        android:strokeWidth="6"
+        android:strokeColor="@color/white"
+        android:strokeLineCap="round"/>
+</vector>

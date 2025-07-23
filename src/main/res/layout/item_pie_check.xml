@@ -1,0 +1,23 @@
+<!-- res/layout/layout_pie_text.xml -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!-- 圆饼背景 -->
+    <View
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:background="@drawable/ic_clock_check"
+        android:layout_gravity="center"/>
+
+    <!-- 圆饼背景 -->
+    <View
+        android:id="@+id/bg_selected"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:visibility="gone"
+        android:background="@drawable/pie_bg_dashed"
+        android:layout_gravity="center"/>
+
+</FrameLayout>

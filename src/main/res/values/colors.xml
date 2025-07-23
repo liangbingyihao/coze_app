@@ -15,4 +15,5 @@
     <color name="bg_special">#FFF8F7</color>
     <color name="text_gray">#B1B1B1</color>
     <color name="text_gray2">#919191</color>
+    <color name="button_pink">#FBEBEB</color>
 </resources>

@@ -17,20 +17,44 @@
             android:gravity="center"
             android:orientation="vertical">
 
-            <include layout="@layout/app_bar_default" />
-            <!--            <sdk.chat.demo.robot.ui.CozeChatActionBar-->
-            <!--                android:id="@+id/chatActionBar"-->
-            <!--                android:layout_width="match_parent"-->
-            <!--                android:layout_height="56dp" />-->
+            <!--            <include layout="@layout/app_bar_default" />-->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@android:color/transparent">
+
+                <ImageView
+                    android:id="@+id/menu_home"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="left|center_vertical"
+                    android:layout_marginLeft="20dp"
+                    android:padding="6dp"
+                    android:src="@drawable/icon_home" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="@string/main_title"
+                    android:textColor="@color/item_text_normal"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:id="@+id/menu_task"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right|center_vertical"
+                    android:layout_marginRight="20dp"
+                    android:padding="6dp"
+                    android:src="@mipmap/ic_gw_task" />
+            </FrameLayout>
+
             <FrameLayout
                 android:id="@+id/fragment_container"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
-            <!--            <fragment-->
-            <!--                android:id="@+id/myFragment"-->
-            <!--                android:name="sdk.chat.demo.robot.fragments.GWChatFragment"-->
-            <!--                android:layout_width="match_parent"-->
-            <!--                android:layout_height="match_parent"/>-->
         </LinearLayout>
 
         <LinearLayout
@@ -43,49 +67,49 @@
 
             <include layout="@layout/nav_header" />
 
-<!--            <com.google.android.material.card.MaterialCardView-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="match_parent"-->
-<!--                android:background="#FFFFFF"-->
-<!--                app:cardCornerRadius="16dp"-->
-<!--                app:cardElevation="0dp"-->
-<!--                app:cardPreventCornerOverlap="false"-->
-<!--                app:strokeColor="#6A6A6A">-->
+            <!-- 动态菜单 (RecyclerView) -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/nav_recycler"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp" />
 
-                <!-- 动态菜单 (RecyclerView) -->
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/nav_recycler"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:clipToPadding="false"
-                    android:paddingTop="8dp"
-                    android:paddingBottom="8dp" />
-
-<!--            </com.google.android.material.card.MaterialCardView>-->
 
             <!-- 底部 -->
-            <LinearLayout
-                android:id="@+id/settings"
+
+            <TextView
+                android:id="@+id/debug"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="?attr/colorPrimary"
-                android:orientation="horizontal"
-                android:padding="16dp"
-                android:visibility="gone">
+                android:padding="4dp"
+                android:layout_marginStart="16dp"
+                android:text="debug"
+                android:textColor="@color/item_text_normal" />
+<!--            <LinearLayout-->
+<!--                android:id="@+id/settings"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:background="?attr/colorPrimary"-->
+<!--                android:orientation="horizontal"-->
+<!--                android:padding="16dp"-->
+<!--                android:visibility="gone">-->
 
-                <com.mikepenz.iconics.view.IconicsImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    app:iiv_color="@android:color/white"
-                    app:iiv_icon="faw_user" />
+<!--                <com.mikepenz.iconics.view.IconicsImageView-->
+<!--                    android:layout_width="20dp"-->
+<!--                    android:layout_height="20dp"-->
+<!--                    app:iiv_color="@android:color/white"-->
+<!--                    app:iiv_icon="faw_user" />-->
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:text="切换用户"
-                    android:textColor="@android:color/white" />
-            </LinearLayout>
+<!--                <TextView-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_marginStart="16dp"-->
+<!--                    android:text="切换用户"-->
+<!--                    android:textColor="@android:color/white" />-->
+<!--            </LinearLayout>-->
         </LinearLayout>
 
     </androidx.drawerlayout.widget.DrawerLayout>

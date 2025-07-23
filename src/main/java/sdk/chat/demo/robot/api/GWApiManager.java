@@ -88,6 +88,20 @@ public class GWApiManager {
         return accessToken;
     }
 
+    public static Request buildPostRequest(Map<String, String> params, String url) {
+        String gsonData = new JSONObject(params).toString();
+
+        RequestBody body = RequestBody.create(
+                gsonData,
+                MediaType.parse("application/json; charset=utf-8")
+        );
+
+        return new Request.Builder()
+                .url(url)
+                .post(body)
+                .build();
+    }
+
     public Single<AccountDetails> authenticate(final AccountDetails details) {
         return Single.create((SingleOnSubscribe<AccountDetails>) emitter -> {
             Map<String, String> params = new HashMap<>();
@@ -406,7 +420,6 @@ public class GWApiManager {
 
             Request request = new Request.Builder()
                     .url(URL_MESSAGE)
-//                    .header("Authorization", accessToken)
                     .post(body)
                     .build();
 
@@ -618,10 +631,10 @@ public class GWApiManager {
         });
     }
 
-    public Single<FavoriteList> listMessage(String sessionType,String search, int page, int limit) {
+    public Single<FavoriteList> listMessage(String sessionType, String search, int page, int limit) {
         return Single.create(emitter -> {
 
-            HttpUrl url = Objects.requireNonNull(HttpUrl.parse(URL_MESSAGE+"/filter"))
+            HttpUrl url = Objects.requireNonNull(HttpUrl.parse(URL_MESSAGE + "/filter"))
                     .newBuilder()
                     .addQueryParameter("session_type", sessionType)
                     .addQueryParameter("search", search)

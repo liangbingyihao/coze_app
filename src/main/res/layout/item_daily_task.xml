@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="12dp"
+    android:layout_marginRight="12dp"
+    android:layout_marginBottom="16dp"
+    app:cardBackgroundColor="#F5F5F5"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="0dp"
+    app:cardPreventCornerOverlap="false"
+    app:strokeColor="#29000000">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="20dp"
+        android:paddingRight="10dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp">
+
+        <!-- 第一列 - 上方TextView -->
+        <TextView
+            android:id="@+id/titleText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="第一行文本"
+            android:textColor="@color/item_text_normal"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/actionButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_percent="0.7" />
+
+        <!-- 第一列 - 下方TextView -->
+        <TextView
+            android:id="@+id/subtitleText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="第二行文本"
+            android:textColor="@color/text_gray"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toStartOf="@id/actionButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/titleText"
+            app:layout_constraintWidth_percent="0.7" />
+
+        <!-- 第二列 - 单行TextView -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/actionButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="待开启"
+            android:textColor="@color/item_text_selected"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:backgroundTint="@color/button_pink"
+            app:cornerRadius="13dp"
+            android:stateListAnimator="@null"
+            app:elevation="0dp"
+            app:layout_constraintBottom_toBottomOf="@id/subtitleText"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/titleText"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_percent="0.3" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

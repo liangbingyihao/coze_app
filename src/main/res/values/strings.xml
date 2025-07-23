@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GraceWord</string>
+    <string name="main_title">恩语Grace Word</string>
     <string name="firestream_link"><a href="https://www.google.com/">More Details</a></string>
     <string name="contacts">AI Assistant</string>
     <string name="conversations" formatted="false">Conversations</string>
@@ -39,4 +40,14 @@
     <string name="enter">Enter</string>
     <string name="failed_and_retry">Something went wrong. Please try again later.</string>
     <string name="added_to_timeline">Added to your timeline</string>
+    <string name="task_today">Task Today</string>
+    <string name="task_name_0">每日恩语</string>
+    <string name="task_desc_0">每日一句经文，助你在天父的话语中重新得力！</string>
+    <string name="task_name_1">默想祷告应用</string>
+    <string name="task_desc_1">跟天父保持沟通，在实际生活中活出信仰的智慧！</string>
+    <string name="task_name_2">信仰感悟</string>
+    <string name="task_desc_2">记录信仰生活中的点滴，回顾可见天父的一路恩典</string>
+    <string name="task_action_g">去完成</string>
+    <string name="task_action_d">已完成</string>
+    <string name="task_action_p">待开启</string>
   </resources>

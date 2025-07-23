@@ -21,6 +21,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.OkHttpClient;
 import sdk.chat.demo.MainApp;
+import sdk.chat.demo.robot.api.model.TaskDetail;
 import sdk.chat.demo.robot.api.model.GWConfigs;
 import sdk.chat.demo.robot.api.model.ImageDaily;
 import sdk.chat.demo.robot.api.model.ImageDailyList;
@@ -30,9 +31,9 @@ import sdk.chat.demo.robot.api.model.ImageTagList;
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil;
 
 public class ImageApi {
+    public final static String URL2 = "https://api-test.kolacdn.xyz/api/v1/app/";
     private static ImageTagList imageTagCache;
     private final static Gson gson = new Gson();
-    private final static String URL2 = "https://api-test.kolacdn.xyz/api/v1/app/";
     private final static String URL_IMAGE_TAG = URL2 + "scripture/background";
     private final static String URL_IMAGE_DAILY_GW = URL2 + "scripture/daily";
     private final static String URL_CONFIGS = URL2 + "configs";
@@ -101,7 +102,6 @@ public class ImageApi {
 
             Request request = new Request.Builder()
                     .url(url)
-//                    .header("Authorization", accessToken)
                     .build();
 
 
@@ -131,6 +131,7 @@ public class ImageApi {
             });
         });
     }
+
 
     /**
      * 获取所有 date < endDate 的数据（保持降序）

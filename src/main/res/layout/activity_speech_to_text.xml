@@ -37,4 +37,32 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="清缓存" />
+
+    <Button
+        android:id="@+id/setPrompt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="自定义提示语" />
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/taskIndex"
+            android:layout_width="170dp"
+            android:layout_height="80dp"
+            android:inputType="number"
+            android:digits="0123456789"
+            android:hint="(0-7)"/>
+
+        <Button
+            android:id="@+id/setTask"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:text="已完成打卡次数(0-7)" />
+    </LinearLayout>
 </LinearLayout>

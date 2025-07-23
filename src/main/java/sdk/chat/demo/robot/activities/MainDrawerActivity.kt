@@ -24,7 +24,6 @@ import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
-import sdk.chat.demo.robot.activities.ArticleListActivity
 import sdk.chat.demo.robot.adpter.SessionAdapter
 import sdk.chat.demo.robot.adpter.HistoryItem
 import sdk.chat.demo.robot.dialog.DialogEditSingle
@@ -75,7 +74,9 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
         findViewById<View>(R.id.menu_favorites).setOnClickListener(this)
         findViewById<View>(R.id.menu_gw_daily).setOnClickListener(this)
         findViewById<View>(R.id.menu_search).setOnClickListener(this)
-        findViewById<View>(R.id.settings).setOnClickListener(this)
+        findViewById<View>(R.id.debug).setOnClickListener(this)
+        findViewById<View>(R.id.menu_home).setOnClickListener(this)
+        findViewById<View>(R.id.menu_task).setOnClickListener(this)
 
 //        KeyboardDrawerHelper.setup(drawerLayout)
         drawerLayout.addDrawerListener(object : DrawerLayout.DrawerListener {
@@ -108,23 +109,6 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, GWChatFragment(), chatTag).commit()
 
-
-        // Handle Toolbar
-        setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setHomeButtonEnabled(true)
-
-//        supportActionBar!!.setHomeAsUpIndicator(
-//            ChatSDKUI.icons().get(
-//                this,
-//                ChatSDKUI.icons().drawer,
-//                ChatSDKUI.icons().actionBarIconColor
-//            )
-//        )
-        supportActionBar!!.setHomeAsUpIndicator(
-            R.drawable.icon_home
-        )
-        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
         dm.add(
             ChatSDK.events().sourceOnMain()
@@ -347,19 +331,12 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
             }
 
             R.id.action_share -> {
-//                val intent = Intent(Intent.ACTION_PICK)
-//                intent.setType("image/*")
-//                pickImageLauncher!!.launch(intent)
-//                UpdateTokenWorker.forceUpdateToken(this@MainDrawerActivity)
-                // 显示对话框
-//                val dialog = DialogEditSingle(this) { inputText ->
-//                    // 处理发送逻辑
-//                    Toast.makeText(this, "发送内容: $inputText", Toast.LENGTH_SHORT).show()
-//                }
-//                dialog.show()
-                if (!dialogEditSingle.isShowing) {
-                    dialogEditSingle.show()
-                }
+                startActivity(
+                    Intent(
+                        this@MainDrawerActivity,
+                        TaskActivity::class.java
+                    )
+                )
                 true
             }
 
@@ -465,23 +442,13 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
 
 
     override fun onClick(v: View?) {
-        toggleDrawer()
+        if(v?.id!=R.id.menu_task){
+            toggleDrawer()
+        }
         when (v?.id) {
-//            R.id.btn_new_chat -> {
-//                dm.add(
-//                    threadHandler.newAndListSessions()
-//                        .observeOn(RX.main())
-//                        .subscribe(Consumer { sessions: List<Thread>? ->
-//                            if (sessions != null) {
-//                                val sessionMenus: ArrayList<HistoryItem> = toMenuItems(sessions)
-//                                sessionAdapter.updateAll(sessionMenus)
-//                                setCurrentSession(sessionAdapter.getSelectItem())
-//                            } else {
-//                                throw IllegalArgumentException("创建失败")
-//                            }
-//                        }, this@MainDrawerActivity)
-//                )
-//            }
+            R.id.menu_home -> {
+                true
+            }
 
             R.id.menu_search -> {
                 startActivity(
@@ -510,11 +477,24 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
                 )
             }
 
-            R.id.settings -> {
-//                ChatSDK.ui().startProfileActivity(this@MainDrawerActivity, ChatSDK.currentUserID())
-                ChatSDK.auth().logout().observeOn(RX.main()).doOnComplete(Action {
-                    ChatSDK.ui().startSplashScreenActivity(this@MainDrawerActivity)
-                }).subscribe(this@MainDrawerActivity)
+            R.id.debug -> {
+                startActivity(
+                    Intent(
+                        this@MainDrawerActivity,
+                        SpeechToTextActivity::class.java
+                    )
+                )
+            }
+
+
+            R.id.menu_task -> {
+                startActivity(
+                    Intent(
+                        this@MainDrawerActivity,
+                        TaskActivity::class.java
+                    )
+                )
+                true
             }
         }
     }

@@ -14,7 +14,7 @@
 
     <item
         android:id="@+id/action_share"
-        android:title="更新推送token"
+        android:title="打卡"
         app:showAsAction="never"/>
 
 </menu>

@@ -41,7 +41,9 @@
         <meta-data
             android:name="notch.config"
             android:value="portrait|landscape" />
-
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@mipmap/ic_notification" />
         <!-- 声明语音识别服务 -->
         <meta-data
             android:name="android.speech.RecognitionService"
@@ -73,6 +75,7 @@
         <activity android:name="sdk.chat.demo.robot.activities.FavoriteListActivity" />
         <activity android:name="sdk.chat.demo.robot.activities.ImageViewerActivity" />
         <activity android:name="sdk.chat.demo.robot.activities.SearchActivity" />
+        <activity android:name="sdk.chat.demo.robot.activities.TaskActivity" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
