@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_marginLeft="26dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginRight="26dp"
+    android:layout_marginBottom="8dp">
+
+
+    <include layout="@layout/item_feed_explore" />
+
+    <androidx.core.widget.ContentLoadingProgressBar
+        android:id="@+id/pb_progress"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="86dp"
+        android:layout_gravity="center_horizontal" />
+</LinearLayout>

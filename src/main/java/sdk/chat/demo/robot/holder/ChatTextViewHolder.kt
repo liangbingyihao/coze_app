@@ -3,9 +3,6 @@ package sdk.chat.demo.robot.holder
 //import sdk.chat.ui.R
 import android.graphics.drawable.Drawable
 import android.text.util.Linkify
-import android.view.ActionMode
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -22,7 +19,6 @@ import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessagesListAdapter
 import com.stfalcon.chatkit.messages.MessagesListStyle
 import io.noties.markwon.Markwon
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.functions.Consumer
 import io.reactivex.functions.Predicate
 import sdk.chat.core.dao.Keys
@@ -37,12 +33,10 @@ import sdk.chat.demo.robot.extensions.StateStorage
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.ui.chat.model.MessageHolder
 import sdk.chat.ui.module.UIModule
-import sdk.chat.ui.utils.ToastHelper
 import sdk.chat.ui.views.ProgressView
 import sdk.guru.common.DisposableMap
 import sdk.guru.common.RX
 import java.text.DateFormat
-import java.util.Random
 
 open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
     MessageHolders.BaseMessageViewHolder<T>(itemView, null),
@@ -90,14 +84,11 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
     open var imageMenu: View? = itemView.findViewById(R.id.image_menu)
     open var bible: TextView? = itemView.findViewById(R.id.bible)
 
-    //    open var explore1: View? = itemView.findViewById(R.id.explore1)
-//    open var explore2: View? = itemView.findViewById(R.id.explore2)
-//    open var explore3: View? = itemView.findViewById(R.id.explore3)
-    val exploreView: Map<String, TextView> = mapOf(
-        "explore0" to itemView.findViewById<TextView>(R.id.explore1),
-        "explore1" to itemView.findViewById<TextView>(R.id.explore2),
-        "explore2" to itemView.findViewById<TextView>(R.id.explore3)
-    )
+//    val exploreView: Map<String, TextView> = mapOf(
+//        "explore0" to itemView.findViewById<TextView>(R.id.explore1),
+//        "explore1" to itemView.findViewById<TextView>(R.id.explore2),
+//        "explore2" to itemView.findViewById<TextView>(R.id.explore3)
+//    )
     open var imageLikeAi: ImageView? = itemView.findViewById(R.id.btn_like_ai)
     open var imageLikeContent: ImageView? = itemView.findViewById(R.id.btn_like_user_text)
 
@@ -168,52 +159,52 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
             btnPlay?.setImageResource(R.mipmap.ic_play_black);
         }
         var aiFeedback: MessageDetail? = (t as? TextHolder)?.getAiFeedback();
-        var i = 0
-        var aiExplore = threadHandler.aiExplore
-        while (i < 3) {
-            var v: TextView = exploreView.getValue("explore$i")
-            if (aiExplore != null && t.message.id.equals(aiExplore.message.id) && i < aiExplore.itemList.size) {
-                var data = aiExplore.itemList[i]
-                v.visibility = View.VISIBLE
-                v.text = data.text
-                if (data.action == GWThreadHandler.action_bible_pic) {
-                    var bible = aiFeedback?.feedback?.bible ?: ""
-                    if (bible.isEmpty()) {
-                        v.visibility = View.GONE
-                        continue
-                    }
-//                    bible = aiFeedback?.feedbackText ?:""
-                    v.setOnClickListener { view ->
-                        // 可以使用view参数
-                        if (aiFeedback != null && !bible.isEmpty()) {
-                            view as TextView
-                            threadHandler.sendExploreMessage(
-                                view.text.toString().trim(),
-                                t.message,
-                                data.action,
-                                "${aiFeedback.feedback.tag}|${bible}"
-                            ).subscribe();
-                        } else {
-                            Toast.makeText(v.context, "没有经文...", Toast.LENGTH_SHORT)
-                                .show()
-                        }
-                    }
-                } else {
-                    v.setOnClickListener { view ->
-                        view as TextView // 安全转换
-                        threadHandler.sendExploreMessage(
-                            view.text.toString().trim(),
-                            t.message,
-                            data.action,
-                            data.params
-                        ).subscribe();
-                    }
-                }
-            } else {
-                v.visibility = View.GONE
-            }
-            ++i
-        }
+//        var i = 0
+//        var aiExplore = threadHandler.aiExplore
+//        while (i < 3) {
+//            var v: TextView = exploreView.getValue("explore$i")
+//            if (aiExplore != null && t.message.id.equals(aiExplore.message.id) && i < aiExplore.itemList.size) {
+//                var data = aiExplore.itemList[i]
+//                v.visibility = View.VISIBLE
+//                v.text = data.text
+//                if (data.action == GWThreadHandler.action_bible_pic) {
+//                    var bible = aiFeedback?.feedback?.bible ?: ""
+//                    if (bible.isEmpty()) {
+//                        v.visibility = View.GONE
+//                        continue
+//                    }
+////                    bible = aiFeedback?.feedbackText ?:""
+//                    v.setOnClickListener { view ->
+//                        // 可以使用view参数
+//                        if (aiFeedback != null && !bible.isEmpty()) {
+//                            view as TextView
+//                            threadHandler.sendExploreMessage(
+//                                view.text.toString().trim(),
+//                                t.message,
+//                                data.action,
+//                                "${aiFeedback.feedback.tag}|${bible}"
+//                            ).subscribe();
+//                        } else {
+//                            Toast.makeText(v.context, "没有经文...", Toast.LENGTH_SHORT)
+//                                .show()
+//                        }
+//                    }
+//                } else {
+//                    v.setOnClickListener { view ->
+//                        view as TextView // 安全转换
+//                        threadHandler.sendExploreMessage(
+//                            view.text.toString().trim(),
+//                            t.message,
+//                            data.action,
+//                            data.params
+//                        ).subscribe();
+//                    }
+//                }
+//            } else {
+//                v.visibility = View.GONE
+//            }
+//            ++i
+//        }
 
 //        t.message.metaValuesAsMap
         var feedbackText = aiFeedback?.feedbackText ?: t.message.stringForKey("feedback")
@@ -235,16 +226,21 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
                 feedbackMenu?.visibility = View.VISIBLE
             }
             //FIXME
-            if (aiFeedback?.status == 1) {
-                feedbackHint?.visibility = View.VISIBLE
-                val hints = ImageApi.getGwConfigs()?.configs?.generatingHint
-                feedbackHint?.text = if (!hints.isNullOrEmpty()) {
-                    hints.random()
-                } else {
-                    "种子正在发芽，新信息马上生长..." // 默认值
-                }
-            } else {
+            if (aiFeedback?.status == 2) {
                 feedbackHint?.visibility = View.GONE
+            } else {
+                feedbackHint?.visibility = View.VISIBLE
+                if(t.message.id==threadHandler.pendingMsgId()){
+                    feedbackHint?.setText(R.string.loading);
+                }else{
+                    feedbackHint?.setText(R.string.msg_failed);
+                }
+//                val hints = ImageApi.getGwConfigs()?.configs?.generatingHint
+//                feedbackHint?.text = if (!hints.isNullOrEmpty()) {
+//                    hints.random()
+//                } else {
+//                    "种子正在发芽，新信息马上生长..." // 默认值
+//                }
             }
             if (t.message.text.isEmpty()) {
                 contentMenu?.visibility = View.GONE

@@ -45,6 +45,7 @@ import sdk.chat.core.types.MessageSendStatus;
 import sdk.chat.core.types.MessageType;
 import sdk.chat.demo.MainApp;
 import sdk.chat.demo.pre.BuildConfig;
+import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.adpter.data.AIExplore;
 import sdk.chat.demo.robot.api.GWApiManager;
 import sdk.chat.demo.robot.api.ImageApi;
@@ -80,6 +81,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
     public final static int action_daily_gw = 2;
     public final static int action_direct_msg = 3;
     public final static int action_daily_pray = 4;
+    public final static int action_input_prompt = 5;
 
     public AIExplore getAiExplore() {
         return aiExplore;
@@ -313,6 +315,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(tmp);
                 if (aiFeedback != null && aiFeedback.getFeedback() != null) {
                     aiExplore = AIExplore.loads(tmp, aiFeedback.getFeedback().getFunction());
+                    Log.d("sending","aiExplore1="+aiExplore.getMessage().getId());
                 }
                 ++i;
             }
@@ -343,6 +346,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 if (newAiExplore != null) {
                     Message oldMsg = aiExplore != null ? aiExplore.getMessage() : null;
                     aiExplore = newAiExplore;
+                    Log.d("sending","aiExplore2="+aiExplore.getMessage().getId());
                     if (oldMsg != null) {
                         ChatSDK.events().source().accept(NetworkEvent.messageUpdated(oldMsg));
                     }
@@ -434,9 +438,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
             ChatSDK.db().update(message, false);
             ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
             return Single.just(message);
-        }).onErrorResumeNext(throwable -> {
-            return Single.error(throwable);
-        }).ignoreElement();
+        }).onErrorResumeNext(Single::error).ignoreElement();
     }
 
     private void inheritExplore(Message message) {
@@ -499,10 +501,12 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         }
                     }
                     return Single.just(message);
-                }).onErrorResumeNext(throwable -> {
-                    return Single.error(throwable);
-                }).ignoreElement();
+                }).onErrorResumeNext(Single::error).ignoreElement();
             }
+        }
+
+        if (pendingMsgId != null && pendingMsgId > 0) {
+            return Completable.error(new Exception(MainApp.getContext().getString(R.string.sending)));
         }
 
         String prompt = null;
@@ -517,21 +521,28 @@ public class GWThreadHandler extends AbstractThreadHandler {
             ).getString(k, null);
         }
 
+        ChatSDK.events().source().accept(NetworkEvent.messageSendStatusChanged(message));
+        pendingMsgId = message.getId();
         return GWApiManager.shared().askRobot(message, prompt)
                 .subscribeOn(RX.io()).flatMap(data -> {
-                    message.setEntityID(data.get("id").getAsString());
+                    String entityId = data.get("id").getAsString();
+                    message.setEntityID(entityId);
                     ChatSDK.db().update(message);
-                    startPolling(data.get("id").getAsString());
+                    startPolling(message.getId(), entityId);
 //                    message.setMessageStatus(MessageSendStatus.Uploading,true);
 //                    ChatSDK.events().source().accept(NetworkEvent.messageProgressUpdated(message, new Progress(10,100)));
                     pushForMessage(message);
 //                    ChatSDK.events().source().accept(NetworkEvent.threadMessagesUpdated(message.getThread()));
 //                    message.setMessageStatus(MessageSendStatus.Uploading,true);
 //                    ChatSDK.events().source().accept(NetworkEvent.messageProgressUpdated(message, new Progress(10,100)));
+                    ChatSDK.events().source().accept(NetworkEvent.messageSendStatusChanged(message));
                     return Single.just(message);
-                }).onErrorResumeNext(throwable -> {
-                    return Single.error(throwable);
-                }).ignoreElement();
+                })
+                .doOnError(throwable -> {
+                    pendingMsgId = null;
+                    ChatSDK.events().source().accept(NetworkEvent.messageSendStatusChanged(message));
+                }).onErrorResumeNext(Single::error)
+                .ignoreElement();
 
     }
 
@@ -677,7 +688,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
         // 其他错误传递到UI层
         return GWApiManager.shared().renew(message.getEntityID(), prompt)
                 .subscribeOn(RX.io()).flatMap(data -> {
-                    startPolling(message.getEntityID());
+                    startPolling(message.getId(), message.getEntityID());
                     return Single.just(data);
                 }).onErrorResumeNext(Single::error);
     }
@@ -1097,6 +1108,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                     if (newAIExplore != null) {
                         Message oldMsg = aiExplore != null ? aiExplore.getMessage() : null;
                         aiExplore = newAIExplore;
+                        Log.d("sending","aiExplore3="+aiExplore.getMessage().getId());
                         if (oldMsg != null) {
                             ChatSDK.events().source().accept(NetworkEvent.messageUpdated(oldMsg));
                         }
@@ -1125,32 +1137,34 @@ public class GWThreadHandler extends AbstractThreadHandler {
 
     private final CompositeDisposable disposables = new CompositeDisposable();
     private final AtomicInteger retryCount = new AtomicInteger(0);    // 配置参数
-    private volatile boolean isPolling = false;
+    private volatile Long pendingMsgId = null;
     private static final long INITIAL_DELAY = 0; // 立即开始
     private static final long POLL_INTERVAL = 2; // 5秒间隔
     private static final long REQUEST_TIMEOUT = 15; // 单个请求10秒超时
     private static final long OPERATION_TIMEOUT = 2; // 整体操作2分钟超时
     private static final int MAX_RETRIES = 3; // 最大重试次数
 
-    public synchronized boolean isPolling() {
-        return isPolling;
+    public synchronized Long pendingMsgId() {
+        return pendingMsgId;
     }
 
     public synchronized void stopPolling() {
         disposables.clear();
-        isPolling = false;
+        pendingMsgId = null;
     }
 
-    public synchronized void startPolling(String contextId) {
-        if (isPolling) {
-            Logger.warn("轮询已在运行中");
-            return;
+    public synchronized void startPolling(Long localId, String contextId) throws Exception {
+        if (pendingMsgId != null && !pendingMsgId.equals(localId)) {
+            disposables.clear();
+            throw new Exception(MainApp.getContext().getString(R.string.sending));
         }
 
-        isPolling = true;
+        Log.d("sending", "startPolling:" + localId.toString());
+        pendingMsgId = localId;
         Disposable disposable = Observable.interval(INITIAL_DELAY, POLL_INTERVAL, TimeUnit.SECONDS)
                 .doOnDispose(() -> {
-                            isPolling = false;
+                            Log.d("sending", "doOnDispose:" + localId.toString());
+                            pendingMsgId = null;
                         }
                 )
                 .flatMap(tick -> {
@@ -1174,10 +1188,10 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 .timeout(OPERATION_TIMEOUT, TimeUnit.MINUTES)
                 .observeOn(RX.main())
                 .subscribe(() -> {
-                            Logger.warn("success...");
+                            Log.d("sending", "success:" + localId.toString());
                         },
                         error -> {
-                            Logger.warn("failed..." + error.getMessage());
+                            Log.d("sending", "error:" + localId.toString()+","+error.getMessage());
 
                         });
 

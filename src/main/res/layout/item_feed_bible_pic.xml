@@ -85,7 +85,7 @@
 
     </com.google.android.flexbox.FlexboxLayout>
 
-    <include layout="@layout/item_feed_explore"/>
+<!--    <include layout="@layout/item_feed_explore"/>-->
 
 
 </LinearLayout>

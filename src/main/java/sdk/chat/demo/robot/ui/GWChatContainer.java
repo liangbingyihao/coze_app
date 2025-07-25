@@ -431,6 +431,9 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
     protected void addMessageHoldersToEnd(List<MessageHolder> holders, boolean notify) {
         // Add to current holders at zero index
         // Newest first
+        if(holders==null||holders.size()==0){
+            return;
+        }
         List<MessageHolder> toAdd = new ArrayList<>();
         for (MessageHolder holder : holders) {
             if (!messageHolders.contains(holder)) {
@@ -447,19 +450,8 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
         int position = layoutManager.findLastVisibleItemPosition();
 
         messagesListAdapter.addHistoryMessages(toAdd,  () -> {
-////            messagesList.smoothScrollToPosition(olderSize+1);
-//            if (messagesList == null || messagesList.getLayoutManager() == null) {
-//                return Unit.INSTANCE;
-//            }
-//            // 检查LayoutManager类型
-//            if (!(messagesList.getLayoutManager() instanceof LinearLayoutManager)) {
-//                throw new IllegalArgumentException("Only LinearLayoutManager is supported");
-//            }
-//            LinearLayoutManager layoutManager = (LinearLayoutManager) messagesList.getLayoutManager();
-            // 执行滚动
-//            View view = layoutManager.findViewByPosition(position);
-//            int offset = (view != null) ? view.getBottom() : 0;
-            layoutManager.scrollToPositionWithOffset(position + 1, 600);
+            messagesList.setItemAnimator(null);
+            layoutManager.scrollToPositionWithOffset(position+1, 700);
 
             return Unit.INSTANCE;
         });

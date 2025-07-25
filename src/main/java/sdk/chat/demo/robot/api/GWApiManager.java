@@ -32,6 +32,8 @@ import sdk.chat.core.dao.Message;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.types.AccountDetails;
 import sdk.chat.core.types.MessageSendStatus;
+import sdk.chat.demo.MainApp;
+import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.api.model.FavoriteList;
 import sdk.chat.demo.robot.api.model.SystemConf;
 import sdk.chat.demo.robot.push.UpdateTokenWorker;
@@ -155,9 +157,9 @@ public class GWApiManager {
 
     public Single<JsonObject> saveSession(String robotId) {
         return Single.create(emitter -> {
-
             Map<String, String> params = new HashMap<>();
             params.put("robot_id", robotId);
+
             Type typeObject = new TypeToken<HashMap>() {
             }.getType();
             String gsonData = gson.toJson(params, typeObject);
@@ -168,7 +170,6 @@ public class GWApiManager {
 
             Request request = new Request.Builder()
                     .url(URL_SESSION)
-//                    .header("Authorization", accessToken)
                     .post(body)
                     .build();
 
@@ -205,16 +206,17 @@ public class GWApiManager {
         return Single.create(emitter -> {
             Map<String, String> params = new HashMap<String, String>();
             params.put("summary", summary);
-            RequestBody body = RequestBody.create(
-                    new JSONObject(params).toString(),
-                    MediaType.parse("application/json; charset=utf-8")
-            );
-
-            Request request = new Request.Builder()
-                    .url(URL_MESSAGE + "/" + msgId)
-//                    .header("Authorization", accessToken)
-                    .post(body)
-                    .build();
+//            RequestBody body = RequestBody.create(
+//                    new JSONObject(params).toString(),
+//                    MediaType.parse("application/json; charset=utf-8")
+//            );
+//
+//            Request request = new Request.Builder()
+//                    .url(URL_MESSAGE + "/" + msgId)
+////                    .header("Authorization", accessToken)
+//                    .post(body)
+//                    .build();
+            Request request = buildPostRequest(params, URL_MESSAGE + "/" + msgId);
 
             client.newCall(request).enqueue(new Callback() {
                 @Override
@@ -427,7 +429,7 @@ public class GWApiManager {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException error) {
                     Logger.warn("Message: " + message.getText() + "请求失败: " + error.getMessage());
-                    emitter.onError(new Exception("send msg error"));
+                    emitter.onError(new Exception(error.getMessage()));
                 }
 
                 @Override

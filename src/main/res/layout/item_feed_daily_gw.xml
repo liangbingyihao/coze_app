@@ -122,61 +122,61 @@
     </com.google.android.flexbox.FlexboxLayout>
 
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/explore1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:gravity="start"
-        android:lineSpacingExtra="8dp"
-        android:padding="8dp"
-        android:stateListAnimator="@null"
-        android:textColor="@color/item_text_normal"
-        android:textSize="17sp"
-        app:backgroundTint="@color/white"
-        app:cornerRadius="10dp"
-        app:elevation="0dp"
-        app:layout_alignSelf="flex_start"
-        app:rippleColor="#20000000"
-        app:strokeColor="#E7E7E7"
-        app:strokeWidth="1dp" />
+<!--    <com.google.android.material.button.MaterialButton-->
+<!--        android:id="@+id/explore1"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="16dp"-->
+<!--        android:gravity="start"-->
+<!--        android:lineSpacingExtra="8dp"-->
+<!--        android:padding="8dp"-->
+<!--        android:stateListAnimator="@null"-->
+<!--        android:textColor="@color/item_text_normal"-->
+<!--        android:textSize="17sp"-->
+<!--        app:backgroundTint="@color/white"-->
+<!--        app:cornerRadius="10dp"-->
+<!--        app:elevation="0dp"-->
+<!--        app:layout_alignSelf="flex_start"-->
+<!--        app:rippleColor="#20000000"-->
+<!--        app:strokeColor="#E7E7E7"-->
+<!--        app:strokeWidth="1dp" />-->
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/explore2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:gravity="start"
-        android:lineSpacingExtra="8dp"
-        android:padding="8dp"
-        android:stateListAnimator="@null"
-        android:textColor="@color/item_text_normal"
-        android:textSize="17sp"
-        app:backgroundTint="@color/white"
-        app:cornerRadius="10dp"
-        app:elevation="0dp"
-        app:layout_alignSelf="flex_start"
-        app:rippleColor="#20000000"
-        app:strokeColor="#E7E7E7"
-        app:strokeWidth="1dp" />
+<!--    <com.google.android.material.button.MaterialButton-->
+<!--        android:id="@+id/explore2"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="8dp"-->
+<!--        android:gravity="start"-->
+<!--        android:lineSpacingExtra="8dp"-->
+<!--        android:padding="8dp"-->
+<!--        android:stateListAnimator="@null"-->
+<!--        android:textColor="@color/item_text_normal"-->
+<!--        android:textSize="17sp"-->
+<!--        app:backgroundTint="@color/white"-->
+<!--        app:cornerRadius="10dp"-->
+<!--        app:elevation="0dp"-->
+<!--        app:layout_alignSelf="flex_start"-->
+<!--        app:rippleColor="#20000000"-->
+<!--        app:strokeColor="#E7E7E7"-->
+<!--        app:strokeWidth="1dp" />-->
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/explore3"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:gravity="start"
-        android:lineSpacingExtra="8dp"
-        android:padding="8dp"
-        android:stateListAnimator="@null"
-        android:textColor="@color/item_text_normal"
-        android:textSize="17sp"
-        app:backgroundTint="@color/white"
-        app:cornerRadius="10dp"
-        app:elevation="0dp"
-        app:layout_alignSelf="flex_start"
-        app:rippleColor="#20000000"
-        app:strokeColor="#E7E7E7"
-        app:strokeWidth="1dp" />
+<!--    <com.google.android.material.button.MaterialButton-->
+<!--        android:id="@+id/explore3"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginTop="8dp"-->
+<!--        android:gravity="start"-->
+<!--        android:lineSpacingExtra="8dp"-->
+<!--        android:padding="8dp"-->
+<!--        android:stateListAnimator="@null"-->
+<!--        android:textColor="@color/item_text_normal"-->
+<!--        android:textSize="17sp"-->
+<!--        app:backgroundTint="@color/white"-->
+<!--        app:cornerRadius="10dp"-->
+<!--        app:elevation="0dp"-->
+<!--        app:layout_alignSelf="flex_start"-->
+<!--        app:rippleColor="#20000000"-->
+<!--        app:strokeColor="#E7E7E7"-->
+<!--        app:strokeWidth="1dp" />-->
 
 </LinearLayout>

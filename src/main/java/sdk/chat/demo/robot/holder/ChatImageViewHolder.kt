@@ -146,34 +146,34 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
 
 
         val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
-        var i = 0
-        var aiExplore = threadHandler.aiExplore
-        while (i < 3) {
-            var v: TextView = exploreView.getValue("explore$i")
-            if (aiExplore != null && t.message.id.equals(aiExplore.message.id) && i < aiExplore.itemList.size) {
-                var data = aiExplore.itemList[i]
-                if (data.action == 1) {
-                    //图片下方没有再生成图片了...
-                    v.visibility = View.GONE
-                } else {
-                    v.visibility = View.VISIBLE
-                    v.text = data.text
-                    v.setOnClickListener { view ->
-                        // 可以使用view参数
-                        view as TextView // 安全转换
-                        threadHandler.sendExploreMessage(
-                            view.text.toString().trim(),
-                            t.message,
-                            data.action,
-                            data.params
-                        ).subscribe();
-                    }
-                }
-            } else {
-                v.visibility = View.GONE
-            }
-            ++i
-        }
+//        var i = 0
+//        var aiExplore = threadHandler.aiExplore
+//        while (i < 3) {
+//            var v: TextView = exploreView.getValue("explore$i")
+//            if (aiExplore != null && t.message.id.equals(aiExplore.message.id) && i < aiExplore.itemList.size) {
+//                var data = aiExplore.itemList[i]
+//                if (data.action == GWThreadHandler.action_bible_pic) {
+//                    //图片下方没有再生成图片了...
+//                    v.visibility = View.GONE
+//                } else {
+//                    v.visibility = View.VISIBLE
+//                    v.text = data.text
+//                    v.setOnClickListener { view ->
+//                        // 可以使用view参数
+//                        view as TextView // 安全转换
+//                        threadHandler.sendExploreMessage(
+//                            view.text.toString().trim(),
+//                            t.message,
+//                            data.action,
+//                            data.params
+//                        ).subscribe();
+//                    }
+//                }
+//            } else {
+//                v.visibility = View.GONE
+//            }
+//            ++i
+//        }
 
 //        t.message.metaValuesAsMap
         feedback?.let {

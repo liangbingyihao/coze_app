@@ -92,6 +92,7 @@
         android:layout_height="wrap_content"
         android:textColor="@color/text_gray2"
         android:textSize="17sp"
+        android:text="@string/loading"
         android:textIsSelectable="true"
         android:lineSpacingExtra="8dp"
         android:lineSpacingMultiplier="1"

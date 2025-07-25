@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Debug;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -165,7 +166,6 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
     @Override
     public View onCreateView(@io.reactivex.annotations.NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = super.onCreateView(inflater, container, savedInstanceState);
-
         restoreState(savedInstanceState);
 
         initViews();
@@ -191,6 +191,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                 }
             }
         });
+
 
         return rootView;
     }
@@ -289,6 +290,35 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
         chatView.setDelegate(this);
         chatView.initViews();
 
+
+
+
+
+
+        View.OnTouchListener keyboardDismissTouchListener = new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    Log.d("GW_ACTION_DOWN","GW_ACTION_DOWN");
+                    View currentFocus = getActivity().getCurrentFocus();
+                    if (currentFocus instanceof EditText) {
+                        Rect rect = new Rect();
+                        currentFocus.getGlobalVisibleRect(rect);
+                        if (!rect.contains((int)event.getRawX(), (int)event.getRawY())) {
+                            currentFocus.clearFocus();
+                            hideKeyboard();
+                        }
+                    }
+                }
+                return false;
+            }
+        };
+        chatView.findViewById(R.id.recyclerview).setOnTouchListener(keyboardDismissTouchListener);
+//        chatView.findViewById(R.id.root).setOnTouchListener(keyboardDismissTouchListener);
+
+
+
+
         GWClickListener.registerListener((BaseActivity)getActivity(),chatView.getMessagesListAdapter());
 //
 //        if (UIModule.config().messageSelectionEnabled) {
@@ -362,6 +392,19 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                 .filter(NetworkEvent.filterRoleUpdated(thread, ChatSDK.currentUser()))
                 .subscribe(networkEvent -> {
                     showOrHideTextInputView();
+                }));
+
+        dm.add(ChatSDK.events().sourceOnMain()
+                .filter(NetworkEvent.filterType(EventType.MessageInputPrompt))
+                .subscribe(networkEvent -> {
+                    showTextInput();
+                    showKeyboard();
+                    EditText editText = input.getInputEditText();
+                    editText.requestFocus();
+                    editText.setText(networkEvent.getText());
+                    editText.post(() -> {
+                        editText.setSelection(editText.getText().length());
+                    });
                 }));
 
         if (chatView != null) {

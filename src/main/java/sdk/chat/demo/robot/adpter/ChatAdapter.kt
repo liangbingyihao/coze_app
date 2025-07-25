@@ -1,8 +1,6 @@
 package sdk.chat.demo.robot.adpter
 
 import android.annotation.SuppressLint
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.util.SparseArray
 import android.view.LayoutInflater
@@ -19,6 +17,7 @@ import org.pmw.tinylog.Logger
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.holder.ChatImageViewHolder
 import sdk.chat.demo.robot.holder.ChatTextViewHolder
+import sdk.chat.demo.robot.holder.ExploreViewHolder
 import sdk.chat.demo.robot.holder.ImageHolder
 import sdk.chat.demo.robot.holder.TextHolder
 import sdk.chat.demo.robot.holder.TimeHolder
@@ -85,7 +84,8 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     }
 
     private val items = mutableListOf<IMessage>()
-//    private var header: Any? = null
+
+    //    private var header: Any? = null
     private var footer: Any? = null
     private val viewClickListenersArray =
         SparseArray<OnMessageViewClickListener>()
@@ -102,7 +102,7 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     var header = false
         set(value) {
             if (field != value) {
-                field = false
+                field = value
 //                Handler(Looper.getMainLooper()).postDelayed({ notifyItemChanged(itemCount-1); },2)
             }
         }
@@ -114,7 +114,7 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         viewClickListenersArray.append(viewId, onMessageViewClickListener)
     }
 
-    fun bindListeners(holder: RecyclerView.ViewHolder, item: IMessage) {
+    fun bindListeners(holder: RecyclerView.ViewHolder, item: IMessage?) {
         for (i in 0..<viewClickListenersArray.size) {
             val key: Int = viewClickListenersArray.keyAt(i)
             val view: View? = holder.itemView.findViewById<View?>(key)
@@ -212,11 +212,11 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        if(TYPE_HEADER==viewType){
+        if (TYPE_HEADER == viewType) {
             Logger.warn("onLoadCreateView:" + viewType)
         }
         return when (viewType) {
-            TYPE_HEADER -> HeaderViewHolder(inflateView(R.layout.item_list_footer, parent))
+            TYPE_HEADER -> ExploreViewHolder(inflateView(R.layout.item_feed_header, parent))
             TYPE_TEXT -> ChatTextViewHolder<TextHolder>(
                 inflateView(
                     R.layout.item_feed_text,
@@ -279,7 +279,10 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             }
 
             is TimeViewHolder -> holder.bind(getItem(position) as TimeHolder)
-            is HeaderViewHolder -> holder.bind(header)
+            is ExploreViewHolder -> {
+                holder.bind(header)
+//                bindListeners(holder, null)
+            }
             is FooterViewHolder -> holder.bind(footer)
         }
     }
@@ -297,7 +300,7 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private fun isHeaderPosition(pos: Int) = hasHeader() && pos == 0
     private fun isFooterPosition(pos: Int) = hasFooter() && pos == itemCount - 1
-    private fun hasHeader() = header == true
+    private fun hasHeader() = true
     private fun hasFooter() = footer != null
     private fun headerOffset() = if (hasHeader()) 1 else 0
     private fun footerOffset() = if (hasFooter()) 1 else 0
@@ -312,18 +315,23 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         }
     }
 
-    inner class HeaderViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        var contentLoadingProgressBar: ContentLoadingProgressBar =
-            itemView.findViewById<ContentLoadingProgressBar?>(
-                R.id.pb_progress
-            )
-
-        fun bind(header: Boolean) {
-            // 根据header类型处理
-            contentLoadingProgressBar.visibility =
-                if (header) View.VISIBLE else View.INVISIBLE
-        }
-    }
+//    inner class ExploreViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+//        var contentLoadingProgressBar: ContentLoadingProgressBar =
+//            itemView.findViewById<ContentLoadingProgressBar?>(
+//                R.id.pb_progress
+//            )
+//        val exploreView: Map<String, TextView> = mapOf(
+//            "explore0" to itemView.findViewById<TextView>(R.id.explore1),
+//            "explore1" to itemView.findViewById<TextView>(R.id.explore2),
+//            "explore2" to itemView.findViewById<TextView>(R.id.explore3)
+//        )
+//
+//        fun bind(header: Boolean) {
+//            // 根据header类型处理
+//            contentLoadingProgressBar.visibility = if (header) View.VISIBLE else View.INVISIBLE
+//            bindListeners(this, null)
+//        }
+//    }
 
     inner class FooterViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         fun bind(item: Any?) {

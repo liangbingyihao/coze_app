@@ -65,7 +65,7 @@ public class MainApp extends Application implements Configuration.Provider, Appl
     public void onCreate() {
         super.onCreate();
         registerActivityLifecycleCallbacks(this);
-        Log.i("FATAL", "MainApp.onCreate");
+        Log.i("MainApp", "MainApp.onCreate");
         context = getApplicationContext();
         scheduleTokenUpdate();
 
@@ -85,12 +85,13 @@ public class MainApp extends Application implements Configuration.Provider, Appl
                                 isInitialized = true;
                             },
                             error -> { /* 错误处理 */
-                                Log.w("Fat", error.getMessage());
+                                Log.w("MainApp", error.getMessage());
                                 //FIXME
                                 isInitialized = true;
                             }
                     ));
         } catch (Exception e) {
+            Log.i("MainApp", "MainApp.onCreate:e:"+e.getMessage());
             assert (false);
         }
         setupEnhancedCrashReporting();

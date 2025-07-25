@@ -73,6 +73,9 @@ public class ImageDaily {
     public List<List<String>> getExploreWithParams() {
 
         List<List<String>> function = new ArrayList<>();
+        for(String f:prompt){
+            function.add(List.of(f, Integer.toString(GWThreadHandler.action_input_prompt), f));
+        }
         for (String f : explore) {
             if (f.indexOf("祷告默想和实际应用") > 0) {
                 function.add(

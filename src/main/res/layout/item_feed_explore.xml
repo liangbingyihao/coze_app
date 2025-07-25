@@ -3,15 +3,19 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/explore1"
         style="@style/ExploreButtonStyle"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp"
+        android:text="1"
+        />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/explore2"
         style="@style/ExploreButtonStyle"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="8dp"
+        android:text="2" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/explore3"
         style="@style/ExploreButtonStyle"
-        android:layout_marginTop="8dp"/>
+        android:layout_marginTop="8dp"
+        android:text="3"/>
 </merge>

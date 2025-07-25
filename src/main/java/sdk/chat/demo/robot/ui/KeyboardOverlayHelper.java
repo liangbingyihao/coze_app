@@ -1,7 +1,10 @@
 package sdk.chat.demo.robot.ui;
 
+import android.graphics.Rect;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentContainerView;
@@ -32,6 +35,7 @@ public class KeyboardOverlayHelper {
 
     protected KeyboardOverlayOptionsFragment optionsKeyboardOverlayFragment;
     protected AbstractKeyboardOverlayFragment currentKeyboardOverlayFragment;
+//    private View.OnTouchListener keyboardDismissTouchListener;
 
     protected List<Listener> listeners = new ArrayList<>();
 
@@ -74,9 +78,28 @@ public class KeyboardOverlayHelper {
 //            setChatViewBottomMargin(bottomMargin);
         });
 
-        keyboardAwareView().heightUpdater = height -> {
-            setKeyboardOverlayHeight(height);
-        };
+        keyboardAwareView().heightUpdater = this::setKeyboardOverlayHeight;
+
+
+//        keyboardDismissTouchListener = new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View v, MotionEvent event) {
+//                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+//                    View currentFocus = cf().getActivity().getCurrentFocus();
+//                    if (currentFocus instanceof EditText) {
+//                        Rect rect = new Rect();
+//                        currentFocus.getGlobalVisibleRect(rect);
+//                        if (!rect.contains((int)event.getRawX(), (int)event.getRawY())) {
+//                            currentFocus.clearFocus();
+//                            cf().hideKeyboard();
+//                        }
+//                    }
+//                }
+//                return false;
+//            }
+//        };
+//        keyboardAwareView().setOnTouchListener(keyboardDismissTouchListener);
+
     }
 
     public boolean setCurrentOverlay(AbstractKeyboardOverlayFragment overlay) {
