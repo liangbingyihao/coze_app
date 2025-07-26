@@ -17,7 +17,9 @@ import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.ImagePagerAdapter
 import sdk.chat.demo.robot.api.ImageApi
+import sdk.chat.demo.robot.api.model.TaskDetail
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil.getDateBefore
+import sdk.chat.demo.robot.handlers.DailyTaskHandler
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.demo.robot.holder.DailyGWHolder
 import sdk.chat.demo.robot.holder.ImageHolder
@@ -32,6 +34,7 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
     private lateinit var adapter: ImagePagerAdapter
     private var dateStr: String? = null
     private lateinit var imageHandler: GWClickListener<ImageHolder>
+    private lateinit var taskDetail: TaskDetail
 
     companion object {
         private const val EXTRA_INITIAL_DATA = "initial_data"
@@ -155,6 +158,24 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
                     this
                 )
         )
+
+        dm.add(
+            DailyTaskHandler.getTaskProgress()
+                .subscribeOn(Schedulers.io()) // Specify database operations on IO thread
+                .observeOn(AndroidSchedulers.mainThread()) // Results return to main thread
+                .subscribe(
+                    { data ->
+                        if (data != null) {
+                            taskDetail = data.taskDetail
+                            taskDetail.completeTaskByIndex(0)
+                            DailyTaskHandler.setTaskDetail(taskDetail)
+                        } else {
+                            throw IllegalArgumentException("获取数据失败")
+                        }
+                    },
+                    this
+                )
+        )
     }
 
     override fun getLayout(): Int {
@@ -193,11 +214,11 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
             R.id.conversations -> {
                 val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
                 var date = adapter.getUrlAt(viewPager.currentItem)?.date
-                threadHandler.aiExplore.contextId
+//                threadHandler.aiExplore.contextId
                 threadHandler.sendExploreMessage(
                     "【每日恩语】-${date}",
                     threadHandler.aiExplore.message,
-                    2,
+                    GWThreadHandler.action_daily_gw,
                     date
                 ).subscribe();
                 finish()

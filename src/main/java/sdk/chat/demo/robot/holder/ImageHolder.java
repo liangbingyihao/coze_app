@@ -33,8 +33,8 @@ public class ImageHolder extends ImageMessageHolder {
         super(message);
         action = message.integerForKey("action");
         if (!message.stringForKey(Keys.ImageUrl).isEmpty()) {
-            imageDaily = new ImageDaily(message.stringForKey("image-text"),message.stringForKey(Keys.ImageUrl));
-        } else if (action == GWThreadHandler.action_daily_gw) {
+            imageDaily = new ImageDaily(message.stringForKey("image-text"), message.stringForKey(Keys.ImageUrl));
+        } else if (action == GWThreadHandler.action_daily_gw || action == GWThreadHandler.action_daily_gw_pray) {
             bibleDate = message.stringForKey("image-date");
         }
     }
@@ -44,7 +44,7 @@ public class ImageHolder extends ImageMessageHolder {
     }
 
     public ImageDaily getImageDaily() {
-        if (imageDaily == null && action == GWThreadHandler.action_daily_gw) {
+        if (imageDaily == null && (action == GWThreadHandler.action_daily_gw || action == GWThreadHandler.action_daily_gw_pray)) {
             imageDaily = ImageApi.getImageDailyListCache(bibleDate);
         }
         return imageDaily;

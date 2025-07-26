@@ -15,11 +15,16 @@ import sdk.chat.ui.chat.model.MessageHolder;
 public class TextHolder extends MessageHolder implements MessageContentType,AIFeedbackType {
     @JvmField
     private MessageDetail aiFeedback;
+    private final int action;
 
     public TextHolder(Message message) {
         super(message);
+        action = message.integerForKey("action");
     }
 
+    public int getAction() {
+        return action;
+    }
     public void setAiFeedback(MessageDetail aiFeedback) {
         this.aiFeedback = aiFeedback;
     }

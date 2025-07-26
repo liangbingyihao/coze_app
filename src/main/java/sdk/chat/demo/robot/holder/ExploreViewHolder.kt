@@ -102,7 +102,7 @@ open class ExploreViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             ChatSDK.events().sourceOnSingle()
                 .filter(
                     NetworkEvent.filterType(
-                        EventType.MessageSendStatusUpdated
+                        EventType.MessageSendStatusUpdated, EventType.MessageUpdated
                     )
                 )
                 .subscribe {

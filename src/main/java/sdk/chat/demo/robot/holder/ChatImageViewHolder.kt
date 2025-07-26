@@ -125,7 +125,6 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
             it.isSelected = isSelected
         }
 
-//        setText(t.message.id.toString()+","+t.message.entityID.toString()+","+t.text, t.enableLinkify())
         setText(t.text, t.enableLinkify())
 
         time?.let {
@@ -146,36 +145,6 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
 
 
         val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
-//        var i = 0
-//        var aiExplore = threadHandler.aiExplore
-//        while (i < 3) {
-//            var v: TextView = exploreView.getValue("explore$i")
-//            if (aiExplore != null && t.message.id.equals(aiExplore.message.id) && i < aiExplore.itemList.size) {
-//                var data = aiExplore.itemList[i]
-//                if (data.action == GWThreadHandler.action_bible_pic) {
-//                    //图片下方没有再生成图片了...
-//                    v.visibility = View.GONE
-//                } else {
-//                    v.visibility = View.VISIBLE
-//                    v.text = data.text
-//                    v.setOnClickListener { view ->
-//                        // 可以使用view参数
-//                        view as TextView // 安全转换
-//                        threadHandler.sendExploreMessage(
-//                            view.text.toString().trim(),
-//                            t.message,
-//                            data.action,
-//                            data.params
-//                        ).subscribe();
-//                    }
-//                }
-//            } else {
-//                v.visibility = View.GONE
-//            }
-//            ++i
-//        }
-
-//        t.message.metaValuesAsMap
         feedback?.let {
             it.text = t.message.stringForKey("feedback");
         }
@@ -436,7 +405,7 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
         var imageDaily: ImageDaily = imageHolder.getImageDaily()
         if (action == GWThreadHandler.action_bible_pic) {
             bible?.text = imageDaily.scripture
-        } else if (action == GWThreadHandler.action_daily_gw) {
+        } else if (action == GWThreadHandler.action_daily_gw||action==GWThreadHandler.action_daily_gw_pray) {
             var imageDaily: ImageDaily? = imageHolder.getImageDaily()
             if (imageDaily != null) {
                 day?.text = if(imageDaily.date!=null) imageDaily.date.substring(8) else ""

@@ -16,7 +16,9 @@ import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.TaskPieAdapter
 import sdk.chat.demo.robot.api.model.TaskDetail
 import sdk.chat.demo.robot.api.model.TaskProgress
+import sdk.chat.demo.robot.extensions.DateLocalizationUtil.formatDayAgo
 import sdk.chat.demo.robot.handlers.DailyTaskHandler
+import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.demo.robot.ui.TaskList
 import sdk.chat.ui.activities.BaseActivity
 
@@ -66,8 +68,22 @@ class TaskActivity : BaseActivity(), View.OnClickListener {
             })
         taskContainer = findViewById<TaskList>(R.id.taskContainer)
         taskContainer.onCellButtonClick = { row ->
-            taskDetail.completeTaskByIndex(row)
-            DailyTaskHandler.setTaskDetail(taskDetail)
+//            taskDetail.completeTaskByIndex(row)
+            if(row==0){
+                ImageViewerActivity.start(this@TaskActivity);
+            }else if(row==1){
+                val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
+                var date = formatDayAgo(0);
+//                threadHandler.aiExplore.contextId
+                threadHandler.sendExploreMessage(
+                    "【每日恩语】-${date}",
+                    threadHandler.aiExplore.message,
+                    GWThreadHandler.action_daily_gw_pray,
+                    date
+                ).subscribe();
+                finish()
+            }
+//            DailyTaskHandler.setTaskDetail(taskDetail)
         }
 
     }

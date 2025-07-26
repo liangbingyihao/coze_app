@@ -82,6 +82,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
     public final static int action_direct_msg = 3;
     public final static int action_daily_pray = 4;
     public final static int action_input_prompt = 5;
+    public final static int action_daily_gw_pray = 6;
 
     public AIExplore getAiExplore() {
         return aiExplore;
@@ -315,7 +316,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(tmp);
                 if (aiFeedback != null && aiFeedback.getFeedback() != null) {
                     aiExplore = AIExplore.loads(tmp, aiFeedback.getFeedback().getFunction());
-                    Log.d("sending","aiExplore1="+aiExplore.getMessage().getId());
+                    Log.d("sending", "aiExplore1=" + aiExplore.getMessage().getId());
                 }
                 ++i;
             }
@@ -346,7 +347,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 if (newAiExplore != null) {
                     Message oldMsg = aiExplore != null ? aiExplore.getMessage() : null;
                     aiExplore = newAiExplore;
-                    Log.d("sending","aiExplore2="+aiExplore.getMessage().getId());
+                    Log.d("sending", "aiExplore2=" + aiExplore.getMessage().getId());
                     if (oldMsg != null) {
                         ChatSDK.events().source().accept(NetworkEvent.messageUpdated(oldMsg));
                     }
@@ -404,19 +405,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
 //    action_daily_pray = 4
             if (action == action_direct_msg) {
                 message.setMetaValue("feedback", params);
-//            } else if (action == action_bible_pic) {
-//                message.setType(MessageType.Image);
-//                String[] parts = params.split("\\|"); // 需要转义 |
-//                String tag, bible;
-//                if (parts.length == 2) {
-//                    tag = parts[0];    // 第一部分是 tag
-//                    bible = parts[1];  // 第二部分是 bible
-//                    String imageUrl = ImageApi.getRandomImageByTag(tag);
-//                    message.setMetaValue(Keys.ImageUrl, imageUrl);
-//                    message.setMetaValue("image-text", bible);
-//                    inheritExplore(message);
-//                }
-            } else if (action == action_daily_gw) {
+            } else if (action == action_daily_gw || action == action_daily_gw_pray) {
                 message.setType(DailyGWRegistration.GWMessageType);
                 message.setMetaValue("image-date", params);
             } else if (action == action_daily_pray && params != null && !params.isEmpty()) {
@@ -474,7 +463,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
         if (action != null) {
             if (action == action_direct_msg) {
                 return Completable.complete();
-            } else if (action == action_daily_gw) {
+            } else if (action == action_daily_gw || action == action_daily_gw_pray) {
                 String imageDate = message.stringForKey("image-date");
                 return ImageApi.listImageDaily("").subscribeOn(RX.io()).flatMap(data -> {
                     if (data != null && !data.isEmpty()) {
@@ -498,6 +487,14 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         aiFeedback.setFunction(m.getExploreWithParams());
                         if (!aiFeedback.getFunction().isEmpty()) {
                             updateMessage(message, gson.toJsonTree(messageDetail).getAsJsonObject());
+                        }
+                        if (action == action_daily_gw_pray) {
+                            sendExploreMessage(
+                                    "关于以上内容的祷告和默想建议",
+                                    message,
+                                    GWThreadHandler.action_daily_pray,
+                                    m.getScripture()
+                            ).subscribe();
                         }
                     }
                     return Single.just(message);
@@ -1108,10 +1105,10 @@ public class GWThreadHandler extends AbstractThreadHandler {
                     if (newAIExplore != null) {
                         Message oldMsg = aiExplore != null ? aiExplore.getMessage() : null;
                         aiExplore = newAIExplore;
-                        Log.d("sending","aiExplore3="+aiExplore.getMessage().getId());
-                        if (oldMsg != null) {
-                            ChatSDK.events().source().accept(NetworkEvent.messageUpdated(oldMsg));
-                        }
+                        Log.d("sending", "aiExplore3=" + aiExplore.getMessage().getId());
+//                        if (oldMsg != null) {
+//                            ChatSDK.events().source().accept(NetworkEvent.messageUpdated(oldMsg));
+//                        }
                     }
                 }
             }
@@ -1191,7 +1188,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                             Log.d("sending", "success:" + localId.toString());
                         },
                         error -> {
-                            Log.d("sending", "error:" + localId.toString()+","+error.getMessage());
+                            Log.d("sending", "error:" + localId.toString() + "," + error.getMessage());
 
                         });
 
