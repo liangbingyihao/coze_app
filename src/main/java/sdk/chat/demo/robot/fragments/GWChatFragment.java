@@ -398,13 +398,14 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                 .filter(NetworkEvent.filterType(EventType.MessageInputPrompt))
                 .subscribe(networkEvent -> {
                     showTextInput();
-                    showKeyboard();
                     EditText editText = input.getInputEditText();
                     editText.requestFocus();
                     editText.setText(networkEvent.getText());
-                    editText.post(() -> {
+                    Log.e("input","MessageInputPrompt:"+networkEvent.getText());
+                    editText.postDelayed(() -> {
                         editText.setSelection(editText.getText().length());
-                    });
+                        showKeyboard();
+                    },500);
                 }));
 
         if (chatView != null) {
@@ -485,6 +486,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
         }
 
         if (!StringChecker.isNullOrEmpty(thread.getDraft())) {
+            Log.e("input",thread.getDraft());
             input.getInputEditText().setText(thread.getDraft());
         }
 

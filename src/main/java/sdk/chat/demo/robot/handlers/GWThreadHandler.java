@@ -492,7 +492,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                             sendExploreMessage(
                                     "关于以上内容的祷告和默想建议",
                                     message,
-                                    GWThreadHandler.action_daily_pray,
+                                    action_daily_pray,
                                     m.getScripture()
                             ).subscribe();
                         }
@@ -1109,6 +1109,15 @@ public class GWThreadHandler extends AbstractThreadHandler {
 //                        if (oldMsg != null) {
 //                            ChatSDK.events().source().accept(NetworkEvent.messageUpdated(oldMsg));
 //                        }
+                    }
+                }
+                int action = message.integerForKey("action");
+                if (action == action_daily_pray) {
+                    DailyTaskHandler.completeTaskByIndex(1);
+                } else if (action == 0) {
+                    String contextId = message.stringForKey("context_id");
+                    if(contextId==null||contextId.isEmpty()){
+                        DailyTaskHandler.completeTaskByIndex(2);
                     }
                 }
             }

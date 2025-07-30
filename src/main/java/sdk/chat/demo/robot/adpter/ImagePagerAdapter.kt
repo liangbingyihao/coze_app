@@ -63,8 +63,8 @@ class ImagePagerAdapter(
         Glide.with(context)
             .load(url)
             .diskCacheStrategy(DiskCacheStrategy.ALL)
-            .placeholder(R.drawable.icn_200_image_message_placeholder) // 占位图
-            .error(R.drawable.icn_200_image_message_error) // 错误图
+            .placeholder(R.mipmap.ic_placeholder) // 占位图
+            .error(R.mipmap.ic_placeholder) // 错误图
             .addListener(object : RequestListener<Drawable> {
                 override fun onLoadFailed(
                     e: GlideException?,

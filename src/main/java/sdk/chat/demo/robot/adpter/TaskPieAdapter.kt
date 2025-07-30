@@ -121,17 +121,17 @@ class TaskPieAdapter(
         var oldView: View? = pieSelected?.get()
         if (oldView != null) {
             var oldIndex = oldView.tag as Int
-            if (index == oldIndex) {
-                return
-            }
-            oldView.findViewById<View>(R.id.bg_selected)?.visibility = View.GONE
-            if (oldIndex != taskToday.index) {
-                var v: TextView?=oldView.findViewById<TextView>(R.id.pieText)
-                v?.setTextColor(context.getColor(R.color.item_text_normal))
+            if (index != oldIndex) {
+                oldView.findViewById<View>(R.id.bg_selected)?.visibility = View.GONE
+                if (oldIndex != taskToday.index) {
+                    var v: TextView? = oldView.findViewById<TextView>(R.id.pieText)
+                    v?.setTextColor(context.getColor(R.color.item_text_normal))
+                }
             }
         }
         newView.findViewById<View>(R.id.bg_selected)?.visibility = View.VISIBLE
-        newView.findViewById<TextView>(R.id.pieText)?.setTextColor(context.getColor(R.color.item_text_selected))
+        newView.findViewById<TextView>(R.id.pieText)
+            ?.setTextColor(context.getColor(R.color.item_text_selected))
 
         pieSelected = SoftReference(newView)
     }

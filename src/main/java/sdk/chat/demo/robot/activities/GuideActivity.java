@@ -115,12 +115,6 @@ public class GuideActivity extends AppCompatActivity {
     }
 
     private void launchMainActivity() {
-        // 保存已经显示过引导页的状态
-        getSharedPreferences("app_prefs", MODE_PRIVATE)
-                .edit()
-                .putBoolean("has_shown_guide", true)
-                .apply();
-
         startActivity(new Intent(this, MainDrawerActivity.class));
         finish();
     }

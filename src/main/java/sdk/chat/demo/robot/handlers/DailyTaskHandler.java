@@ -35,6 +35,7 @@ import sdk.chat.demo.robot.api.JsonCacheManager;
 import sdk.chat.demo.robot.api.model.ImageDaily;
 import sdk.chat.demo.robot.api.model.ImageDailyList;
 import sdk.chat.demo.robot.api.model.TaskDetail;
+import sdk.chat.demo.robot.api.model.TaskHistory;
 import sdk.chat.demo.robot.api.model.TaskProgress;
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil;
 
@@ -42,9 +43,11 @@ public class DailyTaskHandler {
     private final static Gson gson = new Gson();
     private final static String KEY_CACHE_TASK_DETAIL = "gwTaskDetail";
     private final static String KEY_CACHE_TASK_PROCESS = "gwTaskProcess";
+    private final static String KEY_CACHE_TASK_HISTORY = "gwTaskHistory";
     private final static int MAX_TASK_INDEX = 6;
     private final static String URL_UNLOCK_STORY = ImageApi.URL2 + "story/unlock";
     private final static String URL_STORY_PROGRESS = ImageApi.URL2 + "story/progress";
+    private final static String URL_STORY_HISTORY = ImageApi.URL2 + "story/history";
     private final static String timeZoneId = TimeZone.getDefault().getID();
 
     public static void testTaskDetail(Integer completeIndex) {
@@ -61,6 +64,12 @@ public class DailyTaskHandler {
         JsonCacheManager.INSTANCE.save(MainApp.getContext(), KEY_CACHE_TASK_DETAIL, gson.toJson(item));
     }
 
+    public static void completeTaskByIndex(int index){
+        TaskDetail taskDetail = getTaskToday();
+        taskDetail.completeTaskByIndex(index);
+        setTaskDetail(taskDetail);
+    }
+
     public static void setTaskDetail(TaskDetail detail) {
         if (detail == null) {
             Log.e("TaskManager", "TaskDetail cannot be null");
@@ -68,7 +77,7 @@ public class DailyTaskHandler {
         }
 
         JsonCacheManager.INSTANCE.save(MainApp.getContext(), KEY_CACHE_TASK_DETAIL, gson.toJson(detail));
-        if (detail.isAllUserTaskCompleted()) {
+        if (!detail.isTaskCompleted(UNLOCK_STORY_MASK)&&detail.isAllUserTaskCompleted()) {
             unlockStory()
                     .subscribeOn(Schedulers.io()) // 在IO线程执行网络请求
                     .observeOn(AndroidSchedulers.mainThread()) // 在主线程处理结果
@@ -127,9 +136,10 @@ public class DailyTaskHandler {
             String cachedData = JsonCacheManager.INSTANCE.get(MainApp.getContext(), KEY_CACHE_TASK_PROCESS);
             if (cachedData != null&&!cachedData.isEmpty()) {
                 TaskProgress progress = gson.fromJson(cachedData, TaskProgress.class);
-                if (progress!=null&&taskToday.getCntComplete() == progress.getUnlocked()) {
+                if (progress!=null&&taskToday.getCntComplete() == progress.getUnlocked()&&!progress.getProgressImage().isEmpty()) {
                     progress.setTaskDetail(taskToday);
                     emitter.onSuccess(progress);
+                    return;
                 }
             }
             HttpUrl url = Objects.requireNonNull(HttpUrl.parse(URL_STORY_PROGRESS))
@@ -194,6 +204,44 @@ public class DailyTaskHandler {
                     }
                 }
             });
+        });
+    }
+
+
+    public static Single<TaskHistory> getTaskHistory() {
+        return Single.create(emitter -> {
+            TaskDetail taskToday = getTaskToday();
+            String cachedData = JsonCacheManager.INSTANCE.get(MainApp.getContext(), KEY_CACHE_TASK_HISTORY);
+            if (cachedData != null&&!cachedData.isEmpty()) {
+                TaskHistory progress = gson.fromJson(cachedData, TaskHistory.class);
+                if (progress!=null) {
+                    emitter.onSuccess(progress);
+                }
+            }
+            HttpUrl url = Objects.requireNonNull(HttpUrl.parse(URL_STORY_HISTORY))
+                    .newBuilder()
+                    .addQueryParameter("start_month", "2025-07")
+                    .addQueryParameter("lang", Locale.getDefault().toString())
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .build();
+            try (Response response = GWApiManager.shared().getClient().newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    emitter.onError(new IOException("HTTP error: " + response.code()));
+                    return;
+                }
+                String responseBody = response.body() != null ? response.body().string() : "";
+                JsonObject data = gson.fromJson(responseBody, JsonObject.class).getAsJsonObject("data");
+                TaskHistory progress = gson.fromJson(data, TaskHistory.class);
+                if (progress != null) {
+                    JsonCacheManager.INSTANCE.save(MainApp.getContext(), KEY_CACHE_TASK_HISTORY, data.toString());
+                    emitter.onSuccess(progress);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         });
     }
 }

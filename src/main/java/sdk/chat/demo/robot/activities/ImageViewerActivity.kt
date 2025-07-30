@@ -214,11 +214,16 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
             R.id.conversations -> {
                 val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
                 var date = adapter.getUrlAt(viewPager.currentItem)?.date
+
+                var action = GWThreadHandler.action_daily_gw
+                if(!taskDetail.isTaskCompleted(TaskDetail.TASK_PRAY_MASK)){
+                    action = GWThreadHandler.action_daily_gw_pray
+                }
 //                threadHandler.aiExplore.contextId
                 threadHandler.sendExploreMessage(
                     "【每日恩语】-${date}",
                     threadHandler.aiExplore.message,
-                    GWThreadHandler.action_daily_gw,
+                    action,
                     date
                 ).subscribe();
                 finish()

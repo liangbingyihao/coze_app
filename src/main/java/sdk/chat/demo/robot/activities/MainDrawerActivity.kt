@@ -10,12 +10,12 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.edit
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.functions.Action
 import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import materialsearchview.MaterialSearchView
@@ -24,12 +24,15 @@ import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
-import sdk.chat.demo.robot.adpter.SessionAdapter
 import sdk.chat.demo.robot.adpter.HistoryItem
+import sdk.chat.demo.robot.adpter.SessionAdapter
+import sdk.chat.demo.robot.api.model.TaskDetail
 import sdk.chat.demo.robot.dialog.DialogEditSingle
+import sdk.chat.demo.robot.extensions.DateLocalizationUtil
 import sdk.chat.demo.robot.extensions.LanguageUtils
 import sdk.chat.demo.robot.extensions.dpToPx
 import sdk.chat.demo.robot.fragments.GWChatFragment
+import sdk.chat.demo.robot.handlers.DailyTaskHandler
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.demo.robot.ui.CustomDivider
 import sdk.chat.demo.robot.ui.listener.GWClickListener
@@ -161,6 +164,32 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
 //                }
 //                .show()
         }
+        checkTaskDetail()
+    }
+
+    private fun checkTaskDetail() {
+        val hasShownGuide = getSharedPreferences("app_prefs", MODE_PRIVATE)
+            .getBoolean("has_shown_guide", false)
+        if (hasShownGuide) {
+            val today: String = DateLocalizationUtil.formatDayAgo(0)
+            var showDate = getSharedPreferences("app_prefs", MODE_PRIVATE).getString("shown_gw_date","")
+            if(!today.equals(showDate)){
+                ImageViewerActivity.start(this@MainDrawerActivity);
+            }
+
+            getSharedPreferences("app_prefs", MODE_PRIVATE)
+                .edit() {
+                    putString("shown_gw_date", today)
+                }
+        } else {
+            // 保存已经显示过引导页的状态
+            getSharedPreferences("app_prefs", MODE_PRIVATE)
+                .edit() {
+                    putBoolean("has_shown_guide", true)
+                }
+        }
+
+
     }
 
     private fun safeInstallTtsEngine() {
@@ -442,7 +471,7 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
 
 
     override fun onClick(v: View?) {
-        if(v?.id!=R.id.menu_task){
+        if (v?.id != R.id.menu_task) {
             toggleDrawer()
         }
         when (v?.id) {

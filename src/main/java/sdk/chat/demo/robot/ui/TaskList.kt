@@ -20,6 +20,7 @@ class TaskList @JvmOverloads constructor(
     private val cells = mutableListOf<View>()
     private var headerLabel: TextView
     private var contentContainer: LinearLayout
+    var mode = 0
 
     // 设置按钮点击回调
     var onCellButtonClick: ((row: Int) -> Unit)? = null
@@ -61,6 +62,7 @@ class TaskList @JvmOverloads constructor(
 
     fun setTaskData(mode: Int, taskPending: TaskDetail? = null) {
         //mode:>0:已完成，=0：进行种，<0：未开始
+        this.mode = mode
         if (mode < 0) {
             visibility = VISIBLE
             for (index in 0..2){

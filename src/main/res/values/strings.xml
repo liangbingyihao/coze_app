@@ -53,4 +53,5 @@
     <string name="loading">耐心是圣灵的果子，我们在努力加载中</string>
     <string name="sending">存在发送中的信息，请稍后</string>
     <string name="msg_failed">回复失败，请重试</string>
+    <string name="task_calendar">打卡日记</string>
   </resources>

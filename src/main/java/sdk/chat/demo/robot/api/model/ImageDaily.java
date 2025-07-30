@@ -15,7 +15,7 @@ public class ImageDaily {
     @SerializedName("background_url")
     private String backgroundUrl;
     private ArrayList<String> explore;
-    private ArrayList<String> prompt;
+//    private ArrayList<String> prompt;
 
     public ImageDaily(String scripture, String backgroundUrl) {
         this.scripture = scripture;
@@ -73,9 +73,9 @@ public class ImageDaily {
     public List<List<String>> getExploreWithParams() {
 
         List<List<String>> function = new ArrayList<>();
-        for(String f:prompt){
-            function.add(List.of(f, Integer.toString(GWThreadHandler.action_input_prompt), f));
-        }
+//        for(String f:prompt){
+//            function.add(List.of(f, Integer.toString(GWThreadHandler.action_input_prompt), f));
+//        }
         for (String f : explore) {
             if (f.indexOf("祷告默想和实际应用") > 0) {
                 function.add(
@@ -91,11 +91,11 @@ public class ImageDaily {
         return function;
     }
 
-    public ArrayList<String> getPrompt() {
-        return prompt;
-    }
-
-    public void setPrompt(ArrayList<String> prompt) {
-        this.prompt = prompt;
-    }
+//    public ArrayList<String> getPrompt() {
+//        return prompt;
+//    }
+//
+//    public void setPrompt(ArrayList<String> prompt) {
+//        this.prompt = prompt;
+//    }
 }

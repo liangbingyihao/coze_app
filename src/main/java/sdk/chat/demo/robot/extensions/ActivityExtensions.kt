@@ -24,6 +24,21 @@ fun Float.dpToPx(context: Context): Float {
     )
 }
 
+fun callMethodByName(obj: Any, methodName: String, vararg args: Any?): Any? {
+    try {
+        // 获取参数类型数组
+        val paramTypes = args.map { it?.javaClass ?: Any::class.java }.toTypedArray()
+
+        // 获取方法对象
+        val method = obj.javaClass.getMethod(methodName, *paramTypes)
+
+        // 调用方法
+        return method.invoke(obj, *args)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        throw RuntimeException("Failed to call method '$methodName'", e)
+    }
+}
 
 fun showMaterialConfirmationDialog(
     context: Context,

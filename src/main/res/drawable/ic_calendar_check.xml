@@ -1,0 +1,14 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+
+    <!-- 调整后的圆环 -->
+    <path
+        android:pathData="M50,8 a42,42 0 1,1 0,84 a42,42 0 1,1 0,-84"
+        android:strokeWidth="16"
+        android:strokeColor="#59CF4B40"
+        android:fillColor="#ffCF4B40"/>
+
+</vector>
