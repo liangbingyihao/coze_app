@@ -461,9 +461,14 @@ public class GWThreadHandler extends AbstractThreadHandler {
      */
     public Completable sendMessage(final Message message) {
 
-        if(message.getEntityID()!=null&&message.getEntityID().length()>20){
+        if (message.getEntityID() != null && message.getEntityID().length() > 20) {
             try {
-                startPolling(message.getId(), message.getEntityID());
+                JsonObject data = gson.fromJson(message.stringForKey(KEY_AI_FEEDBACK), JsonObject.class);
+                if (data.has("status")) {
+                    data.addProperty("status", MessageDetail.STATUS_PENDING);
+                }
+                updateMessage(message, data);
+                startPolling(message.getId(), message.getEntityID(), 1);
                 return Completable.complete();
             } catch (Exception e) {
                 return Completable.error(e);
@@ -536,7 +541,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                     String entityId = data.get("id").getAsString();
                     message.setEntityID(entityId);
                     ChatSDK.db().update(message);
-                    startPolling(message.getId(), entityId);
+                    startPolling(message.getId(), entityId, 0);
 //                    message.setMessageStatus(MessageSendStatus.Uploading,true);
 //                    ChatSDK.events().source().accept(NetworkEvent.messageProgressUpdated(message, new Progress(10,100)));
                     pushForMessage(message);
@@ -696,7 +701,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
         // 其他错误传递到UI层
         return GWApiManager.shared().renew(message.getEntityID(), prompt)
                 .subscribeOn(RX.io()).flatMap(data -> {
-                    startPolling(message.getId(), message.getEntityID());
+                    startPolling(message.getId(), message.getEntityID(), 0);
                     return Single.just(data);
                 }).onErrorResumeNext(Single::error);
     }
@@ -1048,7 +1053,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 List<Message> data = qb.list();
 
                 if (data.isEmpty()) {
-                    GWApiManager.shared().getMessageDetail("welcome")
+                    GWApiManager.shared().getMessageDetail("welcome", 0)
                             .subscribeOn(RX.io())
                             .subscribe(
                                     json -> {
@@ -1102,10 +1107,11 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 message.setThreadId(sid);
                 updateThread(Long.toString(sid), messageDetail.getFeedback().getTopic(), new Date());
             }
-
-            if (messageDetail.getStatus() == 2) {
+            if (messageDetail.getStatus() != MessageDetail.STATUS_PENDING) {
                 disposables.clear();
+            }
 
+            if (messageDetail.getStatus() == MessageDetail.STATUS_SUCCESS) {
                 if (sid != null && sid > 0 && !sid.equals(message.getThreadId())) {
                     message.setThreadId(sid);
                     updateThread(Long.toString(sid), messageDetail.getFeedback().getTopic(), new Date());
@@ -1127,7 +1133,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                     DailyTaskHandler.completeTaskByIndex(1);
                 } else if (action == 0) {
                     String contextId = message.stringForKey("context_id");
-                    if(contextId==null||contextId.isEmpty()){
+                    if (contextId == null || contextId.isEmpty()) {
                         DailyTaskHandler.completeTaskByIndex(2);
                     }
                 }
@@ -1170,7 +1176,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
         pendingMsgId = null;
     }
 
-    public synchronized void startPolling(Long localId, String contextId) throws Exception {
+    public synchronized void startPolling(Long localId, String contextId, int retry) throws Exception {
         if (pendingMsgId != null && !pendingMsgId.equals(localId)) {
             disposables.clear();
             throw new Exception(MainApp.getContext().getString(R.string.sending));
@@ -1185,8 +1191,9 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         }
                 )
                 .flatMap(tick -> {
+                    Log.d("sending", "tick:" + tick);
                     retryCount.set(0);
-                    return GWApiManager.shared().getMessageDetail(contextId)
+                    return GWApiManager.shared().getMessageDetail(contextId, tick == 0 ? retry : 0)
                             .subscribeOn(RX.io())
                             .flatMap(Single::just).toObservable();
                 })

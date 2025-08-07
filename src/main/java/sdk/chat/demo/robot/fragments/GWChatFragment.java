@@ -388,11 +388,11 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                     Logger.debug(typingText);
                 }));
 
-        dm.add(ChatSDK.events().sourceOnMain()
-                .filter(NetworkEvent.filterRoleUpdated(thread, ChatSDK.currentUser()))
-                .subscribe(networkEvent -> {
-                    showOrHideTextInputView();
-                }));
+//        dm.add(ChatSDK.events().sourceOnMain()
+//                .filter(NetworkEvent.filterRoleUpdated(thread, ChatSDK.currentUser()))
+//                .subscribe(networkEvent -> {
+//                    showOrHideTextInputView();
+//                }));
 
         dm.add(ChatSDK.events().sourceOnMain()
                 .filter(NetworkEvent.filterType(EventType.MessageInputPrompt))

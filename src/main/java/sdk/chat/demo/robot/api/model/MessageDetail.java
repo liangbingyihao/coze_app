@@ -3,6 +3,8 @@ package sdk.chat.demo.robot.api.model;
 import com.google.gson.annotations.SerializedName;
 
 public class MessageDetail {
+    public static final int STATUS_PENDING = 1;
+    public static final int STATUS_SUCCESS = 2;
     private String id;
     private int status;
     private String summary;
@@ -27,6 +29,7 @@ public class MessageDetail {
     }
 
     public int getStatus() {
+        //0:未开始，1：生成中，2：生成成功，3：生成失败
         return status;
     }
 

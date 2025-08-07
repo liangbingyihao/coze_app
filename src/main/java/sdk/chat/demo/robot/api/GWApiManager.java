@@ -513,11 +513,12 @@ public class GWApiManager {
         accessToken = null;
     }
 
-    public Single<JsonObject> getMessageDetail(String contextId) {
+    public Single<JsonObject> getMessageDetail(String contextId,int retry) {
         return Single.create(emitter -> {
 
-            HttpUrl url = HttpUrl.parse(URL_MESSAGE + "/" + contextId)
+            HttpUrl url = Objects.requireNonNull(HttpUrl.parse(URL_MESSAGE + "/" + contextId))
                     .newBuilder()
+                    .addQueryParameter("retry", Integer.toString(retry))
                     .build();
 
             Request request = new Request.Builder()

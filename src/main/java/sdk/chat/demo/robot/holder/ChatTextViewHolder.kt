@@ -185,7 +185,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
                 feedbackMenu?.visibility = View.VISIBLE
             }
             //FIXME
-            if (aiFeedback?.status == 2) {
+            if (aiFeedback?.status == MessageDetail.STATUS_SUCCESS) {
                 hintContainer?.visibility = View.GONE
             } else {
                 hintContainer?.visibility = View.VISIBLE
