@@ -26,6 +26,9 @@ public class GWMsgHandler implements MessageHandler {
 
 
     public static MessageDetail getAiFeedback(Message message) {
+        if(message==null){
+            return null;
+        }
         String aiFeedbackStr = message.stringForKey(GWThreadHandler.KEY_AI_FEEDBACK);
         if (!aiFeedbackStr.isEmpty()) {
             return (new Gson()).fromJson(aiFeedbackStr, MessageDetail.class);

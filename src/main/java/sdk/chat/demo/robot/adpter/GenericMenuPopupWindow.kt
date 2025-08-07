@@ -83,10 +83,16 @@ class GenericMenuPopupWindow<T, VH : GenericMenuAdapter.ViewHolder<T>>(
     }
 
 
-    fun updateMenuItems(newItems: List<T>, newSelectedPos: Int = -1) {
+    fun updateMenuItems(newItems: MutableList<T>, newSelectedPos: Int = -1) {
         adapter.updateData(newItems, newSelectedPos)
         adjustPopupHeight()
     }
+
+
+    fun updateMenuItemSelected(newItems: T) {
+        adapter.updateItemAt(adapter.getSelectedPosition(),newItems)
+    }
+
 
     private fun initPopupWindow() {
         val inflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater

@@ -1,6 +1,7 @@
 package sdk.chat.demo.robot.holder
 
 //import sdk.chat.ui.R
+import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.text.util.Linkify
 import android.view.View
@@ -35,6 +36,7 @@ import sdk.chat.ui.views.ProgressView
 import sdk.guru.common.DisposableMap
 import sdk.guru.common.RX
 import java.text.DateFormat
+import androidx.core.graphics.toColorInt
 
 open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
     MessageHolders.BaseMessageViewHolder<T>(itemView, null),
@@ -45,11 +47,12 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
 
     open var messageIcon: ImageView? = itemView.findViewById(R.id.messageIcon)
 
-    open var imageOverlay: ImageView? = itemView.findViewById(R.id.imageOverlay)
 
     open var text: TextView? = itemView.findViewById(R.id.messageText)
     open var feedback: TextView? = itemView.findViewById(R.id.feedback)
+    open var imageFeedbackHint: ImageView? = itemView.findViewById(R.id.loadingImage)
     open var feedbackHint: TextView? = itemView.findViewById(R.id.feedbackHint)
+    open var hintContainer: View? = itemView.findViewById(R.id.hint_container)
     open var time: TextView? = itemView.findViewById(R.id.messageTime)
 
     open var readStatus: ImageView? = itemView.findViewById(R.id.readStatus)
@@ -127,8 +130,8 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
             sessionContainer?.visibility = View.GONE
             if (action != GWThreadHandler.action_daily_pray && !t.message.entityID.equals("welcome")) {
                 setText(t.message.id.toString() + ",原消息已删除", t.enableLinkify())
-            }else{
-                setText("",false);
+            } else {
+                setText("", false);
             }
         }
 
@@ -166,13 +169,15 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
             Markwon.create(it.context)
                 .setMarkdown(it, feedbackText)
         }
-        if (t.message.entityID.equals("welcome")||action == GWThreadHandler.action_daily_pray) {
-            contentMenu?.visibility = View.GONE
-        }
+//        if (t.message.entityID.equals("welcome")||action == GWThreadHandler.action_daily_pray) {
+//            contentMenu?.visibility = View.GONE
+//        }
 
 
         if (t.message.entityID.equals("welcome")) {
+            contentMenu?.visibility = View.GONE
             feedbackMenu?.visibility = View.GONE
+            hintContainer?.visibility = View.GONE
         } else {
             if (aiFeedback?.status != 2 || feedbackText.isEmpty()) {
                 feedbackMenu?.visibility = View.GONE
@@ -181,22 +186,20 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
             }
             //FIXME
             if (aiFeedback?.status == 2) {
-                feedbackHint?.visibility = View.GONE
+                hintContainer?.visibility = View.GONE
             } else {
-                feedbackHint?.visibility = View.VISIBLE
+                hintContainer?.visibility = View.VISIBLE
                 if (t.message.id == threadHandler.pendingMsgId()) {
                     feedbackHint?.setText(R.string.loading);
+                    feedbackHint?.setTextColor("#919191".toColorInt())
+                    imageFeedbackHint?.setImageResource(R.drawable.loading_animation)
                 } else {
                     feedbackHint?.setText(R.string.msg_failed);
+                    feedbackHint?.setTextColor("#FFCF4B40".toColorInt())
+                    imageFeedbackHint?.setImageResource(R.mipmap.ic_redo_red)
                 }
-//                val hints = ImageApi.getGwConfigs()?.configs?.generatingHint
-//                feedbackHint?.text = if (!hints.isNullOrEmpty()) {
-//                    hints.random()
-//                } else {
-//                    "种子正在发芽，新信息马上生长..." // 默认值
-//                }
             }
-            if (t.message.text.isEmpty()) {
+            if (t.message.text.isEmpty() || action == GWThreadHandler.action_daily_pray) {
                 contentMenu?.visibility = View.GONE
             } else {
                 contentMenu?.visibility = View.VISIBLE
@@ -327,6 +330,24 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
                 .subscribe {
                     RX.main().scheduleDirect {
                         bindProgress(t)
+                    }
+                })
+
+        dm.add(
+            ChatSDK.events().sourceOnSingle()
+                .filter { networkEvent: NetworkEvent? -> networkEvent!!.type == EventType.ThreadsUpdated
+                        && networkEvent.threadId == t.message.threadId }
+//                .filter { networkEvent: NetworkEvent? -> networkEvent!!.type == EventType.ThreadsUpdated }
+                .doOnError(this)
+                .subscribe {
+                    RX.main().scheduleDirect {
+                        val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
+                        var topic = threadHandler.getSessionName(t.message.threadId)
+                        if (topic != null) {
+                            sessionName?.let {
+                                it.text = topic
+                            }
+                        }
                     }
                 })
 

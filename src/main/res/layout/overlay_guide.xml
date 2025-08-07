@@ -1,0 +1,75 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- 半透明遮罩背景 -->
+    <View
+        android:id="@+id/mask_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#CC000000" />
+
+
+    <LinearLayout
+        android:id="@+id/guide_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/highlight_target"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rounded_bg"
+            android:drawableLeft="@drawable/icon_home"
+            android:drawablePadding="16dp"
+            android:paddingLeft="16dp"
+            android:paddingTop="8dp"
+            android:paddingRight="16dp"
+            android:paddingBottom="8dp"
+            android:text="@string/guide_drawer"
+            android:textColor="@color/black"
+            android:textSize="18sp" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="18dp"
+            android:layout_marginTop="4dp"
+            android:src="@mipmap/ic_guide_pointer" />
+
+
+        <TextView
+            android:id="@+id/highlight_desc"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:paddingLeft="16dp"
+            android:paddingTop="8dp"
+            android:paddingRight="16dp"
+            android:paddingBottom="8dp"
+            android:gravity="center"
+            android:text="@string/guide_pic_desc"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_next"
+            android:layout_width="138dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="20dp"
+            android:backgroundTint="@color/item_text_selected"
+            android:stateListAnimator="@null"
+            android:text="@string/get_it"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            app:cornerRadius="21dp"
+            app:elevation="0dp"
+            app:strokeWidth="1dp" />
+    </LinearLayout>
+
+
+</FrameLayout>

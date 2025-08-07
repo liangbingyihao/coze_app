@@ -54,7 +54,9 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
     private lateinit var vEmptyContainer: View
     private lateinit var vLineDash: View
     private lateinit var recyclerView: RecyclerView
-    private var isEditingSummary = false
+    private var editingMode = 0
+    private val EDIT_SUMMARY = 1
+    private val EDIT_TOPIC_NAME = 2
     private var currentPage = 1
 
     companion object {
@@ -117,7 +119,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
             onEditClick = { article ->
                 // 处理编辑点击
 //                Toast.makeText(this, "编辑: ${article.title}", Toast.LENGTH_SHORT).show()
-                isEditingSummary = true
+                editingMode = EDIT_SUMMARY
                 vEdSummary.setText(article.title)
                 vEdSummaryContainer.visibility = View.VISIBLE
                 showKeyboard(vEdSummary)
@@ -171,7 +173,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         }
     }
 
-    private fun initMenuPopup(items: List<ArticleSession>) {
+    private fun initMenuPopup(items: MutableList<ArticleSession>) {
         var selectedPosition = items.indexOfFirst { it.id == sessionId }.let {
             if (it < 0) 0 else it
         }
@@ -193,7 +195,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                         loadArticles()
                     }
                 } else {
-                    isEditingSummary = false
+                    editingMode = 0
                     vEdSummary.setText("")
                     vEdSummaryContainer.visibility = View.VISIBLE
                     showKeyboard(vEdSummary)
@@ -218,7 +220,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                         )
                     }
                     Single.just(articleSessions)
-                } as Function<in MutableList<Thread>, SingleSource<List<ArticleSession>>>)
+                } as Function<in MutableList<Thread>, SingleSource<MutableList<ArticleSession>>>)
                 .observeOn(RX.main())
                 .subscribe(
                     { articleSessions ->
@@ -296,79 +298,6 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         )
     }
 
-//    fun loadArticlesFromServer(page: Int) {
-//        currentPage = page
-//        if(page==1){
-//            articleAdapter.clearAll()
-//        }
-////        Toast.makeText(applicationContext, "page:${page}", Toast.LENGTH_SHORT).show()
-//        dm.add(
-//            GWApiManager.shared().listMessage(sessionId, page, 20)
-//                .flatMap(Function { messages: List<MessageDetail> ->
-//                    var lastDay = "";
-//                    val articleList = messages.map { message ->
-//                        val parts = message.createdAt.split("T")
-//                        var thisDay = ""
-//                        var thisTime = ""
-//                        if (parts.size == 2) {
-//                            thisDay = parts[0];
-//                            thisTime = parts[1]
-//                        }
-//
-//                        var showDay = thisDay != lastDay
-//                        lastDay = thisDay
-////                        val aiFeedback: MessageDetail? = GWMsgHandler.getAiFeedback(message)
-//
-//                        Article(
-//                            id = message.id,
-//                            content = message.content,
-//                            day = thisDay,
-//                            time = thisTime,
-//                            title = message.summary,
-//                            colorTag = message.feedback?.colorTag?.toColorInt()
-//                                ?: "#FFFBE8".toColorInt(),
-//                            showDay = showDay
-//                        )
-//                    }
-//                    Single.just(articleList)
-//                } as Function<List<MessageDetail?>?, SingleSource<List<Article>>>)
-//                .observeOn(RX.main())
-//                .subscribe(
-//                    { messages ->
-//                        articleAdapter.isLoading = false
-//                        if (page == 1) {
-//                            articleAdapter.clearAll()
-//                            articleAdapter.appendItems(messages,Runnable {
-//                                recyclerView.scrollToPosition(0);
-//                            });
-//                            swipeRefreshLayout.isRefreshing = false
-//                            if (messages != null && !messages.isEmpty()) {
-//                                setEmptyRecord(false)
-//                            } else {
-//                                setEmptyRecord(true)
-//                            }
-//                        }else{
-//                            articleAdapter.appendItems(messages,null);
-//                            swipeRefreshLayout.setLoadingMore(false)
-//                        }
-//                        if (messages == null || messages.isEmpty()) {
-//                            swipeRefreshLayout.setCanLoadMore(false)
-//                        } else {
-//                            swipeRefreshLayout.setCanLoadMore(true)
-//                        }
-//                    },
-//                    { error -> // onError
-//                        articleAdapter.isLoading = false
-//                        swipeRefreshLayout.setLoadingMore(false)
-//                        swipeRefreshLayout.isRefreshing = false
-//                        Toast.makeText(
-//                            this@ArticleListActivity,
-//                            "加载失败: ${error.message}",
-//                            Toast.LENGTH_SHORT
-//                        ).show()
-//                    })
-//        )
-//    }
 
     override fun onClick(v: View?) {
         when (v?.id) {
@@ -387,8 +316,10 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
             }
 
             R.id.edSummaryConfirm -> {
-                if (isEditingSummary) {
+                if (editingMode == EDIT_SUMMARY) {
                     editSummary()
+                } else if (editingMode == EDIT_TOPIC_NAME) {
+                    editTopicName()
                 } else {
                     newTopic()
                 }
@@ -430,10 +361,17 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                                     })
                             }
 
+                            R.id.rename -> {
+                                editingMode = EDIT_TOPIC_NAME
+                                vEdSummary.setText(tvTitle.text)
+                                vEdSummaryContainer.visibility = View.VISIBLE
+                                showKeyboard(vEdSummary)
+                            }
                         }
                     },
                     menuResId = R.layout.menu_article_topic,
                     clickableResIds = intArrayOf(
+                        R.id.rename,
                         R.id.delTopic,
                     )
                 ).show()
@@ -442,39 +380,6 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         }
     }
 
-//    fun showMaterialConfirmationDialog(
-//        context: Context,
-//        title: String?,
-//        message: String,
-//        positiveAction: () -> Unit
-//    ) {
-//        val dialog = MaterialAlertDialogBuilder(context)
-////            .setTitle(title)
-//            .setMessage(message)
-//            .setPositiveButton(getString(R.string.confirm)) { dialog, _ ->
-//                positiveAction()
-//                dialog.dismiss()
-//            }
-//            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
-//                dialog.dismiss()
-//            }
-//            .setBackground(ContextCompat.getDrawable(context, R.drawable.dialog_background))
-//            .create()
-//
-//        dialog.setOnShowListener {
-//            // 获取按钮并自定义
-//            dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.apply {
-////                setBackgroundColor(ContextCompat.getColor(context, R.color.colorPrimary))
-//                setTextColor(ContextCompat.getColor(context, R.color.item_text_selected))
-//            }
-//
-//            dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.apply {
-//                setTextColor(ContextCompat.getColor(context, R.color.item_text_normal))
-//            }
-//        }
-//
-//        dialog.show()
-//    }
 
     // 在Activity/Fragment中使用
     fun showPopupMenu(anchorView: View, selectedArticle: Article) {
@@ -525,7 +430,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                         } else {
 //                            sessionId = topicId.toString()
                             loadSessions()
-                            start(this@ArticleListActivity,topicId.toString())
+                            start(this@ArticleListActivity, topicId.toString())
                         }
                     },
                     { error -> // onError
@@ -536,6 +441,13 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                         ).show()
                     })
         )
+    }
+
+    fun hideEditDialog() {
+
+        vEdSummary.requestFocus()
+        hideKeyboard()
+        vEdSummaryContainer.visibility = View.GONE
     }
 
     fun editSummary() {
@@ -549,19 +461,53 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                         if (result) {
                             articleAdapter.updateSummaryById(msgId, newSummary)
                         }
-                        vEdSummary.requestFocus()
-                        hideKeyboard()
-                        vEdSummaryContainer.visibility = View.GONE
+                        hideEditDialog()
                     },
                     { error -> // onError
-                        vEdSummary.requestFocus()
-                        hideKeyboard()
-                        vEdSummaryContainer.visibility = View.GONE
                         Toast.makeText(
                             this@ArticleListActivity,
                             "修改失败: ${error.message}",
                             Toast.LENGTH_SHORT
                         ).show()
+                        hideEditDialog()
+                    })
+        )
+    }
+
+    fun editTopicName() {
+        if(sessionId.isEmpty()){
+            return
+        }
+        var title = vEdSummary.text.toString()
+        dm.add(
+            threadHandler.setSessionName(sessionId.toLong(), title)
+                .observeOn(RX.main()).subscribe(
+                    { result ->
+                        if (!result) {
+                            Toast.makeText(
+                                this@ArticleListActivity,
+                                getString(R.string.failed_and_retry),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            menuPopup.updateMenuItemSelected(
+                                ArticleSession(
+                                    id = sessionId,
+                                    title = title,
+                                )
+                            )
+                            menuPopup.setTitle(title)
+                            tvTitle.text = title
+                        }
+                        hideEditDialog()
+                    },
+                    { error -> // onError
+                        Toast.makeText(
+                            this@ArticleListActivity,
+                            "${getString(R.string.failed_and_retry)} ${error.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        hideEditDialog()
                     })
         )
     }
@@ -599,6 +545,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
     fun showKeyboard(view: View?) {
         if (view == null) return
 
+
         val context = view.getContext()
         view.requestFocus()
 
@@ -612,6 +559,11 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                     // 传统方式
                     imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
                 }
+            }
+
+            var edv = view as? EditText
+            if (edv != null) {
+                edv.setSelection(edv.getText().length)
             }
         })
     }

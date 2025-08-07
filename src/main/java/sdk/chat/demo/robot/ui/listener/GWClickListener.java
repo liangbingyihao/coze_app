@@ -13,6 +13,11 @@ import android.widget.ImageView;
 
 import com.stfalcon.chatkit.commons.models.IMessage;
 
+import org.pmw.tinylog.Logger;
+
+import io.reactivex.Completable;
+import sdk.chat.core.rigs.MessageSendRig;
+import sdk.chat.core.types.MessageType;
 import sdk.chat.demo.robot.activities.ArticleListActivity;
 
 import java.lang.ref.WeakReference;
@@ -49,6 +54,7 @@ import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.activities.BaseActivity;
 import sdk.chat.ui.chat.model.MessageHolder;
 import sdk.chat.ui.utils.ToastHelper;
+import sdk.guru.common.RX;
 
 public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.OnMessageViewClickListener {
     private final WeakReference<BaseActivity> weakContext;
@@ -87,6 +93,7 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
         adapter.registerViewClickListener(R.id.btn_share_user_text, listener);
         adapter.registerViewClickListener(R.id.btn_del_user_text, listener);
         adapter.registerViewClickListener(R.id.session_name, listener);
+        adapter.registerViewClickListener(R.id.hint_container, listener);
     }
 
     @Override
@@ -324,6 +331,15 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
                     GWThreadHandler.action_daily_pray,
                     params
             ).subscribe();
+        }else if (id == R.id.hint_container){
+            Completable completable = new MessageSendRig(message).run();
+            completable.observeOn(RX.main()).doOnError(throwable -> {
+                Logger.warn("");
+                ToastHelper.show(
+                        weakContext.get(),
+                        throwable.getLocalizedMessage()
+                );
+            }).subscribe(weakContext.get());
         }
     }
 }

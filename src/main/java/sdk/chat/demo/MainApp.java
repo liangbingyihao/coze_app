@@ -10,6 +10,7 @@ import sdk.chat.contact.ContactBookModule;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.utils.Device;
 import sdk.chat.demo.robot.ChatSDKCoze;
+import sdk.chat.demo.robot.handlers.GWAuthenticationHandler;
 import sdk.chat.demo.robot.push.UpdateTokenWorker;
 import sdk.guru.common.DisposableMap;
 import sdk.guru.common.RX;
@@ -23,6 +24,7 @@ import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
+import com.bytedance.speech.speechengine.SpeechEngineGenerator;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
 import java.util.concurrent.TimeUnit;
@@ -69,6 +71,8 @@ public class MainApp extends Application implements Configuration.Provider, Appl
         context = getApplicationContext();
         scheduleTokenUpdate();
 
+        SpeechEngineGenerator.PrepareEnvironment(getApplicationContext(), this);
+
         try {
             // Setup Chat SDK
             boolean drawerEnabled = !Device.honor();
@@ -79,14 +83,13 @@ public class MainApp extends Application implements Configuration.Provider, Appl
 
             dm.add(ChatSDK.auth().authenticate()
                     .observeOn(RX.main())
-                    .doFinally(dm::dispose)
+                    .doFinally(GWAuthenticationHandler::ensureDatabase)
                     .subscribe(
                             () -> {
                                 isInitialized = true;
                             },
                             error -> { /* 错误处理 */
                                 Log.w("MainApp", error.getMessage());
-                                //FIXME
                                 isInitialized = true;
                             }
                     ));

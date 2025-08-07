@@ -65,4 +65,23 @@
             android:layout_marginLeft="16dp"
             android:text="已完成打卡次数(0-7)" />
     </LinearLayout>
+
+    <Button
+        android:id="@+id/initdbasr"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="init豆包asr" />
+    <Button
+        android:id="@+id/cleardbasr"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="clear豆包asr" />
+    <Button
+        android:id="@+id/startdbasr"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="豆包asr" />
 </LinearLayout>

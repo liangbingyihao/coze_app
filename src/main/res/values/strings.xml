@@ -16,6 +16,7 @@
     <string name="remove">Remove</string>
     <string name="remove_topic">Remove Topic</string>
     <string name="change_topic">Change Topic</string>
+    <string name="renamne_topic">Rename Topic</string>
     <string name="new_topic">New</string>
     <string name="hint_no_record">No records found. Start by adding from the chat.</string>
     <string name="go_to_record">Start Record</string>
@@ -38,6 +39,7 @@
     <string name="fold">Fold</string>
     <string name="next">Next</string>
     <string name="enter">Enter</string>
+    <string name="get_it">我知道了</string>
     <string name="failed_and_retry">Something went wrong. Please try again later.</string>
     <string name="added_to_timeline">Added to your timeline</string>
     <string name="task_today">Task Today</string>
@@ -54,4 +56,10 @@
     <string name="sending">存在发送中的信息，请稍后</string>
     <string name="msg_failed">回复失败，请重试</string>
     <string name="task_calendar">打卡日记</string>
+    <string name="guide_drawer">侧边栏</string>
+    <string name="guide_pic">生成经文图</string>
+    <string name="guide_pray">默想祷告</string>
+    <string name="guide_drawer_desc">已将您的记录归入时间轴“%s”\n您的每次分享都会自动整理在侧边栏 时间轴中，可以随时回顾与管理哦~</string>
+    <string name="guide_pray_desc">试试点击这里\n帮你生成专属的祷告默想建议。</string>
+    <string name="guide_pic_desc">试试点击这里，可以将经文生成图片，更好保存与分享</string>
   </resources>

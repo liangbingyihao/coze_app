@@ -37,6 +37,7 @@ import sdk.chat.core.dao.MessageDao;
 import sdk.chat.core.dao.Thread;
 import sdk.chat.core.dao.ThreadDao;
 import sdk.chat.core.dao.User;
+import sdk.chat.core.events.EventType;
 import sdk.chat.core.events.NetworkEvent;
 import sdk.chat.core.interfaces.ThreadType;
 import sdk.chat.core.rigs.MessageSendRig;
@@ -316,7 +317,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(tmp);
                 if (aiFeedback != null && aiFeedback.getFeedback() != null) {
                     aiExplore = AIExplore.loads(tmp, aiFeedback.getFeedback().getFunction());
-                    Log.d("sending", "aiExplore1=" + aiExplore.getMessage().getId());
+//                    Log.d("sending", "aiExplore1=" + aiExplore.getMessage().getId());
                 }
                 ++i;
             }
@@ -345,12 +346,12 @@ public class GWThreadHandler extends AbstractThreadHandler {
                     --i;
                 }
                 if (newAiExplore != null) {
-                    Message oldMsg = aiExplore != null ? aiExplore.getMessage() : null;
+//                    Message oldMsg = aiExplore != null ? aiExplore.getMessage() : null;
                     aiExplore = newAiExplore;
                     Log.d("sending", "aiExplore2=" + aiExplore.getMessage().getId());
-                    if (oldMsg != null) {
-                        ChatSDK.events().source().accept(NetworkEvent.messageUpdated(oldMsg));
-                    }
+//                    if (oldMsg != null) {
+//                        ChatSDK.events().source().accept(NetworkEvent.messageUpdated(oldMsg));
+//                    }
                 }
             }
             return Single.just(messages);
@@ -459,6 +460,16 @@ public class GWThreadHandler extends AbstractThreadHandler {
      * The uploading to the server part can bee seen her {@see FirebaseCoreAdapter#PushMessageWithComplition}.
      */
     public Completable sendMessage(final Message message) {
+
+        if(message.getEntityID()!=null&&message.getEntityID().length()>20){
+            try {
+                startPolling(message.getId(), message.getEntityID());
+                return Completable.complete();
+            } catch (Exception e) {
+                return Completable.error(e);
+            }
+        }
+
         Integer action = message.integerForKey("action");
         if (action != null) {
             if (action == action_direct_msg) {
@@ -709,7 +720,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         Thread thread = ChatSDK.db().fetchThreadWithEntityID(sessionId);
                         ChatSDK.db().delete(thread);
                         sessionCache = null;
-                        ChatSDK.events().source().accept(NetworkEvent.threadsUpdated());
+                        ChatSDK.events().source().accept(NetworkEvent.threadsUpdated(Long.parseLong(sessionId)));
                         return result;
                     }).subscribeOn(RX.db());
                 }).onErrorResumeNext(Single::error);
@@ -919,7 +930,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                             // 更新内存缓存
                             if (modified) {
                                 sessionCache = null;
-                                ChatSDK.events().source().accept(NetworkEvent.threadsUpdated());
+                                ChatSDK.events().source().accept(NetworkEvent.threadsUpdated(0L));
                             }
                         },
                         error -> {
@@ -928,26 +939,26 @@ public class GWThreadHandler extends AbstractThreadHandler {
     }
 
     public Thread createChatSessions() {
-        DaoCore daoCore = ChatSDK.db().getDaoCore();
-        QueryBuilder<Message> qb = daoCore.getDaoSession().queryBuilder(Message.class);
-        qb.where(MessageDao.Properties.Type.eq(MessageType.Text));
-        List<Message> data = qb.list();
-        for (Message d : data) {
-            MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(d);
-            if (aiFeedback == null || aiFeedback.getFeedbackText().isEmpty()) {
-                if (d.getText().isEmpty()) {
-                    d.cascadeDelete();
-                }
-            }
-//            Integer action = d.integerForKey("action");
-//            if (action == action_daily_gw) {
-//                d.setType(DailyGWRegistration.GWMessageType);
-//                daoCore.updateEntity(d);
-//            } else if (action == action_bible_pic) {
-//                daoCore.deleteEntity(d);
+//        DaoCore daoCore = ChatSDK.db().getDaoCore();
+//        QueryBuilder<Message> qb = daoCore.getDaoSession().queryBuilder(Message.class);
+//        qb.where(MessageDao.Properties.Type.eq(MessageType.Text));
+//        List<Message> data = qb.list();
+//        for (Message d : data) {
+//            MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(d);
+//            if (aiFeedback == null || aiFeedback.getFeedbackText().isEmpty()) {
+//                if (d.getText().isEmpty()) {
+//                    d.cascadeDelete();
+//                }
 //            }
-//            daoCore.deleteEntity(d);
-        }
+////            Integer action = d.integerForKey("action");
+////            if (action == action_daily_gw) {
+////                d.setType(DailyGWRegistration.GWMessageType);
+////                daoCore.updateEntity(d);
+////            } else if (action == action_bible_pic) {
+////                daoCore.deleteEntity(d);
+////            }
+////            daoCore.deleteEntity(d);
+//        }
 
         String entityID = "0";
         Thread thread = ChatSDK.db().fetchThreadWithEntityID(entityID);
@@ -984,7 +995,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
         }
         ChatSDK.db().update(entity);
         sessionCache = null;
-        ChatSDK.events().source().accept(NetworkEvent.threadsUpdated());
+        ChatSDK.events().source().accept(NetworkEvent.threadsUpdated(threadId));
     }
 
     public boolean updateThread(String threadId, String sessionName, Date updateAt) {
@@ -1002,7 +1013,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
         if (modified) {
             ChatSDK.db().update(entity);
             sessionCache = null;
-            ChatSDK.events().source().accept(NetworkEvent.threadsUpdated());
+            ChatSDK.events().source().accept(NetworkEvent.threadsUpdated(Long.parseLong(threadId)));
         }
         return modified;
     }

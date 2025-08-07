@@ -8,7 +8,7 @@ import android.widget.BaseAdapter
 
 abstract class GenericMenuAdapter<T, VH : GenericMenuAdapter.ViewHolder<T>>(
     private val context: Context,
-    private var items: List<T>,
+    private var items: MutableList<T>,
     private var selectedPosition: Int
 ) : BaseAdapter() {
 
@@ -16,17 +16,27 @@ abstract class GenericMenuAdapter<T, VH : GenericMenuAdapter.ViewHolder<T>>(
         abstract fun bind(item: T, position: Int, isSelected: Boolean)
     }
 
+    fun getSelectedPosition(): Int = selectedPosition
+
     // 获取布局资源ID
     abstract fun getLayoutRes(): Int
 
     // 创建ViewHolder
     abstract fun createViewHolder(view: View): VH
 
-    fun updateData(newItems: List<T>, newSelectedPos: Int) {
+    fun updateData(newItems: MutableList<T>, newSelectedPos: Int) {
         this.items = newItems
         this.selectedPosition = newSelectedPos
         notifyDataSetChanged()
     }
+
+    fun updateItemAt(position:Int,newItem:T){
+        if (position in items.indices) {
+            items[position] = newItem
+            notifyDataSetChanged()
+        }
+    }
+
 
     fun updateSelectedPosition(position: Int) {
         if(selectedPosition!=position){

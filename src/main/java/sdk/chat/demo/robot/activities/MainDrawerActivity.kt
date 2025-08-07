@@ -26,15 +26,15 @@ import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.HistoryItem
 import sdk.chat.demo.robot.adpter.SessionAdapter
-import sdk.chat.demo.robot.api.model.TaskDetail
 import sdk.chat.demo.robot.dialog.DialogEditSingle
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil
 import sdk.chat.demo.robot.extensions.LanguageUtils
 import sdk.chat.demo.robot.extensions.dpToPx
 import sdk.chat.demo.robot.fragments.GWChatFragment
-import sdk.chat.demo.robot.handlers.DailyTaskHandler
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.demo.robot.ui.CustomDivider
+import sdk.chat.demo.robot.ui.HighlightOverlayView
+import sdk.chat.demo.robot.ui.hasShownGuideOverlay
 import sdk.chat.demo.robot.ui.listener.GWClickListener
 import sdk.chat.ui.activities.MainActivity
 import sdk.guru.common.RX
@@ -46,8 +46,9 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
     open lateinit var drawerLayout: DrawerLayout
     open lateinit var searchView: MaterialSearchView
     private lateinit var recyclerView: RecyclerView
+    private lateinit var vHomeMenu: View
     private lateinit var sessions: List<Thread>
-    private var currentSession: Thread? = null
+    private var highlightOverlay: HighlightOverlayView? = null
     private lateinit var sessionAdapter: SessionAdapter
     private val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
     private val chatTag = "tag_chat";
@@ -72,13 +73,14 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
         super.onCreate(savedInstanceState)
         setContentView(layout)
 
-        drawerLayout = findViewById(R.id.root)
-//        searchView = findViewById(R.id.btn_search)
+        drawerLayout = findViewById(R.id.root_container)
+        highlightOverlay = findViewById(R.id.overlay)
         findViewById<View>(R.id.menu_favorites).setOnClickListener(this)
         findViewById<View>(R.id.menu_gw_daily).setOnClickListener(this)
         findViewById<View>(R.id.menu_search).setOnClickListener(this)
         findViewById<View>(R.id.debug).setOnClickListener(this)
-        findViewById<View>(R.id.menu_home).setOnClickListener(this)
+        vHomeMenu = findViewById<View>(R.id.menu_home)
+        vHomeMenu.setOnClickListener(this)
         findViewById<View>(R.id.menu_task).setOnClickListener(this)
 
 //        KeyboardDrawerHelper.setup(drawerLayout)
@@ -117,13 +119,22 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
             ChatSDK.events().sourceOnMain()
                 .filter(NetworkEvent.filterType(EventType.ThreadsUpdated)).subscribe(Consumer {
                     createSessionMenu()
-                    // Refresh the read count
-
-//            dm.add(privateTabName().subscribe(Consumer {
-//                slider.updateName(privateThreadItem.identifier, it)
-//            }))
                 })
         )
+
+        if (!hasShownGuideOverlay(this@MainDrawerActivity)) {
+            dm.add(
+                ChatSDK.events().prioritySourceOnSingle()
+                    .filter(NetworkEvent.filterType(EventType.MessageUpdated))
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(Consumer { networkEvent: NetworkEvent? ->
+                        highlightOverlay?.handleFirst(
+                            this@MainDrawerActivity,
+                            networkEvent?.message
+                        )
+                    }, this)
+            )
+        }
 
         requestPermissions();
 
@@ -172,8 +183,9 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
             .getBoolean("has_shown_guide", false)
         if (hasShownGuide) {
             val today: String = DateLocalizationUtil.formatDayAgo(0)
-            var showDate = getSharedPreferences("app_prefs", MODE_PRIVATE).getString("shown_gw_date","")
-            if(!today.equals(showDate)){
+            var showDate =
+                getSharedPreferences("app_prefs", MODE_PRIVATE).getString("shown_gw_date", "")
+            if (today != showDate) {
                 ImageViewerActivity.start(this@MainDrawerActivity);
             }
 
@@ -450,25 +462,23 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
 
     }
 
-//    private fun setCurrentSession(selected: HistoryItem.SessionItem?) {
-//        currentSession = if (selected != null) {
-//            sessions.firstOrNull { selected.sessionId == it.id.toString() }
-//        } else {
-//            null
+    // 显示引导层
+    fun showTutorialOverlay(targetView: View) {
+//        highlightOverlay?.setHighlightMode(this@MainDrawerActivity,guideDrawer)
+//        val rootView = findViewById<ViewGroup>(R.id.content_container) // 获取根布局
+//        val overlay = HighlightOverlayView(this).apply {
+//            layoutParams = FrameLayout.LayoutParams(
+//                ViewGroup.LayoutParams.MATCH_PARENT,
+//                ViewGroup.LayoutParams.MATCH_PARENT
+//            )
 //        }
-//        if (currentSession != null) {
-//            val fragment: GWChatFragment? =
-//                supportFragmentManager.findFragmentByTag(chatTag) as? GWChatFragment;
-//            if (fragment == null) {
-//                supportFragmentManager.beginTransaction()
-//                    .replace(R.id.fragment_container, GWChatFragment(), chatTag).commit()
-//            } else {
-////                fragment.onNewIntent(currentSession);
-//            }
-//            getToolbar()?.title = currentSession!!.name
+//        var r:RecyclerView = findViewById<View>(R.id.chatView).findViewById<RecyclerView>(R.id.recyclerview)
+//        var m: View? = findTopmostVisibleViewByResId(r,R.id.btn_pic)
+//        if(m!=null){
+//            highlightOverlay?.setHighlightMode(this@MainDrawerActivity,guideDrawer) // 设置高亮区域
 //        }
-//    }
-
+//        rootView.addView(overlay) // 添加到根布局
+    }
 
     override fun onClick(v: View?) {
         if (v?.id != R.id.menu_task) {

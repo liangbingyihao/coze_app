@@ -41,11 +41,13 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled project.hasProperty('minifyRelease') && minifyRelease
+//            minifyEnabled project.hasProperty('minifyRelease') && minifyRelease
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), '../chat-sdk-proguard-rules.pro', 'proguard-rules.pro'
         }
         debug {
-            minifyEnabled project.hasProperty('minifyDebug') && minifyDebug
+//            minifyEnabled project.hasProperty('minifyDebug') && minifyDebug
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), '../chat-sdk-proguard-rules.pro', 'proguard-rules.pro'
             ext.alwaysUpdateBuildId = false
         }
@@ -61,6 +63,14 @@ android {
     }
 
 
+}
+
+repositories {
+    // 默认会继承项目级的仓库配置
+    // 添加模块特有的仓库
+    maven {
+        url "https://artifact.bytedance.com/repository/Volcengine/"
+    }
 }
 
 dependencies {
@@ -86,6 +96,14 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.0'
     implementation 'com.geyifeng.immersionbar:immersionbar:3.2.1'
     implementation 'com.github.prolificinteractive:material-calendarview:2.0.1'
+
+//    implementation 'com.bytedance.boringssl.so:boringssl-so:1.3.7-16kb'
+//    implementation('org.chromium.net:cronet:4.2.210.4-tob') {
+//        exclude group: 'com.bytedance.common', module: 'wschannel'
+//    }
+//    implementation 'com.bytedance.frameworks.baselib:ttnet:4.2.210.4-tob'
+// Speech Engine
+    implementation 'com.bytedance.speechengine:speechengine_asr_tob:1.1.6'
 //    implementation 'com.github.amitshekhariitbhu.Fast-Android-Networking:android-networking:v1.0.2'
 
 }

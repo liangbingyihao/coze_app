@@ -194,6 +194,7 @@ public class DailyTaskHandler {
 //                            emitter.onError(new IOException("HTTP error: " + response.code()));
 //                            return;
 //                        }
+                        JsonCacheManager.INSTANCE.save(MainApp.getContext(), KEY_CACHE_TASK_HISTORY,"");
                         String responseBody = response.body() != null ? response.body().string() : "";
                         String data = gson.fromJson(responseBody, JsonObject.class).getAsJsonPrimitive("code").getAsString();
                         emitter.onSuccess("OK".equals(data) || "DUPLICATE_OPERATION".equals(data)); // 请求成功

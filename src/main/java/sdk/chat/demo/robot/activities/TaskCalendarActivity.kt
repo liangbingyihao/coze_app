@@ -1,9 +1,9 @@
 package sdk.chat.demo.robot.activities
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +11,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.text.HtmlCompat
 import com.bumptech.glide.Glide
 import com.prolificinteractive.materialcalendarview.CalendarDay
 import com.prolificinteractive.materialcalendarview.MaterialCalendarView
@@ -26,8 +27,8 @@ import sdk.chat.demo.robot.extensions.StoryHelper
 import sdk.chat.demo.robot.handlers.DailyTaskHandler
 import sdk.chat.demo.robot.ui.TaskList
 import sdk.chat.ui.activities.BaseActivity
-import sdk.chat.ui.utils.ToastHelper
-
+import java.time.LocalDate
+import java.time.temporal.TemporalAdjusters
 
 class TaskCalendarActivity : BaseActivity(), View.OnClickListener {
     private lateinit var pieContainer: ViewGroup
@@ -70,6 +71,9 @@ class TaskCalendarActivity : BaseActivity(), View.OnClickListener {
         tvStoryTitle.setOnClickListener(this)
         calendarView.setOnDateChangedListener { widget, date, selected ->
             setSelectCalendar(widget, date)
+        }
+        calendarView.setOnMonthChangedListener { widget, date ->
+            setSelectCalendar(widget, lastDate)
         }
 
 
@@ -121,7 +125,7 @@ class TaskCalendarActivity : BaseActivity(), View.OnClickListener {
                 if (lastDate != null) {
                     var index = selectedDates.indexOfFirst { it == lastDate } - 1
                     if (index >= 0) {
-                        setSelectCalendar(calendarView, selectedDates[index])
+                        setSelectCalendar(calendarView, selectedDates[index], true)
                     }
                 }
             }
@@ -130,7 +134,7 @@ class TaskCalendarActivity : BaseActivity(), View.OnClickListener {
                 if (lastDate != null) {
                     var index = selectedDates.indexOfFirst { it == lastDate } + 1
                     if (index < selectedDates.size) {
-                        setSelectCalendar(calendarView, selectedDates[index])
+                        setSelectCalendar(calendarView, selectedDates[index], true)
                     }
                 }
             }
@@ -154,7 +158,7 @@ class TaskCalendarActivity : BaseActivity(), View.OnClickListener {
                         if (data != null) {
                             var fake = Chapter()
                             fake.content = "fakestory"
-                            fake.date = "2025-05-01"
+                            fake.date = "2025-05-07"
                             fake.title = "faketitle"
                             data.history.add(0, fake)
                             taskProcess = data
@@ -170,12 +174,21 @@ class TaskCalendarActivity : BaseActivity(), View.OnClickListener {
 
     private fun setCalendar() {
         selectedDates = taskProcess.history.map { c -> c.calendarDay }
+
         for (d in selectedDates) {
             calendarView.setDateSelected(d, true)
         }
+
+        var lastTaskDate = selectedDates[selectedDates.size - 1]
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            var d = LocalDate.of(lastTaskDate.year, lastTaskDate.month, lastTaskDate.day)
+                .with(TemporalAdjusters.lastDayOfMonth())
+            lastTaskDate = CalendarDay.from(d.year, d.monthValue, d.dayOfMonth)
+        }
+
         calendarView.state().edit()
-            .setMinimumDate(selectedDates[0])
-            .setMaximumDate(selectedDates[selectedDates.size - 1])
+            .setMinimumDate(CalendarDay.from(selectedDates[0].year, selectedDates[0].month, 1))
+            .setMaximumDate(lastTaskDate)
             .commit()
 
         calendarView.postDelayed({
@@ -183,47 +196,53 @@ class TaskCalendarActivity : BaseActivity(), View.OnClickListener {
         }, 500)
     }
 
-    private fun setSelectCalendar(widget: MaterialCalendarView, date: CalendarDay) {
+    private fun setSelectCalendar(
+        widget: MaterialCalendarView,
+        date: CalendarDay?,
+        force: Boolean = false
+    ) {
+        if (date == null) {
+            return
+        }
         var index = selectedDates.indexOfFirst { it == date }
-        if(index<0){
+        if (index < 0) {
+            widget.setDateSelected(date, false)
             return
         }
         if (index == 0) {
             vPre.setImageResource(R.mipmap.ic_pre_chapter_gray)
-        }else{
+        } else {
             vPre.setImageResource(R.mipmap.ic_pre_chapter)
         }
         if (index == selectedDates.size - 1) {
             vNext.setImageResource(R.mipmap.ic_next_chapter_gray)
-        }else{
+        } else {
             vNext.setImageResource(R.mipmap.ic_next_chapter)
         }
-        if (index >= 0) {
-            val outViews = ArrayList<View>()
+        val outViews = ArrayList<View>()
+        if (force) {
             widget.setCurrentDate(date)
-            widget.findViewsWithText(outViews, date.day.toString(), View.FIND_VIEWS_WITH_TEXT)
-            for (v in outViews) {
-                var clxName = v::class.simpleName
-                if ("DayView" == clxName) {
-                    var d: CalendarDay? = StoryHelper.getCalendarDate(v)
-                    if (d == date) {
-                        if (lastView != null) {
-                            StoryHelper.setCustomBackground(lastView!!, null)
-                            var od: CalendarDay? = StoryHelper.getCalendarDate(lastView!!)
-                            widget.setDateSelected(od, true)
-                        }
-                        widget.setDateSelected(date, false)
-                        lastView = v
-                        lastDate = d
-                        (v as TextView).setTextColor(getColor(R.color.white))
-                        StoryHelper.setCustomBackground(v, selectDrawable)
-                        setChapterByDate(d)
-                        break
+        }
+        widget.findViewsWithText(outViews, date.day.toString(), View.FIND_VIEWS_WITH_TEXT)
+        for (v in outViews) {
+            var clxName = v::class.simpleName
+            if ("DayView" == clxName) {
+                var d: CalendarDay? = StoryHelper.getCalendarDate(v)
+                if (d == date) {
+                    if (lastView != null) {
+                        StoryHelper.setCustomBackground(lastView!!, null)
+                        var od: CalendarDay? = StoryHelper.getCalendarDate(lastView!!)
+                        widget.setDateSelected(od, true)
                     }
+                    widget.setDateSelected(date, false)
+                    lastView = v
+                    lastDate = d
+                    (v as TextView).setTextColor(getColor(R.color.white))
+                    StoryHelper.setCustomBackground(v, selectDrawable)
+                    setChapterByDate(d)
+                    break
                 }
             }
-        } else {
-            widget.setDateSelected(date, false)
         }
     }
 
@@ -232,7 +251,7 @@ class TaskCalendarActivity : BaseActivity(), View.OnClickListener {
         var chapter = taskProcess.history.firstOrNull { it.calendarDay == d }
         if (chapter != null) {
             tvStoryTitle.text = chapter.title
-            tvStory.text = chapter.content
+            tvStory.text = HtmlCompat.fromHtml(chapter.content, HtmlCompat.FROM_HTML_MODE_LEGACY);
         }
     }
 

@@ -1,5 +1,7 @@
 package sdk.chat.demo.robot.api;
+
 import okhttp3.*;
+
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -48,7 +50,8 @@ public class TokenRefreshInterceptor implements Interceptor {
             try {
                 String responseBody = response.peekBody(1024).string();
                 return responseBody.contains("expired") ||
-                        responseBody.contains("invalid_token");
+                        responseBody.contains("invalid_token") ||
+                        responseBody.contains("Authorization");
             } catch (IOException e) {
                 return false;
             }
@@ -61,7 +64,7 @@ public class TokenRefreshInterceptor implements Interceptor {
     }
 
     private Request addAuthHeader(Request originalRequest, String token) {
-        if(token==null||token.isEmpty()){
+        if (token == null || token.isEmpty()) {
             return originalRequest;
         }
         return originalRequest.newBuilder()

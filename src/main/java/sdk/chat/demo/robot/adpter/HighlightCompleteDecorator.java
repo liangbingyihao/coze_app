@@ -19,8 +19,8 @@ public class HighlightCompleteDecorator implements DayViewDecorator {
     private HashSet<CalendarDay> dates;
     private static final int color = Color.parseColor("#228BC34A");
 
-    public HighlightCompleteDecorator(Collection<CalendarDay> dates) {
-        highlightDrawable = new ColorDrawable(color);
+    public HighlightCompleteDecorator(Collection<CalendarDay> dates,Drawable highlightDrawable) {
+        this.highlightDrawable = highlightDrawable;
         this.dates = new HashSet<>(dates);
     }
 

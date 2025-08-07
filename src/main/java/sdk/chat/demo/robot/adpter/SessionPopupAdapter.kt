@@ -9,7 +9,7 @@ import sdk.chat.demo.robot.adpter.data.ArticleSession
 
 class SessionPopupAdapter(
     context: Context,
-    items: List<ArticleSession>,
+    items: MutableList<ArticleSession>,
     selectedPosition: Int
 ) : GenericMenuAdapter<ArticleSession, SessionPopupAdapter.SessionItemViewHolder>(
     context,
@@ -35,7 +35,7 @@ class SessionPopupAdapter(
         ) {
             val session: ArticleSession? = getItem(position)
             if (session != null) {
-                titleView.setText(session.title)
+                titleView.text = session.title
                 // 设置选中状态
                 if (isSelected) {
                     titleView.setTextColor(

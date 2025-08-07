@@ -37,21 +37,23 @@
         android:layout_height="wrap_content"
         app:mcv_selectionColor="#ffCF4B40"
         app:mcv_selectionMode="multiple"
-        app:mcv_showOtherDates="all"
+        app:mcv_showOtherDates="none"
+        app:mcv_showWeekDays="true"
         app:mcv_tileHeight="40dp" />
 
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:layout_marginTop="-30dp">
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginLeft="18dp"
+            android:layout_marginTop="10dp"
             android:layout_marginRight="18dp"
-            android:layout_marginTop="20dp"
             android:layout_marginBottom="34dp"
             app:cardCornerRadius="40dp"
             app:cardElevation="4dp"
@@ -61,29 +63,44 @@
 
             <ScrollView
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:fillViewport="true">
 
-                <TextView
-                    android:id="@+id/story"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="76dp"
-                    android:lineHeight="28dp"
-                    android:paddingStart="18dp"
-                    android:paddingEnd="18dp"
-                    android:textColor="@color/item_text_normal"
-                    android:textSize="14sp" />
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:visibility="gone"
+                        android:textColor="@color/item_text_normal"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/story"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="40dp"
+                        android:lineHeight="28dp"
+                        android:padding="32dp"
+                        android:textSize="14sp" />
+                </LinearLayout>
             </ScrollView>
         </com.google.android.material.card.MaterialCardView>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="58dp"
-            android:gravity="center_vertical"
-            android:layout_marginTop="28dp"
             android:layout_marginLeft="20dp"
+            android:layout_marginTop="28dp"
             android:layout_marginRight="20dp"
             android:elevation="4dp"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <ImageView
@@ -92,15 +109,12 @@
                 android:layout_height="wrap_content"
                 android:padding="16dp"
                 android:src="@mipmap/ic_pre_chapter" />
-            <TextView
-                android:id="@+id/title"
+            <View
                 android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:textColor="@color/item_text_normal"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:layout_height="1dp"
+                android:layout_weight="1"/>
+
+
             <ImageView
                 android:id="@+id/next_chapter"
                 android:layout_width="wrap_content"
@@ -113,7 +127,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="right|top"
-            android:layout_marginTop="10dp"
             android:layout_marginRight="106dp"
             android:elevation="5dp"
             android:src="@mipmap/ic_clip" />

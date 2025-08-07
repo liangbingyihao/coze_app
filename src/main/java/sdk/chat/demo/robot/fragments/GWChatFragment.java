@@ -400,7 +400,8 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                     showTextInput();
                     EditText editText = input.getInputEditText();
                     editText.requestFocus();
-                    editText.setText(networkEvent.getText());
+                    String rawText = networkEvent.getText().replaceAll("[.…]+$", "");
+                    editText.setText(rawText);
                     Log.e("input","MessageInputPrompt:"+networkEvent.getText());
                     editText.postDelayed(() -> {
                         editText.setSelection(editText.getText().length());

@@ -7,57 +7,46 @@
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="#FFFFFF"
         app:cardCornerRadius="16dp"
         app:cardElevation="0dp"
-        app:strokeColor="#6A6A6A"
-        android:background="#FFFFFF"
-        app:cardPreventCornerOverlap="false">
+        app:cardPreventCornerOverlap="false"
+        app:strokeColor="#6A6A6A">
 
         <!--        android:background="#20000000"-->
         <LinearLayout
             android:id="@+id/cardView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:paddingBottom="32dp"
-            android:paddingTop="26dp"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/menu_favorites"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:padding="16dp"
-                android:gravity="center"
-                android:drawableTop="@mipmap/ic_favorites"
-                android:text="@string/favorites"
-                android:textColor="@color/item_text_normal"
-                android:breakStrategy="simple"
-                android:textSize="12sp" />
+                style="@style/NavMenuHeader"
+                android:drawableLeft="@mipmap/ic_favorites"
+                android:text="@string/favorites" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/gray_divider" />
 
             <TextView
                 android:id="@+id/menu_gw_daily"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:padding="16dp"
-                android:gravity="center"
-                android:drawableTop="@mipmap/ic_gw_daily"
-                android:text="@string/daily_gw"
-                android:textColor="@color/item_text_normal"
-                android:textSize="12sp" />
+                style="@style/NavMenuHeader"
+                android:drawableLeft="@mipmap/ic_gw_daily"
+                android:text="@string/daily_gw" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/gray_divider" />
 
             <TextView
                 android:id="@+id/menu_search"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:padding="16dp"
-                android:gravity="center"
-                android:drawableTop="@mipmap/ic_search"
-                android:text="@string/search"
-                android:textColor="@color/item_text_normal"
-                android:textSize="12sp" />
+                style="@style/NavMenuHeader"
+                android:drawableLeft="@mipmap/ic_search"
+                android:text="@string/search"/>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
@@ -66,8 +55,8 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
         android:layout_marginTop="26dp"
+        android:layout_marginBottom="12dp"
         android:text="@string/timeline"
-        android:textSize="14sp"/>
+        android:textSize="14sp" />
 </LinearLayout>

@@ -99,7 +99,7 @@ public class SplashScreenActivity extends AppCompatActivity {
 
     private void proceedToMain() {
         // 确保主界面启动前所有服务就绪
-        if (GWApiManager.shared().isAuthenticated()) {
+        if (ChatSDK.db().getDaoCore()!=null) {
             startActivity(new Intent(this, MainDrawerActivity.class));
             finish();
         } else {

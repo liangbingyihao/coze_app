@@ -124,7 +124,7 @@
                                 android:paddingTop="24dp"
                                 android:paddingBottom="12dp"
                                 android:gravity="center"
-                                android:text="121324"
+                                android:visibility="gone"
                                 android:textColor="@color/item_text_normal"
                                 android:textSize="18sp" />
 
@@ -132,16 +132,16 @@
                                 android:id="@+id/story"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:paddingStart="18dp"
-                                android:paddingEnd="18dp"
-                                android:lineHeight="30dp"
-                                android:textColor="@color/item_text_normal"
-                                android:textSize="14sp" />
+                                android:padding="20dp"
+                                android:textSize="14sp"
+                                android:lineSpacingExtra="8dp" />
                         </LinearLayout>
                     </ScrollView>
                 </com.google.android.material.card.MaterialCardView>
             </FrameLayout>
             <!--            </FrameLayout>-->
+<!--            android:textColor="@color/item_text_normal"-->
+<!--            android:textSize="14sp"-->
 
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

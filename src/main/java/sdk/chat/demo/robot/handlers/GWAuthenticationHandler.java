@@ -66,10 +66,28 @@ public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
     public Completable authenticate(final AccountDetails details) {
         return Completable.defer(() -> {
             if (!isAuthenticating()) {
-                authenticating = GWApiManager.shared().authenticate(details).flatMapCompletable(this::loginSuccessful).cache();
+                authenticating = GWApiManager.shared().authenticate(details)
+                        .flatMapCompletable(this::loginSuccessful)
+                        .cache();
             }
             return authenticating;
         }).doFinally(this::cancel);
+    }
+
+    public static void ensureDatabase() throws Exception {
+        if (!GWApiManager.shared().isAuthenticated()) {
+            initDatabaseByUser(ChatSDK.currentUserID());
+        }
+    }
+
+    public static void initDatabaseByUser(String userId) throws Exception {
+        ChatSDK.db().openDatabase(userId);
+        User user = ChatSDK.db().fetchOrCreateEntityWithEntityID(User.class, userId);
+        List<User> robot = ChatSDK.contact().contacts();
+        if (!robot.isEmpty()) {
+            user.addContact(robot.get(0));
+            ChatSDK.db().update(user);
+        }
     }
 
     @SuppressLint("CheckResult")
@@ -77,18 +95,11 @@ public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
         return Completable.defer(() -> {
 //            String userId = details.getMetaValue("userId");
             String userId = "user_" + details.getMetaValue("userId");
-            Log.i("FATAL","loginSuccessful:"+userId);
-            ChatSDK.db().openDatabase(userId);
-            if (details.type == AccountDetails.Type.Username) {
-                ChatSDK.shared().getKeyStorage().save(details.username, details.password);
-            }
+            initDatabaseByUser(userId);
             setCurrentUserEntityID(userId);
 
-            User user = ChatSDK.db().fetchOrCreateEntityWithEntityID(User.class, userId);
-            List<User> robot = ChatSDK.contact().contacts();
-            if (!robot.isEmpty()) {
-                user.addContact(robot.get(0));
-                ChatSDK.db().update(user);
+            if (details.type == AccountDetails.Type.Username) {
+                ChatSDK.shared().getKeyStorage().save(details.username, details.password);
             }
             GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
             handler.getWelcomeMsg().subscribe();
@@ -96,11 +107,11 @@ public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
             ImageApi.listImageTags().subscribe();
             ImageApi.getServerConfigs().subscribe();
 
-            if (ChatSDK.hook() != null) {
-                HashMap<String, Object> data = new HashMap<>();
-                data.put(HookEvent.User, user);
-                ChatSDK.hook().executeHook(HookEvent.DidAuthenticate, data).subscribe(ChatSDK.events());
-            }
+//            if (ChatSDK.hook() != null) {
+//                HashMap<String, Object> data = new HashMap<>();
+//                data.put(HookEvent.User, user);
+//                ChatSDK.hook().executeHook(HookEvent.DidAuthenticate, data).subscribe(ChatSDK.events());
+//            }
 
 
 //            ChatSDK.core().sendAvailablePresence().subscribe();
@@ -109,7 +120,7 @@ public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
 //                    .buildDelete()
 //                    .executeDeleteWithoutDetachingEntities();
 
-            Logger.info("Authentication complete! name = " + user.getName() + ", id = " + user.getEntityID());
+//            Logger.info("Authentication complete! name = " + user.getName() + ", id = " + user.getEntityID());
 
             setAuthStateToIdle();
 

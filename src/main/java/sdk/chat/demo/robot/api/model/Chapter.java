@@ -11,6 +11,7 @@ public class Chapter {
     @SerializedName("chapter_no")
     private Integer chapterNo;
     private String title;
+    @SerializedName("html_content")
     private String content;
     private String date;
     private CalendarDay calendarDay;

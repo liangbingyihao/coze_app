@@ -112,7 +112,7 @@ class SessionAdapter(
 
     inner class ArticleViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val titleText: TextView = view.findViewById(R.id.title_text)
-        private val editTopic: View? = view.findViewById(R.id.edit_topic)
+//        private val editTopic: View? = view.findViewById(R.id.edit_topic)
 
         fun bind(item: HistoryItem.SessionItem, position: Int) {
             titleText.text = item.title
@@ -172,15 +172,15 @@ class SessionAdapter(
                 onItemClick(previous != selectedPosition, item)
             }
 
-            editTopic?.setOnClickListener {
-                val clickedPosition =
-                    absoluteAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }
-                        ?: return@setOnClickListener
-                // 更新选中状态
-                selectedPosition = clickedPosition
-
-                onItemEdit(item)
-            }
+//            editTopic?.setOnClickListener {
+//                val clickedPosition =
+//                    absoluteAdapterPosition.takeIf { it != RecyclerView.NO_POSITION }
+//                        ?: return@setOnClickListener
+//                // 更新选中状态
+//                selectedPosition = clickedPosition
+//
+//                onItemEdit(item)
+//            }
         }
     }
 }
