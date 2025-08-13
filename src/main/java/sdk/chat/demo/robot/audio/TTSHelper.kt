@@ -18,6 +18,8 @@ import com.bytedance.speech.speechengine.SpeechEngine
 import com.bytedance.speech.speechengine.SpeechEngine.SpeechListener
 import com.bytedance.speech.speechengine.SpeechEngineDefines
 import com.bytedance.speech.speechengine.SpeechEngineGenerator
+import org.json.JSONException
+import org.json.JSONObject
 import sdk.chat.core.dao.Message
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.session.ChatSDK
@@ -34,6 +36,20 @@ object TTSHelper {
 
     //doubao
     private var mSpeechEngine: SpeechEngine? = null
+
+    // Options Default Value
+    private const val mTtsSilenceDuration = 0
+    private const val mTtsSpeakSpeed = 10
+    private const val mTtsAudioVolume = 10
+    private const val mTtsAudioPitch = 10
+
+    // Novel Scenario Related
+    private var mTtsSynthesisFromPlayer = false
+    private const val mTtsPlayingProgress = 0.0
+    private var mTtsPlayingIndex = -1
+    private var mTtsSynthesisIndex = 0
+    private var mTtsSynthesisText: MutableList<String> = mutableListOf()
+    private var mTtsSynthesisMap: MutableMap<String?, Int?>? = mutableMapOf()
 
     // Engine State
     private var mEngineInited = false
@@ -111,13 +127,15 @@ object TTSHelper {
     }
 
     fun speek(text: String, msgId: String) {
-        mCurTtsText = text.replace("*", "").replace("<br>|</br>|<br/>".toRegex(), "")
         if (ttsType == 0) {
+            mCurTtsText = text.replace("*", "").replace("<br>|</br>|<br/>".toRegex(), "")
             textToSpeech?.language = LanguageUtils.getTextLanguage(mCurTtsText)
             textToSpeech?.speak(mCurTtsText, TextToSpeech.QUEUE_FLUSH, null, msgId)
         } else {
-            mCurTtsText = mCurTtsText.take(20)
+//            mCurTtsText = mCurTtsText.take(20)
+            mCurTtsText = text
             startEngine()
+            triggerSynthesis()
         }
     }
 
@@ -148,6 +166,12 @@ object TTSHelper {
 
     //doubao
 
+    private fun initDoubaoTTS(context: AppCompatActivity) {
+        initEngineInternal()
+        mAudioManager =
+            context.applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager?
+    }
+
     private var mAFChangeListener: OnAudioFocusChangeListener =
         object : OnAudioFocusChangeListener {
             override fun onAudioFocusChange(focusChange: Int) {
@@ -155,7 +179,7 @@ object TTSHelper {
                     AudioManager.AUDIOFOCUS_GAIN -> {
                         Log.d(
                             TAG,
-                            "onAudioFocusChange: AUDIOFOCUS_GAIN, " + mResumeOnFocusGain
+                            "onAudioFocusChange: AUDIOFOCUS_GAIN, $mResumeOnFocusGain"
                         )
                         if (mResumeOnFocusGain) {
                             mResumeOnFocusGain = false
@@ -243,20 +267,21 @@ object TTSHelper {
                 SpeechEngineDefines.MESSAGE_TYPE_ENGINE_ERROR -> {
                     // Callback: 错误信息回调
                     Log.e(TAG, "Callback: 错误信息: " + stdData)
-                    setPlayingMsg(null)
-//                    speechError(stdData)
+//                    setPlayingMsg(null)
+                    speechError(stdData)
                 }
 
                 SpeechEngineDefines.MESSAGE_TYPE_TTS_SYNTHESIS_BEGIN -> {
                     // Callback: 合成开始回调
                     Log.e(TAG, "Callback: 合成开始: " + stdData)
+                    updateSynthesisMap(stdData)
 //                    speechStartSynthesis(stdData)
                 }
 
                 SpeechEngineDefines.MESSAGE_TYPE_TTS_SYNTHESIS_END -> {
                     // Callback: 合成结束回调
                     Log.e(TAG, "Callback: 合成结束: " + stdData)
-//                    speechFinishSynthesis(stdData)
+                    speechFinishSynthesis(stdData)
                 }
 
                 SpeechEngineDefines.MESSAGE_TYPE_TTS_START_PLAYING -> {
@@ -267,15 +292,14 @@ object TTSHelper {
 
                 SpeechEngineDefines.MESSAGE_TYPE_TTS_PLAYBACK_PROGRESS -> {
                     // Callback: 播放进度回调
-                    Log.e(TAG, "Callback: 播放进度: " + stdData)
+//                    Log.e(TAG, "Callback: 播放进度: " + stdData)
 //                    speechPlayingProgress(stdData)
                 }
 
                 SpeechEngineDefines.MESSAGE_TYPE_TTS_FINISH_PLAYING -> {
                     // Callback: 播放结束回调
                     Log.e(TAG, "Callback: 播放结束: " + stdData)
-//                    speechFinishPlaying(stdData)
-                    setPlayingMsg(null);
+                    speechFinishPlaying(stdData)
                 }
 
                 SpeechEngineDefines.MESSAGE_TYPE_TTS_AUDIO_DATA -> {
@@ -291,10 +315,114 @@ object TTSHelper {
         }
     }
 
-    private fun initDoubaoTTS(context: AppCompatActivity) {
-        initEngineInternal()
-        mAudioManager =
-            context.applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager?
+    fun speechError(data: String) {
+        try {
+            val reader = JSONObject(data)
+            if (!reader.has("err_code") || !reader.has("err_msg")) {
+                return
+            }
+            val code = reader.getInt("err_code")
+            when (code) {
+                SpeechEngineDefines.CODE_TTS_LIMIT_QPS, SpeechEngineDefines.CODE_TTS_LIMIT_COUNT, SpeechEngineDefines.CODE_TTS_SERVER_BUSY, SpeechEngineDefines.CODE_TTS_LONG_TEXT, SpeechEngineDefines.CODE_TTS_INVALID_TEXT, SpeechEngineDefines.CODE_TTS_SYNTHESIS_TIMEOUT, SpeechEngineDefines.CODE_TTS_SYNTHESIS_ERROR, SpeechEngineDefines.CODE_TTS_SYNTHESIS_WAITING_TIMEOUT, SpeechEngineDefines.CODE_TTS_ERROR_UNKNOWN -> {
+                    Log.w(
+                        TAG,
+                        "When meeting this kind of error, continue to synthesize."
+                    )
+                    synthesisNextSentence()
+                }
+
+//                else -> setResultText(data)
+            }
+        } catch (e: JSONException) {
+            e.printStackTrace()
+        }
+    }
+
+    fun speechFinishSynthesis(data: String?) {
+        synthesisNextSentence()
+    }
+
+    fun speechFinishPlaying(data: String?) {
+        mTtsSynthesisMap!!.remove(data)
+        if (mTtsSynthesisMap!!.isEmpty()) {
+            setPlayingMsg(null)
+        } else {
+            if (mTtsSynthesisFromPlayer) {
+                triggerSynthesis()
+                mTtsSynthesisFromPlayer = false
+            }
+
+        }
+    }
+
+    private fun updateSynthesisMap(synthesisId: String?) {
+        if (mTtsSynthesisIndex < mTtsSynthesisText.size) {
+            mTtsSynthesisMap!!.put(synthesisId, mTtsSynthesisIndex)
+        }
+    }
+
+    private fun synthesisNextSentence() {
+        if (mEngineStarted) {
+            ++mTtsSynthesisIndex
+            if (mTtsSynthesisIndex < mTtsSynthesisText.size) {
+                triggerSynthesis()
+            }
+        }
+    }
+
+    private fun triggerSynthesis() {
+        configSynthesisParams()
+        // DIRECTIVE_SYNTHESIS 是连续合成必需的一个指令，在成功调用 DIRECTIVE_START_ENGINE 之后，每次合成新的文本需要再调用 DIRECTIVE_SYNTHESIS 指令
+        // DIRECTIVE_SYNTHESIS 需要在当前没有正在合成的文本时才可以成功调用，否则就会报错 -901，可以在收到 MESSAGE_TYPE_TTS_SYNTHESIS_END 之后调用
+        // 当使用 SDK 内置的播放器时，为了避免缓存过多的音频导致内存占用过高，SDK 内部限制缓存的音频数量不超过 5 次合成的结果，
+        // 如果 DIRECTIVE_SYNTHESIS 后返回 -902, 就需要在下一次收到 MESSAGE_TYPE_TTS_FINISH_PLAYING 再去调用 MESSAGE_TYPE_TTS_FINISH_PLAYING
+        Log.i(TAG, "触发合成")
+        Log.i(TAG, "Directive: DIRECTIVE_SYNTHESIS")
+        val ret = mSpeechEngine!!.sendDirective(SpeechEngineDefines.DIRECTIVE_SYNTHESIS, "")
+        if (ret != 0) {
+            Log.e(TAG, "Synthesis faile: $ret")
+            if (ret == SpeechEngineDefines.ERR_SYNTHESIS_PLAYER_IS_BUSY) {
+                mTtsSynthesisFromPlayer = true
+            }
+        }
+    }
+
+    private fun resetTtsContext() {
+        mTtsPlayingIndex = -1
+        mTtsSynthesisIndex = 0
+        mTtsSynthesisFromPlayer = false
+        mTtsSynthesisText.clear()
+        mTtsSynthesisMap?.clear()
+    }
+
+    private fun prepareTextList(): Boolean {
+        resetTtsContext()
+
+//        var ttsText = playingMsg.getf
+//        if (ttsText.isEmpty()) {
+//            ttsText =
+//                "愿中国青年都摆脱冷气，只是向上走，不必听自暴自弃者流的话。能做事的做事，能发声的发声。有一分热，发一分光。就令萤火一般，也可以在黑暗里发一点光，不必等候炬火。此后如竟没有炬火：我便是唯一的光。"
+//        }
+
+        //【必需配置】需合成的文本，不可超过 80 字
+        if (mTtsSynthesisText == null || mTtsSynthesisText.isEmpty()) {
+            // 使用下面几个标点符号来分句，会让通过 MESSAGE_TYPE_TTS_PLAYBACK_PROGRESS 返回的播放进度更加准确
+            val tmp: Array<String?> =
+                mCurTtsText.split("[;|!|?|。|！|？|；|…|,|.]".toRegex()).dropLastWhile { it.isEmpty() }
+                    .toTypedArray()
+            for (j in tmp.indices) {
+                AddSentence(tmp[j].toString())
+            }
+        }
+        Log.d(TAG, "Synthesis text item num: " + mTtsSynthesisText!!.size)
+        return !mTtsSynthesisText.isEmpty()
+    }
+
+    private fun AddSentence(text: String) {
+        val tmp = text.trim { it <= ' ' }
+        if (!tmp.isEmpty()) {
+            mTtsSynthesisText.add(tmp)
+        }
     }
 
     private fun initEngineInternal() {
@@ -327,7 +455,7 @@ object TTSHelper {
 
     private fun startEngine() {
         Log.d(TAG, "Start engine, current status: " + mEngineStarted)
-        if (true||!mEngineStarted) {
+        if (true || !mEngineStarted) {
             AcquireAudioFocus()
             if (!mPlaybackNowAuthorized) {
                 Log.w(TAG, "Acquire audio focus failed, can't play audio")
@@ -357,31 +485,16 @@ object TTSHelper {
         //【必需配置】TTS 使用场景
         mSpeechEngine!!.setOptionString(
             SpeechEngineDefines.PARAMS_KEY_TTS_SCENARIO_STRING,
-            SpeechEngineDefines.TTS_SCENARIO_TYPE_NORMAL
+            SpeechEngineDefines.TTS_SCENARIO_TYPE_NOVEL
+//            SpeechEngineDefines.TTS_SCENARIO_TYPE_NORMAL
         )
 
-        //【必需配置】需合成的文本，不可超过 80 字
-        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_TTS_TEXT_STRING, mCurTtsText)
-//        //【可选配置】需合成的文本的类型，支持直接传文本(TTS_TEXT_TYPE_PLAIN)和传 SSML 形式(TTS_TEXT_TYPE_SSML)的文本
-//        mSpeechEngine!!.setOptionString(
-//            SpeechEngineDefines.PARAMS_KEY_TTS_TEXT_TYPE_STRING,
-//            mTtsTextTypeArray[mSettings.getOptions(R.string.tts_text_type_title).chooseIdx]
-//        )
-//        mTtsSpeakSpeed = mSettings.getInt(R.string.config_tts_speak_speed)
-//        //【可选配置】用于控制 TTS 音频的语速，支持的配置范围参考火山官网 语音技术/语音合成/离在线语音合成SDK/参数说明 文档
-//        mSpeechEngine!!.setOptionInt(SpeechEngineDefines.PARAMS_KEY_TTS_SPEED_INT, mTtsSpeakSpeed)
-//        mTtsAudioVolume = mSettings.getInt(R.string.config_tts_audio_volume)
-//        //【可选配置】用于控制 TTS 音频的音量，支持的配置范围参考火山官网 语音技术/语音合成/离在线语音合成SDK/参数说明 文档
-//        mSpeechEngine!!.setOptionInt(SpeechEngineDefines.PARAMS_KEY_TTS_VOLUME_INT, mTtsAudioVolume)
-//        mTtsAudioPitch = mSettings.getInt(R.string.config_tts_audio_pitch)
-//        //【可选配置】用于控制 TTS 音频的音高，支持的配置范围参考火山官网 语音技术/语音合成/离在线语音合成SDK/参数说明 文档
-//        mSpeechEngine!!.setOptionInt(SpeechEngineDefines.PARAMS_KEY_TTS_PITCH_INT, mTtsAudioPitch)
-//        mTtsSilenceDuration = mSettings.getInt(R.string.config_tts_silence_duration)
-//        //【可选配置】是否在文本的每句结尾处添加静音段，单位：毫秒，默认为 0ms
-//        mSpeechEngine!!.setOptionInt(
-//            SpeechEngineDefines.PARAMS_KEY_TTS_SILENCE_DURATION_INT,
-//            mTtsSilenceDuration
-//        )
+        // 准备待合成的文本
+        if (!prepareTextList()) {
+            speechError("{err_code:3006, err_msg:\"Invalid input text.\"}")
+            return
+        }
+
 //
 //        //【可选配置】是否使用 SDK 内置播放器播放合成出的音频，默认为 true
 //        mSpeechEngine!!.setOptionBoolean(
@@ -394,6 +507,34 @@ object TTSHelper {
 //            SpeechEngineDefines.PARAMS_KEY_TTS_DATA_CALLBACK_MODE_INT,
 //            if (mSettings.getBoolean(R.string.config_tts_data_callback)) 2 else 0
 //        )
+    }
+
+    private fun configSynthesisParams() {
+
+        val text: String? = mTtsSynthesisText[mTtsSynthesisIndex]
+        Log.e(TAG, "Synthesis Text: $text")
+        //【必需配置】需合成的文本，不可超过 80 字
+        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_TTS_TEXT_STRING, text)
+//        //【可选配置】需合成的文本的类型，支持直接传文本(TTS_TEXT_TYPE_PLAIN)和传 SSML 形式(TTS_TEXT_TYPE_SSML)的文本
+//        mSpeechEngine!!.setOptionString(
+//            SpeechEngineDefines.PARAMS_KEY_TTS_TEXT_TYPE_STRING,
+//            mTtsTextTypeArray[mSettings.getOptions(R.string.tts_text_type_title).chooseIdx]
+//        )
+//        mTtsSpeakSpeed = mSettings.getInt(R.string.config_tts_speak_speed)
+//        //【可选配置】用于控制 TTS 音频的语速，支持的配置范围参考火山官网 语音技术/语音合成/离在线语音合成SDK/参数说明 文档
+        mSpeechEngine!!.setOptionInt(SpeechEngineDefines.PARAMS_KEY_TTS_SPEED_INT, mTtsSpeakSpeed)
+//        mTtsAudioVolume = mSettings.getInt(R.string.config_tts_audio_volume)
+//        //【可选配置】用于控制 TTS 音频的音量，支持的配置范围参考火山官网 语音技术/语音合成/离在线语音合成SDK/参数说明 文档
+        mSpeechEngine!!.setOptionInt(SpeechEngineDefines.PARAMS_KEY_TTS_VOLUME_INT, mTtsAudioVolume)
+//        mTtsAudioPitch = mSettings.getInt(R.string.config_tts_audio_pitch)
+//        //【可选配置】用于控制 TTS 音频的音高，支持的配置范围参考火山官网 语音技术/语音合成/离在线语音合成SDK/参数说明 文档
+        mSpeechEngine!!.setOptionInt(SpeechEngineDefines.PARAMS_KEY_TTS_PITCH_INT, mTtsAudioPitch)
+//        mTtsSilenceDuration = mSettings.getInt(R.string.config_tts_silence_duration)
+//        //【可选配置】是否在文本的每句结尾处添加静音段，单位：毫秒，默认为 0ms
+        mSpeechEngine!!.setOptionInt(
+            SpeechEngineDefines.PARAMS_KEY_TTS_SILENCE_DURATION_INT,
+            mTtsSilenceDuration
+        )
 
         // ------------------------ 在线合成相关配置 -----------------------
 //        var curVoiceOnline: String = mSettings.getString(R.string.config_voice_online)
@@ -710,7 +851,7 @@ object TTSHelper {
         return playingMsg
     }
 
-    fun isPlayerPaused(): Boolean{
+    fun isPlayerPaused(): Boolean {
         return mPlayerPaused
     }
 
