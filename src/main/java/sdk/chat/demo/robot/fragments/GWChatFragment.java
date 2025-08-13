@@ -52,12 +52,13 @@ import sdk.chat.core.utils.StringChecker;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
 import sdk.chat.demo.robot.ui.GWChatContainer;
+import sdk.chat.demo.robot.ui.GWMsgInput;
 import sdk.chat.demo.robot.ui.KeyboardOverlayHelper;
 import sdk.chat.demo.robot.ui.listener.GWClickListener;
 import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.activities.BaseActivity;
 import sdk.chat.ui.activities.preview.ChatPreviewActivity;
-import sdk.chat.ui.audio.AudioBinder;
+import sdk.chat.demo.robot.ui.AudioBinder;
 import sdk.chat.ui.fragments.AbstractChatFragment;
 import sdk.chat.ui.interfaces.TextInputDelegate;
 import sdk.chat.ui.keyboard.KeyboardAwareFrameLayout;
@@ -80,7 +81,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
     protected GWChatContainer chatView;
     protected View divider;
     protected ReplyView replyView;
-    protected MessageInput input;
+    protected GWMsgInput input;
     protected CoordinatorLayout listContainer;
     protected KeyboardAwareFrameLayout root;
     protected LinearLayout messageInputLinearLayout;
@@ -706,7 +707,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
 
     protected void addTypingListener() {
-        input.setTypingListener(new MessageInput.TypingListener() {
+        input.setTypingListener(new GWMsgInput.TypingListener() {
             @Override
             public void onStartTyping() {
                 startTyping();

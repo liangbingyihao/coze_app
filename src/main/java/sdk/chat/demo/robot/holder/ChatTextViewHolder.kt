@@ -37,6 +37,7 @@ import sdk.guru.common.DisposableMap
 import sdk.guru.common.RX
 import java.text.DateFormat
 import androidx.core.graphics.toColorInt
+import sdk.chat.demo.robot.audio.TTSHelper
 
 open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
     MessageHolders.BaseMessageViewHolder<T>(itemView, null),
@@ -154,7 +155,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
             imageLikeContent?.setImageResource(R.mipmap.ic_like_black)
         }
 
-        if (t.message.equals(threadHandler.playingMsg)) {
+        if (t.message.equals(TTSHelper.getPlayingMsg())&&!TTSHelper.isPlayerPaused()) {
             btnPlay?.setImageResource(R.mipmap.ic_pause_black);
         } else {
             btnPlay?.setImageResource(R.mipmap.ic_play_black);

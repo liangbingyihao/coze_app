@@ -402,17 +402,17 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
             return
         }
         var action = imageHolder.action;
-        var imageDaily: ImageDaily = imageHolder.getImageDaily()
+        var imageDaily: ImageDaily? = imageHolder.getImageDaily()
+        if (imageDaily == null) {
+            return
+        }
         if (action == GWThreadHandler.action_bible_pic) {
+            bible?.text = imageDaily?.scripture
+        } else if (action == GWThreadHandler.action_daily_gw || action == GWThreadHandler.action_daily_gw_pray) {
+            day?.text = if (imageDaily.date != null) imageDaily.date.substring(8) else ""
+            month?.text = if (imageDaily.date != null) imageDaily.date.substring(0, 7) else ""
             bible?.text = imageDaily.scripture
-        } else if (action == GWThreadHandler.action_daily_gw||action==GWThreadHandler.action_daily_gw_pray) {
-            var imageDaily: ImageDaily? = imageHolder.getImageDaily()
-            if (imageDaily != null) {
-                day?.text = if(imageDaily.date!=null) imageDaily.date.substring(8) else ""
-                month?.text = if(imageDaily.date!=null) imageDaily.date.substring(0, 7) else ""
-                bible?.text = imageDaily.scripture
-                reference?.text = imageDaily.reference
-            }
+            reference?.text = imageDaily.reference
         }
         Glide.with(image!!)
             .load(imageDaily.backgroundUrl)

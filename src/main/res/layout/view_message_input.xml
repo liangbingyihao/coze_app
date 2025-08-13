@@ -1,0 +1,59 @@
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardBackgroundColor="@color/white"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    app:strokeColor="#E0E0E0"
+    app:strokeWidth="1dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="32dp">
+
+        <ImageButton
+            android:id="@id/attachmentButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:src="@mipmap/ic_audio" />
+
+        <android.widget.Space
+            android:id="@id/attachmentButtonSpace"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_toEndOf="@id/attachmentButton"
+            android:layout_toRightOf="@id/attachmentButton" />
+
+        <EditText
+            android:id="@id/messageInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@id/sendButtonSpace"
+            android:layout_toLeftOf="@id/sendButtonSpace"
+            android:layout_toEndOf="@id/attachmentButtonSpace"
+            android:layout_toRightOf="@id/attachmentButtonSpace"
+            android:inputType="textAutoCorrect|textAutoComplete|textMultiLine|textCapSentences" />
+
+        <android.widget.Space
+            android:id="@id/sendButtonSpace"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_toStartOf="@id/messageSendButton"
+            android:layout_toLeftOf="@id/messageSendButton" />
+
+        <ImageButton
+            android:id="@id/messageSendButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true" />
+
+    </RelativeLayout>
+</com.google.android.material.card.MaterialCardView>

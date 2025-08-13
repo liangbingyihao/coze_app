@@ -17,7 +17,7 @@ import org.pmw.tinylog.Logger;
 
 import io.reactivex.Completable;
 import sdk.chat.core.rigs.MessageSendRig;
-import sdk.chat.core.types.MessageType;
+import sdk.chat.demo.robot.audio.TTSHelper;
 import sdk.chat.demo.robot.activities.ArticleListActivity;
 
 import java.lang.ref.WeakReference;
@@ -225,15 +225,12 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
             }
         } else if (id == R.id.btn_play) {
             if (imessage.getClass() == TextHolder.class) {
-                if (ttsSpeaker != null && ttsSpeaker.get() != null) {
-                    if (message.equals(threadHandler.getPlayingMsg())) {
-                        ttsSpeaker.get().stop();
-                        threadHandler.setPlayingMsg(null);
-                    } else {
-                        boolean change = threadHandler.setPlayingMsg(message);
-                        if (change && aiFeedback != null) {
-                            ttsSpeaker.get().speek(aiFeedback.getFeedbackText(), message.getId().toString());
-                        }
+                if (message.equals(TTSHelper.INSTANCE.getPlayingMsg())) {
+                    TTSHelper.INSTANCE.stop();
+                } else {
+                    boolean change = TTSHelper.INSTANCE.setPlayingMsg(message);
+                    if (change && aiFeedback != null) {
+                        TTSHelper.INSTANCE.speek(aiFeedback.getFeedbackText(), message.getId().toString());
                     }
                 }
             }
@@ -258,7 +255,7 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
                 ).subscribe();
             }
         } else if (id == R.id.btn_del || id == R.id.btn_del_user_text) {
-            if (imessage.getClass() == TextHolder.class && message!=null) {
+            if (imessage.getClass() == TextHolder.class && message != null) {
                 Context context = this.weakContext.get();
                 ActivityExtensionsKt.showMaterialConfirmationDialog(context, "", context.getString(R.string.delete_confirm), () -> {
                     Single<Boolean> r = id == R.id.btn_del ? threadHandler.clearFeedbackText(message) : threadHandler.clearUserText(message);
@@ -279,7 +276,7 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
 
             }
         } else if (id == R.id.btn_like_ai || id == R.id.btn_like_user_text) {
-            if (imessage.getClass() == TextHolder.class && message!=null) {
+            if (imessage.getClass() == TextHolder.class && message != null) {
                 Single<Integer> r = id == R.id.btn_like_ai ? threadHandler.toggleAiLikeState(message) : threadHandler.toggleContentLikeState(message);
                 Disposable disposable = r.observeOn(AndroidSchedulers.mainThread())
                         .subscribe(newState -> {
@@ -302,7 +299,7 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
             }
         } else if (id == R.id.btn_redo) {
             if (imessage.getClass() == TextHolder.class) {
-                if(aiFeedback!=null){
+                if (aiFeedback != null) {
                     aiFeedback.setStatus(1);
                     ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
                 }
@@ -315,14 +312,14 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
                                 }));
             }
         } else if (id == R.id.session_name) {
-            if(message!=null){
+            if (message != null) {
                 ArticleListActivity.Companion.start(weakContext.get(), message.getThreadId().toString());
             }
         } else if (id == R.id.btn_pray) {
             String params = null;
-            if(imageDaily!=null){
+            if (imageDaily != null) {
                 params = imageDaily.getScripture();
-            }else if(aiFeedback!=null&&aiFeedback.getFeedback()!=null){
+            } else if (aiFeedback != null && aiFeedback.getFeedback() != null) {
                 params = aiFeedback.getFeedback().getBible();
             }
             threadHandler.sendExploreMessage(
@@ -331,7 +328,7 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
                     GWThreadHandler.action_daily_pray,
                     params
             ).subscribe();
-        }else if (id == R.id.hint_container){
+        } else if (id == R.id.hint_container) {
             Completable completable = new MessageSendRig(message).run();
             completable.observeOn(RX.main()).doOnError(throwable -> {
                 Logger.warn("");

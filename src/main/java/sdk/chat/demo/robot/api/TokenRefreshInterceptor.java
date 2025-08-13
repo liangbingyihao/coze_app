@@ -49,7 +49,7 @@ public class TokenRefreshInterceptor implements Interceptor {
         if (response.code() == 401) {
             try {
                 String responseBody = response.peekBody(1024).string();
-                return responseBody.contains("expired") ||
+                return responseBody.toLowerCase().contains("expired") ||
                         responseBody.contains("invalid_token") ||
                         responseBody.contains("Authorization");
             } catch (IOException e) {

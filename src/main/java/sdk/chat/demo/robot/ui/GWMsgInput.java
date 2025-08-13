@@ -1,7 +1,10 @@
 package sdk.chat.demo.robot.ui;
 
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
@@ -11,6 +14,16 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.Space;
+import android.widget.TextView;
+
+import androidx.core.view.ViewCompat;
+
+import com.google.android.material.shape.CornerFamily;
+import com.google.android.material.shape.MaterialShapeDrawable;
+
+import java.lang.reflect.Field;
+
+import sdk.chat.demo.pre.R;
 
 public class GWMsgInput extends RelativeLayout
         implements View.OnClickListener, TextWatcher, View.OnFocusChangeListener {
@@ -91,14 +104,14 @@ public class GWMsgInput extends RelativeLayout
     @Override
     public void onClick(View view) {
         int id = view.getId();
-        if (id == com.stfalcon.chatkit.R.id.messageSendButton) {
+        if (id == R.id.messageSendButton) {
             boolean isSubmitted = onSubmit();
             if (isSubmitted) {
                 messageInput.setText("");
             }
             removeCallbacks(typingTimerRunnable);
             post(typingTimerRunnable);
-        } else if (id == com.stfalcon.chatkit.R.id.attachmentButton) {
+        } else if (id == R.id.attachmentButton) {
             onAddAttachments();
         }
     }
@@ -156,19 +169,22 @@ public class GWMsgInput extends RelativeLayout
 
     public void init(Context context, AttributeSet attrs) {
         init(context);
+//
+//        setPadding(20,10,20,30);
+//        setBackgroundResource(R.drawable.top_rounded_corners);
     }
 
 
     public void init(Context context) {
         // Causes some dropped frames... but it's the system
-        LayoutInflater.from(context).inflate(com.stfalcon.chatkit.R.layout.view_message_input, this);
+        LayoutInflater.from(context).inflate(R.layout.view_message_input, this);
 //        inflate(context, R.layout.view_message_input, this);
 
-        messageInput = findViewById(com.stfalcon.chatkit.R.id.messageInput);
-        messageSendButton = findViewById(com.stfalcon.chatkit.R.id.messageSendButton);
-        attachmentButton = findViewById(com.stfalcon.chatkit.R.id.attachmentButton);
-        sendButtonSpace = findViewById(com.stfalcon.chatkit.R.id.sendButtonSpace);
-        attachmentButtonSpace = findViewById(com.stfalcon.chatkit.R.id.attachmentButtonSpace);
+        messageInput = findViewById(R.id.messageInput);
+        messageSendButton = findViewById(R.id.messageSendButton);
+        attachmentButton = findViewById(R.id.attachmentButton);
+        sendButtonSpace = findViewById(R.id.sendButtonSpace);
+        attachmentButtonSpace = findViewById(R.id.attachmentButtonSpace);
 
         messageSendButton.setOnClickListener(this);
         attachmentButton.setOnClickListener(this);
@@ -177,30 +193,31 @@ public class GWMsgInput extends RelativeLayout
         messageInput.setOnFocusChangeListener(this);
     }
 
-//    private void setCursor(Drawable drawable) {
-//        if (drawable == null) return;
-//
-//        try {
-//            final Field drawableResField = TextView.class.getDeclaredField("mCursorDrawableRes");
-//            drawableResField.setAccessible(true);
-//
-//            final Object drawableFieldOwner;
-//            final Class<?> drawableFieldClass;
-//            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-//                drawableFieldOwner = this.messageInput;
-//                drawableFieldClass = TextView.class;
-//            } else {
-//                final Field editorField = TextView.class.getDeclaredField("mEditor");
-//                editorField.setAccessible(true);
-//                drawableFieldOwner = editorField.get(this.messageInput);
-//                drawableFieldClass = drawableFieldOwner.getClass();
-//            }
-//            final Field drawableField = drawableFieldClass.getDeclaredField("mCursorDrawable");
-//            drawableField.setAccessible(true);
-//            drawableField.set(drawableFieldOwner, new Drawable[]{drawable, drawable});
-//        } catch (Exception ignored) {
-//        }
-//    }
+    private void setCursor(Drawable drawable) {
+        if (drawable == null) return;
+
+        try {
+            @SuppressLint("SoonBlockedPrivateApi")
+            final Field drawableResField = TextView.class.getDeclaredField("mCursorDrawableRes");
+            drawableResField.setAccessible(true);
+
+            final Object drawableFieldOwner;
+            final Class<?> drawableFieldClass;
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+                drawableFieldOwner = this.messageInput;
+                drawableFieldClass = TextView.class;
+            } else {
+                final Field editorField = TextView.class.getDeclaredField("mEditor");
+                editorField.setAccessible(true);
+                drawableFieldOwner = editorField.get(this.messageInput);
+                drawableFieldClass = drawableFieldOwner.getClass();
+            }
+            final Field drawableField = drawableFieldClass.getDeclaredField("mCursorDrawable");
+            drawableField.setAccessible(true);
+            drawableField.set(drawableFieldOwner, new Drawable[]{drawable, drawable});
+        } catch (Exception ignored) {
+        }
+    }
 
     public void setTypingListener(GWMsgInput.TypingListener typingListener) {
         this.typingListener = typingListener;

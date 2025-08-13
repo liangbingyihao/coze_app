@@ -205,27 +205,32 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
                 finish()
             }
 
-            R.id.btn_download,R.id.btn_share_image -> {
+            R.id.btn_download, R.id.btn_share_image -> {
                 val currentPosition = viewPager.currentItem
-                var data = DailyGWHolder(GWThreadHandler.action_daily_gw, adapter.getUrlAt(currentPosition))
+                var data = DailyGWHolder(
+                    GWThreadHandler.action_daily_gw,
+                    adapter.getUrlAt(currentPosition)
+                )
                 imageHandler.onMessageViewClick(v, data)
             }
 
             R.id.conversations -> {
-                val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
-                var date = adapter.getUrlAt(viewPager.currentItem)?.date
+                if (taskDetail != null) {
+                    val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
+                    var date = adapter.getUrlAt(viewPager.currentItem)?.date
 
-                var action = GWThreadHandler.action_daily_gw
-                if(!taskDetail.isTaskCompleted(TaskDetail.TASK_PRAY_MASK)){
-                    action = GWThreadHandler.action_daily_gw_pray
-                }
+                    var action = GWThreadHandler.action_daily_gw
+                    if (!taskDetail.isTaskCompleted(TaskDetail.TASK_PRAY_MASK)) {
+                        action = GWThreadHandler.action_daily_gw_pray
+                    }
 //                threadHandler.aiExplore.contextId
-                threadHandler.sendExploreMessage(
-                    "【每日恩语】-${date}",
-                    threadHandler.aiExplore.message,
-                    action,
-                    date
-                ).subscribe();
+                    threadHandler.sendExploreMessage(
+                        "【每日恩语】-${date}",
+                        threadHandler.aiExplore.message,
+                        action,
+                        date
+                    ).subscribe();
+                }
                 finish()
             }
         }

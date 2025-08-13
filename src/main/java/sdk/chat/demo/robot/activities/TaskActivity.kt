@@ -185,25 +185,6 @@ class TaskActivity : BaseActivity(), View.OnClickListener {
             storyContainer.visibility = View.GONE
         } else {
             storyContainer.visibility = View.VISIBLE
-//            tvStory.text = taskProcess.chapters[index].content
-//            tvStoryTitle.text = taskProcess.chapters[index].title
-//            var html = "<br/><div style=\"text-align:center\"><b><h3><font color='#333333'>第一天：光的创造</font></h3></b></div>\n" +
-//                    "\n" +
-//                    "<p><strong><font color='#333333'>起初，世界一片混沌，黑暗笼罩。上帝说：“要有光！” 光便出现了。上帝将光与暗分开，称光为昼，暗为夜。这一天的创造，是秩序的开端，光代表着希望与启示，打破了无尽的黑暗，为后续的创造奠定基础，让世界有了时间的雏形 —— 昼夜交替，开启了万物生长的可能。</font></strong>\n" +
-//                    "</p>\n" +
-//                    "\n" +
-//                    "<div style=\"text-align:center\"><span style=\"color:#817b7b;\"><b><h4>神7天创造的规律</h4></b></span></div>\n" +
-//                    "<span style=\"color:#817b7b;\">\n" +
-//                    "    1.从宏观到微观：\n" +
-//                    "神先创造了宏观的宇宙框架，如第一天创造光，分开昼夜；第二天创造天空；第三天创造陆地和海洋，以及植物。之后才创造微观的生物，如第四天创造日月星辰管理时间，第五天创造水中的鱼和空中的鸟，第六天创造地上的走兽和人类。\n" +
-//                    "  <br/>\n" +
-//                    "  2.从简单到复杂：\n" +
-//                    "创造的事物从简单的无机物逐渐发展到复杂的有机物和有生命的物体。先有光、天空、陆地等简单的元素，然后有植物、动物，最后创造出具有神形象的人类。\n" +
-//                    "  <br/>\n" +
-//                    "  3.有休息和祝福：\n" +
-//                    "神在第七天歇了他一切的工，安息了，并赐福给第七日，定为圣日。这体现了神创造的节奏，也教导我们要劳逸结合，尊重安息的时间。\n" +
-//                    "  <br/>\n" +
-//                    "</span>"
             tvStory.text = HtmlCompat.fromHtml(taskProcess.chapters[index].content, HtmlCompat.FROM_HTML_MODE_LEGACY);
         }
     }

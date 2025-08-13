@@ -31,17 +31,10 @@
             android:id="@+id/messageInputLinearLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="-16dp"
             android:orientation="vertical"
             android:layout_gravity="bottom"
             >
-
-            <View
-                android:id="@+id/divider"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:background="?chatViewDividerColor"/>
 
             <sdk.chat.ui.views.ReplyView
                 android:id="@+id/replyView"
@@ -49,7 +42,7 @@
                 android:layout_width="match_parent"
                 />
 
-            <com.stfalcon.chatkit.messages.MessageInput
+            <sdk.chat.demo.robot.ui.GWMsgInput
                 android:id="@+id/input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

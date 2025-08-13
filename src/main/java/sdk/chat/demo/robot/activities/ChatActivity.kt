@@ -17,6 +17,7 @@ import sdk.chat.core.dao.Thread
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.SessionAdapter
+import sdk.chat.demo.robot.audio.TTSHelper
 import sdk.chat.demo.robot.extensions.LanguageUtils
 import sdk.chat.demo.robot.fragments.GWChatFragment
 import sdk.chat.demo.robot.handlers.GWThreadHandler
@@ -149,12 +150,12 @@ class ChatActivity : BaseActivity(), View.OnClickListener,
             override fun onDone(utteranceId: String?) {
 
                 //通知老的播放按键恢复一下
-                threadHandler.setPlayingMsg(null);
+                TTSHelper.setPlayingMsg(null);
                 Toast.makeText(this@ChatActivity, "onDone", Toast.LENGTH_SHORT).show()
             }
 
             override fun onError(utteranceId: String?) {
-                threadHandler.setPlayingMsg(null);
+                TTSHelper.setPlayingMsg(null);
                 Toast.makeText(this@ChatActivity, "playError", Toast.LENGTH_SHORT).show()
             }
         })
