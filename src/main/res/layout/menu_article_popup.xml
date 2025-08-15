@@ -12,6 +12,7 @@
         android:src="@drawable/ic_arrow_up" />
 
     <androidx.cardview.widget.CardView
+        android:id="@+id/menu_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:elevation="8dp"
@@ -19,22 +20,14 @@
         app:cardCornerRadius="12dp">
 
         <LinearLayout
-            android:id="@+id/menu_container"
-            android:layout_width="140dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="4dp">
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/delArticle"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:gravity="center_vertical"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                style="@style/PopupmenuText"
                 android:text="@string/remove"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
                 app:drawableEndCompat="@mipmap/ic_del" />
 
             <View
@@ -44,14 +37,8 @@
 
             <TextView
                 android:id="@+id/changeTopic"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:gravity="center_vertical"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                style="@style/PopupmenuText"
                 android:text="@string/change_topic"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
                 app:drawableEndCompat="@mipmap/ic_switch" />
         </LinearLayout>
 

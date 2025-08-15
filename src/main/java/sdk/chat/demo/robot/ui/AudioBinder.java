@@ -52,7 +52,7 @@ public class AudioBinder {
         this.messageInput = messageInput;
         this.delegate = delegate;
 
-        sendButtonDrawable = messageInput.getButton().getDrawable();
+//        sendButtonDrawable = messageInput.getButton().getDrawable();
 
         dm.add(PermissionRequestHandler.requestRecordAudio(activity).subscribe(() -> {
             permissionsGranted = true;
@@ -170,13 +170,13 @@ public class AudioBinder {
     }
 
     protected void startRecordingMode() {
-        messageInput.getButton().setImageDrawable(ChatSDKUI.icons().get(activity, ChatSDKUI.icons().microphone, R.color.white));
-        messageInput.getButton().setEnabled(true);
+//        messageInput.getButton().setImageDrawable(ChatSDKUI.icons().get(activity, ChatSDKUI.icons().microphone, R.color.white));
+//        messageInput.getButton().setEnabled(true);
         audioModeEnabled = true;
     }
 
     protected void endRecordingMode() {
-        messageInput.getButton().setImageDrawable(sendButtonDrawable);
+//        messageInput.getButton().setImageDrawable(sendButtonDrawable);
         messageInput.setEnabled(!messageInput.getInputEditText().getText().toString().isEmpty());
         audioModeEnabled = false;
     }

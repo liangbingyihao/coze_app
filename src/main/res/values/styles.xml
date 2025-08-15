@@ -73,6 +73,28 @@
         <item name="android:padding">2dp</item>
         <item name="android:background">@drawable/dashed_border_selector</item>
     </style>
+
+
+    <style name="PopupmenuText">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:drawablePadding">8dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:ellipsize">none</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="TopRoundedCard">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">15dp</item>
+        <item name="cornerSizeTopRight">15dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
 <!--    <style name="Widget.MyApp.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">-->
 <!--        &lt;!&ndash; 基础样式继承自Material3 &ndash;&gt;-->
 <!--        &lt;!&ndash; 文字样式 &ndash;&gt;-->

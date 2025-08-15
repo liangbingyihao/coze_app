@@ -5,6 +5,9 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
@@ -12,26 +15,25 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Space;
 import android.widget.TextView;
 
-import androidx.core.view.ViewCompat;
-
-import com.google.android.material.shape.CornerFamily;
-import com.google.android.material.shape.MaterialShapeDrawable;
-
 import java.lang.reflect.Field;
 
 import sdk.chat.demo.pre.R;
+import sdk.chat.demo.robot.audio.AsrHelper;
 
 public class GWMsgInput extends RelativeLayout
         implements View.OnClickListener, TextWatcher, View.OnFocusChangeListener {
 
     public EditText messageInput;
-    public ImageButton messageSendButton;
-    public ImageButton attachmentButton;
-    public Space sendButtonSpace, attachmentButtonSpace;
+    public View asrContainer;
+    public View messageSendButton;
+    public ImageView attachmentButton;
+    public SoundWaveView soundWaveView;
+//    public Space sendButtonSpace, attachmentButtonSpace;
 
     private CharSequence input;
     private GWMsgInput.InputListener inputListener;
@@ -39,7 +41,8 @@ public class GWMsgInput extends RelativeLayout
     private boolean isTyping;
     private GWMsgInput.TypingListener typingListener;
     private int delayTypingStatusMillis;
-    private Runnable typingTimerRunnable = new Runnable() {
+    private long whenStartAsrMillis;
+    private final Runnable typingTimerRunnable = new Runnable() {
         @Override
         public void run() {
             if (isTyping) {
@@ -97,8 +100,49 @@ public class GWMsgInput extends RelativeLayout
      *
      * @return ImageButton
      */
-    public ImageButton getButton() {
-        return messageSendButton;
+//    public ImageButton getButton() {
+//        return messageSendButton;
+//    }
+
+    private static final int MSG_UPDATE_WAVE = 1;
+    private int soundWaveTimes;
+    private final Handler handler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message msg) {
+            if (msg.what == MSG_UPDATE_WAVE && soundWaveTimes > 0) {
+                --soundWaveTimes;
+                float amplitude = (float) (Math.random() * 0.8 + 0.2);
+                soundWaveView.updateAmplitude(amplitude);
+
+                if (soundWaveTimes > 0) {
+                    sendEmptyMessageDelayed(MSG_UPDATE_WAVE, 50);
+                } else {
+                    soundWaveView.reset();
+                }
+            }
+        }
+    };
+
+    public void startSimulation(int times) {
+        soundWaveTimes = times;
+        handler.removeMessages(MSG_UPDATE_WAVE);
+        handler.sendEmptyMessage(MSG_UPDATE_WAVE);
+    }
+
+    public void stopSimulation() {
+        soundWaveTimes = 0;
+        soundWaveView.reset();
+        handler.removeMessages(MSG_UPDATE_WAVE);
+    }
+
+    public void onAsrStop() {
+        if (System.currentTimeMillis() - whenStartAsrMillis < 700) {
+            return;
+        }
+        attachmentButton.setImageResource(R.mipmap.ic_audio);
+        asrContainer.setVisibility(View.GONE);
+        if (attachmentsListener != null) attachmentsListener.onChangeKeyboard(true);
+        stopSimulation();
     }
 
     @Override
@@ -112,7 +156,24 @@ public class GWMsgInput extends RelativeLayout
             removeCallbacks(typingTimerRunnable);
             post(typingTimerRunnable);
         } else if (id == R.id.attachmentButton) {
-            onAddAttachments();
+            if (asrContainer.getVisibility() == View.VISIBLE) {
+                whenStartAsrMillis = 0;
+                AsrHelper.INSTANCE.stopAsr();
+            } else {
+                attachmentButton.setImageResource(R.mipmap.ic_show_kb);
+                asrContainer.setVisibility(View.VISIBLE);
+                if (attachmentsListener != null) attachmentsListener.onChangeKeyboard(false);
+                whenStartAsrMillis = System.currentTimeMillis();
+                AsrHelper.INSTANCE.startAsr();
+            }
+//            onAddAttachments();
+        } else if (id == R.id.stopAsr) {
+            whenStartAsrMillis = 0;
+            AsrHelper.INSTANCE.stopAsr();
+//            attachmentButton.setImageResource(R.mipmap.ic_audio);
+//            asrContainer.setVisibility(View.GONE);
+//            if (attachmentsListener != null) attachmentsListener.onChangeKeyboard(true);
+//            stopSimulation();
         }
     }
 
@@ -163,9 +224,9 @@ public class GWMsgInput extends RelativeLayout
         return inputListener != null && inputListener.onSubmit(input);
     }
 
-    private void onAddAttachments() {
-        if (attachmentsListener != null) attachmentsListener.onAddAttachments();
-    }
+//    private void onAddAttachments() {
+//        if (attachmentsListener != null) attachmentsListener.onAddAttachments();
+//    }
 
     public void init(Context context, AttributeSet attrs) {
         init(context);
@@ -183,11 +244,13 @@ public class GWMsgInput extends RelativeLayout
         messageInput = findViewById(R.id.messageInput);
         messageSendButton = findViewById(R.id.messageSendButton);
         attachmentButton = findViewById(R.id.attachmentButton);
-        sendButtonSpace = findViewById(R.id.sendButtonSpace);
-        attachmentButtonSpace = findViewById(R.id.attachmentButtonSpace);
+        asrContainer = findViewById(R.id.asrContainer);
+        soundWaveView = findViewById(R.id.soundWave);
+//        attachmentButtonSpace = findViewById(R.id.attachmentButtonSpace);
 
         messageSendButton.setOnClickListener(this);
         attachmentButton.setOnClickListener(this);
+        findViewById(R.id.stopAsr).setOnClickListener(this);
         messageInput.addTextChangedListener(this);
         messageInput.setText("");
         messageInput.setOnFocusChangeListener(this);
@@ -197,8 +260,7 @@ public class GWMsgInput extends RelativeLayout
         if (drawable == null) return;
 
         try {
-            @SuppressLint("SoonBlockedPrivateApi")
-            final Field drawableResField = TextView.class.getDeclaredField("mCursorDrawableRes");
+            @SuppressLint("SoonBlockedPrivateApi") final Field drawableResField = TextView.class.getDeclaredField("mCursorDrawableRes");
             drawableResField.setAccessible(true);
 
             final Object drawableFieldOwner;
@@ -245,7 +307,7 @@ public class GWMsgInput extends RelativeLayout
         /**
          * Fires when user presses 'add' button.
          */
-        void onAddAttachments();
+        void onChangeKeyboard(boolean show);
     }
 
     /**

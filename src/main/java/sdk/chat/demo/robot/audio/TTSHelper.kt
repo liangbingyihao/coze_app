@@ -1,6 +1,7 @@
 package sdk.chat.demo.robot.audio
 
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
@@ -61,10 +62,17 @@ object TTSHelper {
     private var mResumeOnFocusGain = true
     private var mPlaybackNowAuthorized = false
     private var audioFocusRequest: AudioFocusRequest? = null
+    var voiceType = "BV026_streaming"
+
 
     fun initTTS(context: AppCompatActivity) {
         // 检查 TTS 是否可用
         // 注册 ActivityResultLauncher
+
+        voiceType =
+            context.getSharedPreferences("app_prefs", MODE_PRIVATE).getString("db_voice_type", "BV026_streaming")
+                .toString()
+
         ttsCheckLauncher =
             context.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
@@ -559,7 +567,7 @@ object TTSHelper {
         //【必需配置】在线合成使用的音色代号
         mSpeechEngine!!.setOptionString(
             SpeechEngineDefines.PARAMS_KEY_TTS_VOICE_TYPE_ONLINE_STRING,
-            "BV026_streaming"
+            voiceType
         )
 
         //【可选配置】是否打开在线合成的服务端缓存，默认关闭

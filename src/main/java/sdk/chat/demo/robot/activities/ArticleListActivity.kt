@@ -54,6 +54,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
     private lateinit var vEmptyContainer: View
     private lateinit var vLineDash: View
     private lateinit var recyclerView: RecyclerView
+    private lateinit var vMoreMenus: View
     private var editingMode = 0
     private val EDIT_SUMMARY = 1
     private val EDIT_TOPIC_NAME = 2
@@ -91,7 +92,8 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         tvTitle.setOnClickListener(this)
         findViewById<View>(R.id.edSummaryExit).setOnClickListener(this)
         findViewById<View>(R.id.edSummaryConfirm).setOnClickListener(this)
-        findViewById<View>(R.id.more_menus).setOnClickListener(this)
+        vMoreMenus = findViewById<View>(R.id.more_menus)
+        vMoreMenus.setOnClickListener(this)
         bConversations = findViewById<View>(R.id.conversations)
         bConversations.setOnClickListener(this)
         findViewById<View>(R.id.conversations1).setOnClickListener(this)
@@ -180,6 +182,11 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         var menuPopupAdapter = SessionPopupAdapter(this, items, selectedPosition)
         var title = items[selectedPosition].title
         tvTitle.text = title
+        if (title == "信仰问答") {
+            vMoreMenus.visibility = View.INVISIBLE
+        } else {
+            vMoreMenus.visibility = View.VISIBLE
+        }
         menuPopup = GenericMenuPopupWindow(
             context = this,
             anchor = findViewById(R.id.home),
@@ -193,6 +200,12 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                         sessionId = item.id
                         menuPopup.setTitle(item.title)
                         loadArticles()
+
+                        if (item.title == "信仰问答") {
+                            vMoreMenus.visibility = View.INVISIBLE
+                        } else {
+                            vMoreMenus.visibility = View.VISIBLE
+                        }
                     }
                 } else {
                     editingMode = 0
@@ -301,8 +314,13 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
 
     override fun onClick(v: View?) {
         when (v?.id) {
-            R.id.home, R.id.conversations, R.id.conversations1 -> {
+            R.id.home -> {
                 finish()
+            }
+
+            R.id.conversations, R.id.conversations1 -> {
+                finish()
+                ChatSDK.events().source().accept(NetworkEvent(EventType.HideDrawer))
             }
 
             R.id.title -> {
@@ -475,7 +493,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
     }
 
     fun editTopicName() {
-        if(sessionId.isEmpty()){
+        if (sessionId.isEmpty()) {
             return
         }
         var title = vEdSummary.text.toString()

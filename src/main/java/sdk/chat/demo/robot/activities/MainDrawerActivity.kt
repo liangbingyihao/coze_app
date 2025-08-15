@@ -3,13 +3,12 @@ package sdk.chat.demo.robot.activities
 import android.content.Intent
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
-import android.speech.tts.UtteranceProgressListener
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.EditText
 import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.edit
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -26,9 +25,10 @@ import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.HistoryItem
 import sdk.chat.demo.robot.adpter.SessionAdapter
+import sdk.chat.demo.robot.audio.AsrHelper
+import sdk.chat.demo.robot.audio.TTSHelper
 import sdk.chat.demo.robot.dialog.DialogEditSingle
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil
-import sdk.chat.demo.robot.extensions.LanguageUtils
 import sdk.chat.demo.robot.extensions.dpToPx
 import sdk.chat.demo.robot.fragments.GWChatFragment
 import sdk.chat.demo.robot.handlers.GWThreadHandler
@@ -37,10 +37,9 @@ import sdk.chat.demo.robot.ui.HighlightOverlayView
 import sdk.chat.demo.robot.ui.hasShownGuideOverlay
 import sdk.chat.demo.robot.ui.listener.GWClickListener
 import sdk.chat.ui.activities.MainActivity
+import sdk.chat.ui.utils.ToastHelper
 import sdk.guru.common.RX
-import java.util.Locale
 import kotlin.math.min
-import sdk.chat.demo.robot.audio.TTSHelper
 
 
 class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener.TTSSpeaker {
@@ -122,6 +121,30 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
                 })
         )
 
+        dm.add(
+            ChatSDK.events().sourceOnMain()
+                .filter(NetworkEvent.filterType(EventType.HideDrawer)).subscribe(Consumer {
+                    drawerLayout.closeDrawers()
+                })
+        )
+
+        dm.add(
+            ChatSDK.events().sourceOnMain()
+                .filter(NetworkEvent.filterType(EventType.NetworkStateChanged))
+                .subscribe(Consumer { networkEvent: NetworkEvent? ->
+                    ToastHelper.show(
+                        this@MainDrawerActivity,
+                        "networkEvent:${networkEvent?.isOnline}"
+                    )
+                })
+        )
+
+        //        dm.add(ChatSDK.events().sourceOnMain()
+//                .filter(NetworkEvent.filterRoleUpdated(thread, ChatSDK.currentUser()))
+//                .subscribe(networkEvent -> {
+//                    showOrHideTextInputView();
+//                }));
+
         if (!hasShownGuideOverlay(this@MainDrawerActivity)) {
             dm.add(
                 ChatSDK.events().prioritySourceOnSingle()
@@ -138,6 +161,7 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
 
         requestPermissions();
         TTSHelper.initTTS(this@MainDrawerActivity)
+        AsrHelper.initAsrEngine()
         checkTaskDetail()
     }
 
@@ -259,7 +283,7 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
 
 
     override fun speek(text: String, msgId: String) {
-        TTSHelper.speek(text,msgId)
+        TTSHelper.speek(text, msgId)
     }
 
     override fun getCurrentUtteranceId(): String? {

@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Debug;
+import android.text.Editable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -29,6 +30,7 @@ import org.pmw.tinylog.Logger;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.Map;
 
 import io.reactivex.Completable;
 import sdk.chat.core.dao.Keys;
@@ -89,7 +91,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
     protected ActivityResultLauncher<Intent> launcher;
 
-    protected AudioBinder audioBinder = null;
+    //    protected AudioBinder audioBinder = null;
     protected DisposableMap dm = new DisposableMap();
 
     protected KeyboardOverlayHelper koh;
@@ -144,7 +146,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
 
     public void setThread(Thread thread) {
-        if(true){
+        if (true) {
             return;
         }
         this.thread = thread;
@@ -292,20 +294,16 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
         chatView.initViews();
 
 
-
-
-
-
         View.OnTouchListener keyboardDismissTouchListener = new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    Log.d("GW_ACTION_DOWN","GW_ACTION_DOWN");
+                    Log.d("GW_ACTION_DOWN", "GW_ACTION_DOWN");
                     View currentFocus = getActivity().getCurrentFocus();
                     if (currentFocus instanceof EditText) {
                         Rect rect = new Rect();
                         currentFocus.getGlobalVisibleRect(rect);
-                        if (!rect.contains((int)event.getRawX(), (int)event.getRawY())) {
+                        if (!rect.contains((int) event.getRawX(), (int) event.getRawY())) {
                             currentFocus.clearFocus();
                             hideKeyboard();
                         }
@@ -318,9 +316,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 //        chatView.findViewById(R.id.root).setOnTouchListener(keyboardDismissTouchListener);
 
 
-
-
-        GWClickListener.registerListener((BaseActivity)getActivity(),chatView.getMessagesListAdapter());
+        GWClickListener.registerListener((BaseActivity) getActivity(), chatView.getMessagesListAdapter());
 //
 //        if (UIModule.config().messageSelectionEnabled) {
 //            chatView.enableSelectionMode(count -> {
@@ -332,15 +328,14 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
             hideTextInput();
         }
 
-        if (ChatSDK.audioMessage() != null && getActivity() != null) {
-            addAudioBinder();
-        } else {
-            input.setInputListener(input -> {
-                sendMessage(String.valueOf(input));
-                hideKeyboard();
-                return true;
-            });
-        }
+//        if (ChatSDK.audioMessage() != null && getActivity() != null) {
+//            addAudioBinder();
+//        } else {
+        input.setInputListener(input -> {
+            sendMessage(String.valueOf(input));
+            return true;
+        });
+//        }
 
         addTypingListener();
 
@@ -403,13 +398,33 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                     editText.requestFocus();
                     String rawText = networkEvent.getText().replaceAll("[.…]+$", "");
                     editText.setText(rawText);
-                    Log.e("input","MessageInputPrompt:"+networkEvent.getText());
+                    Log.e("input", "MessageInputPrompt:" + networkEvent.getText());
                     editText.postDelayed(() -> {
                         editText.setSelection(editText.getText().length());
                         showKeyboard();
-                    },500);
+                    }, 500);
                 }));
 
+        dm.add(ChatSDK.events().sourceOnMain()
+                .filter(NetworkEvent.filterType(EventType.MessageInputAsr))
+                .subscribe(networkEvent -> {
+                    if (networkEvent.getIsOnline()) {
+                        showTextInput();
+                        EditText editText = input.getInputEditText();
+                        Map<String, Object> params = networkEvent.getData();
+                        smartInsertAtCursor(editText, (String) params.get("lastMsg"), (String) params.get("newMsg"));
+                        input.startSimulation(50);
+                    } else {
+                        Log.e("AsrHelper", "onAsrStop");
+                        input.onAsrStop();
+                    }
+//                    editText.setText(networkEvent.getText());
+//                    Log.e("input", "MessageInputPrompt:" + networkEvent.getText());
+//                    editText.postDelayed(() -> {
+//                        editText.setSelection(editText.getText().length());
+////                        showKeyboard();
+//                    },500);
+                }));
         if (chatView != null) {
             chatView.addListeners();
 //            chatView.onLoadMore(0, 0);
@@ -417,8 +432,73 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
     }
 
-    protected void addAudioBinder() {
-        audioBinder = new AudioBinder(getActivity(), this, input);
+    public static void smartInsertAtCursor(EditText editText, String lastMsg, String newText) {
+        if (editText == null || newText == null || newText.isEmpty()) {
+            return;
+        }
+
+        try {
+            Editable editable = editText.getText();
+            int cursorPos = editText.getSelectionStart();
+
+            // 处理没有光标位置的情况
+            if (cursorPos < 0) {
+                cursorPos = editable.length();
+            }
+
+            // 获取光标前的内容
+            String beforeCursor = editable.subSequence(0, cursorPos).toString();
+
+            // 查找新文本开头在光标前内容中的最长匹配
+            int matchLength = 0;
+            if (lastMsg != null && !lastMsg.isEmpty()&& newText.startsWith(lastMsg)&&beforeCursor.endsWith(lastMsg)) {
+                matchLength = lastMsg.length();
+            }
+
+            if (matchLength > 0) {
+                // 如果找到匹配，只插入变更部分
+                String textToInsert = newText.substring(matchLength);
+
+                Log.e("AsrHelper", "matchLength:" + matchLength + ",textToInsert:" + textToInsert);
+                editable.insert(cursorPos, textToInsert);
+                editText.setSelection(cursorPos + textToInsert.length());
+            } else {
+                // 没有匹配，插入完整新字符串
+                Log.e("AsrHelper", "matchLength:" + matchLength + ",all textToInsert:" + newText);
+                editable.insert(cursorPos, newText);
+                editText.setSelection(cursorPos + newText.length());
+            }
+        } catch (Exception e) {
+            Log.e("EditTextUtils", "Error inserting text", e);
+            // 回退到简单追加
+            editText.append(newText);
+        }
+    }
+
+    /**
+     * 查找新字符串开头在已有字符串中的最长匹配长度
+     */
+    private static int findLongestPrefixMatch(String existingText, String newText) {
+        if (existingText.isEmpty() || newText.isEmpty()) {
+            return 0;
+        }
+
+        int maxMatch = Math.min(existingText.length(), newText.length());
+        int matchLength = 0;
+
+        for (int i = 1; i <= maxMatch; i++) {
+            String existingSuffix = existingText.substring(existingText.length() - i);
+            String newPrefix = newText.substring(0, i);
+
+            if (existingSuffix.equals(newPrefix)) {
+                matchLength = i;
+            } else {
+                break;
+            }
+        }
+
+        Log.e("AsrHelper", "existingText:" + existingText + ",newText:" + newText + ",matchLength:" + matchLength);
+        return matchLength;
     }
 
     @Override
@@ -437,6 +517,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
             hideTextInput();
         }
     }
+
     /**
      * Send text text
      *
@@ -483,12 +564,12 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
         // Show a local notification if the text is from a different thread
         ChatSDK.ui().setLocalNotificationHandler(thread -> !thread.getEntityID().equals(this.thread.getEntityID()));
 
-        if (audioBinder != null) {
-            audioBinder.updateRecordMode();
-        }
+//        if (audioBinder != null) {
+//            audioBinder.updateRecordMode();
+//        }
 
         if (!StringChecker.isNullOrEmpty(thread.getDraft())) {
-            Log.e("input",thread.getDraft());
+            Log.e("input", thread.getDraft());
             input.getInputEditText().setText(thread.getDraft());
         }
 
@@ -555,7 +636,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
     @Override
     public void onNewIntent(Thread thread) {
-        if(true){
+        if (true) {
             return;
         }
         this.thread = thread;
@@ -564,7 +645,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
     }
 
     public void switchContent() {
-        if(chatView!=null){
+        if (chatView != null) {
 //            chatView.switchContent();
         }
     }
@@ -628,7 +709,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
 
     public static InputMethodManager getInputMethodManager(Context context) {
-        return (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
+        return (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
     }
 
     public void showKeyboard() {
@@ -649,21 +730,26 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
         return getInputMethodManager(et.getContext());
     }
 
-    public void toggleOptions() {
-        // If the keyboard overlay is available
-        if (root.keyboardOverlayAvailable() && getActivity() != null) {
-            koh.toggle();
+    public void toggleOptions(boolean show) {
+        if (show) {
+            showKeyboard();
         } else {
-            // We don't want to remove the user if we load another activity
-            // Like the sticker activity
-            removeUserFromChatOnExit = false;
-
-            if (getActivity() != null) {
-                optionsHandler = ChatSDK.ui().getChatOptionsHandler(this);
-                optionsHandler.show(getActivity());
-            }
-
+            hideKeyboard();
         }
+//        // If the keyboard overlay is available
+//        if (root.keyboardOverlayAvailable() && getActivity() != null) {
+//            koh.toggle();
+//        } else {
+//            // We don't want to remove the user if we load another activity
+//            // Like the sticker activity
+//            removeUserFromChatOnExit = false;
+//
+//            if (getActivity() != null) {
+//                optionsHandler = ChatSDK.ui().getChatOptionsHandler(this);
+//                optionsHandler.show(getActivity());
+//            }
+//
+//        }
     }
 
     @Override

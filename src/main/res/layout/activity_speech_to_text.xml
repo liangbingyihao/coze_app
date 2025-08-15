@@ -6,30 +6,21 @@
     android:padding="16dp">
 
     <TextView
-        android:id="@+id/resultTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:text="点击下方按钮开始语音识别"
-        android:textSize="18sp" />
+        android:text="豆包音色:"
+        android:textSize="14sp" />
 
-    <Button
-        android:id="@+id/startButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:text="开始录音" />
-
-    <Button
-        android:id="@+id/stopButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="停止录音" />
+    <Spinner
+        android:id="@+id/ttsVoiceTypeSpinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
     <Button
         android:id="@+id/updateToken"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
         android:text="更新推送token" />
 
     <Button
@@ -42,7 +33,28 @@
         android:id="@+id/setPrompt"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="自定义提示语" />
+        android:text="自定义AI提示语" />
+
+
+    <TextView
+        android:id="@+id/resultTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="点击下方按钮开始语音识别"
+        android:textSize="14sp" />
+
+    <Button
+        android:id="@+id/startButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="开始录音" />
+
+    <Button
+        android:id="@+id/stopButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="停止录音" />
 
 
     <LinearLayout
@@ -54,9 +66,9 @@
             android:id="@+id/taskIndex"
             android:layout_width="170dp"
             android:layout_height="80dp"
-            android:inputType="number"
             android:digits="0123456789"
-            android:hint="(0-7)"/>
+            android:hint="(0-7)"
+            android:inputType="number" />
 
         <Button
             android:id="@+id/setTask"
@@ -72,12 +84,14 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:text="init豆包asr" />
+
     <Button
         android:id="@+id/cleardbasr"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:text="clear豆包asr" />
+
     <Button
         android:id="@+id/startdbasr"
         android:layout_width="match_parent"

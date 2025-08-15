@@ -1,4 +1,5 @@
 package sdk.chat.demo.robot.activities
+
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -8,11 +9,15 @@ import android.os.Handler
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.EditText
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.edit
 import androidx.lifecycle.LifecycleObserver
 import com.bytedance.speech.speechengine.SpeechEngine
 import com.bytedance.speech.speechengine.SpeechEngineDefines
@@ -21,16 +26,23 @@ import org.json.JSONException
 import org.json.JSONObject
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.api.JsonCacheManager
+import sdk.chat.demo.robot.audio.TTSHelper
 import sdk.chat.demo.robot.extensions.SpeechStreamRecorder
 import sdk.chat.demo.robot.handlers.DailyTaskHandler
 import sdk.chat.demo.robot.handlers.SpeechToTextHelper
 import sdk.chat.demo.robot.push.UpdateTokenWorker
 import sdk.chat.ui.utils.ToastHelper
 
-class SpeechToTextActivity  : AppCompatActivity(), View.OnClickListener , SpeechEngine.SpeechListener, LifecycleObserver{
+data class SpinnerItem(val label: String, val value: String) {
+    override fun toString(): String = label
+}
+
+class SpeechToTextActivity : AppCompatActivity(), View.OnClickListener, SpeechEngine.SpeechListener,
+    LifecycleObserver {
     private lateinit var speechToTextHelper: SpeechToTextHelper
     private lateinit var resultTextView: TextView
     private lateinit var tvTaskIndex: EditText
+    private lateinit var ttsVoiceTypeSpinner: Spinner
 
     // Engine
     private var mSpeechEngine: SpeechEngine? = null
@@ -82,7 +94,8 @@ class SpeechToTextActivity  : AppCompatActivity(), View.OnClickListener , Speech
 
         // 检查并请求录音权限
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-            != PackageManager.PERMISSION_GRANTED) {
+            != PackageManager.PERMISSION_GRANTED
+        ) {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(Manifest.permission.RECORD_AUDIO),
@@ -102,6 +115,58 @@ class SpeechToTextActivity  : AppCompatActivity(), View.OnClickListener , Speech
             }
         }
 
+        setVoiceTypeSpinner()
+
+    }
+
+    fun setVoiceTypeSpinner() {
+        ttsVoiceTypeSpinner = findViewById(R.id.ttsVoiceTypeSpinner)
+        val languages = listOf(
+            SpinnerItem("港剧男神", "BV026_streaming"),
+            SpinnerItem("广东女仔", "BV424_streaming"),
+            SpinnerItem("通用女声", "BV001_streaming"),
+            SpinnerItem("通用男声", "BV002_streaming"),
+            SpinnerItem("通用女声 2.0", "BV001_V2_streaming"),
+            SpinnerItem("擎苍 2.0", "BV701_V2_streaming")
+        )
+
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, languages)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        ttsVoiceTypeSpinner.adapter = adapter
+
+        var voiceType =
+            getSharedPreferences("app_prefs", MODE_PRIVATE).getString("db_voice_type", "BV026_streaming")
+
+        for (i in 0..<adapter.getCount()) {
+            if (adapter.getItem(i)?.value == voiceType) {
+                ttsVoiceTypeSpinner.setSelection(i)
+                break
+            }
+        }
+
+        ttsVoiceTypeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                val selected = languages[position]
+                // 使用selected.value获取实际值
+                Toast.makeText(
+                    this@SpeechToTextActivity,
+                    "Selected value: ${selected.value}",
+                    Toast.LENGTH_SHORT
+                ).show()
+                getSharedPreferences("app_prefs", MODE_PRIVATE)
+                    .edit() {
+                        putString("db_voice_type", selected.value)
+                    }
+                TTSHelper.voiceType = selected.value
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
     }
 
     override fun onRequestPermissionsResult(
@@ -129,7 +194,7 @@ class SpeechToTextActivity  : AppCompatActivity(), View.OnClickListener , Speech
     override fun onClick(v: View?) {
         when (v?.id) {
 
-            R.id.updateToken-> {
+            R.id.updateToken -> {
                 UpdateTokenWorker.forceUpdateToken(this@SpeechToTextActivity)
             }
 
@@ -163,8 +228,9 @@ class SpeechToTextActivity  : AppCompatActivity(), View.OnClickListener , Speech
 //                if(threadHandler.welcome!=null){
 //                    ChatSDK.db().delete(threadHandler.welcome)
 //                }
-                JsonCacheManager.save(this@SpeechToTextActivity,"gwTaskProcess","")
+                JsonCacheManager.save(this@SpeechToTextActivity, "gwTaskProcess", "")
             }
+
             R.id.setTask -> {
                 var taskIndex: Int = tvTaskIndex.text.toString().toInt()
                 DailyTaskHandler.testTaskDetail(taskIndex)
@@ -176,6 +242,7 @@ class SpeechToTextActivity  : AppCompatActivity(), View.OnClickListener , Speech
                 }
                 initEngine()
             }
+
             R.id.cleardbasr -> {
                 mSpeechEngine!!.sendDirective(SpeechEngineDefines.DIRECTIVE_STOP_ENGINE, "")
             }
@@ -224,7 +291,7 @@ class SpeechToTextActivity  : AppCompatActivity(), View.OnClickListener , Speech
     fun speechEnginInitucceeded() {
         Log.i(tagAsr, "引擎初始化成功!")
         mStreamRecorder?.SetSpeechEngine("ASR", mSpeechEngine)
-        ToastHelper.show(this@SpeechToTextActivity,"引擎初始化成功!")
+        ToastHelper.show(this@SpeechToTextActivity, "引擎初始化成功!")
 //        this.runOnUiThread({
 //
 //        })
@@ -311,7 +378,10 @@ class SpeechToTextActivity  : AppCompatActivity(), View.OnClickListener , Speech
 //        }
 //        Log.i(SpeechDemoDefines.TAG, "Current address: " + address)
         //【必需配置】识别服务域名
-        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_ASR_ADDRESS_STRING, "wss://openspeech.bytedance.com")
+        mSpeechEngine!!.setOptionString(
+            SpeechEngineDefines.PARAMS_KEY_ASR_ADDRESS_STRING,
+            "wss://openspeech.bytedance.com"
+        )
 
 //        var uri: String = mSettings.getString(R.string.config_uri)
 //        if (uri.isEmpty()) {
@@ -319,7 +389,10 @@ class SpeechToTextActivity  : AppCompatActivity(), View.OnClickListener , Speech
 //        }
 //        Log.i(SpeechDemoDefines.TAG, "Current uri: " + uri)
         //【必需配置】识别服务Uri
-        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_ASR_URI_STRING, "/api/v2/asr")
+        mSpeechEngine!!.setOptionString(
+            SpeechEngineDefines.PARAMS_KEY_ASR_URI_STRING,
+            "/api/v2/asr"
+        )
 
 //        var appid: String = mSettings.getString(R.string.config_app_id)
 //        if (appid.isEmpty()) {
@@ -330,7 +403,10 @@ class SpeechToTextActivity  : AppCompatActivity(), View.OnClickListener , Speech
 
 //        val token: String? = mSettings.getString(R.string.config_token)
         //【必需配置】鉴权相关：Token
-        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_APP_TOKEN_STRING, "Bearer;Yn2tI0wSDWOgEJhP8PPLcXtGInB11N4M")
+        mSpeechEngine!!.setOptionString(
+            SpeechEngineDefines.PARAMS_KEY_APP_TOKEN_STRING,
+            "Bearer;Yn2tI0wSDWOgEJhP8PPLcXtGInB11N4M"
+        )
 
 //        var cluster: String = mSettings.getString(R.string.config_cluster)
 //        if (cluster.isEmpty()) {
@@ -338,7 +414,10 @@ class SpeechToTextActivity  : AppCompatActivity(), View.OnClickListener , Speech
 //        }
 //        Log.i(SpeechDemoDefines.TAG, "Current cluster: " + cluster)
         //【必需配置】识别服务所用集群
-        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_ASR_CLUSTER_STRING, "volcengine_input_common")
+        mSpeechEngine!!.setOptionString(
+            SpeechEngineDefines.PARAMS_KEY_ASR_CLUSTER_STRING,
+            "volcengine_input_common"
+        )
 
         //【可选配置】在线请求的建连与接收超时，一般不需配置使用默认值即可
         mSpeechEngine!!.setOptionInt(SpeechEngineDefines.PARAMS_KEY_ASR_CONN_TIMEOUT_INT, 3000)
@@ -436,7 +515,7 @@ class SpeechToTextActivity  : AppCompatActivity(), View.OnClickListener , Speech
                 if (!reader.has("err_code") || !reader.has("err_msg")) {
                     return@runOnUiThread
                 }
-                resultTextView.setText(resultTextView.text.toString()+"\n"+data)
+                resultTextView.setText(resultTextView.text.toString() + "\n" + data)
             } catch (e: JSONException) {
                 e.printStackTrace()
             }
@@ -467,7 +546,7 @@ class SpeechToTextActivity  : AppCompatActivity(), View.OnClickListener , Speech
                     text += "\nreqid: " + reader.getString("reqid")
                     text += "\nresponse_delay: " + response_delay
                 }
-                resultTextView.setText(resultTextView.text.toString()+text)
+                resultTextView.setText(resultTextView.text.toString() + text)
             } catch (e: JSONException) {
                 e.printStackTrace()
             }
@@ -529,6 +608,7 @@ class SpeechToTextActivity  : AppCompatActivity(), View.OnClickListener , Speech
             recordHandler!!.removeCallbacks(recordRunnable)
         }
     }
+
     private fun configStartAsrParams() {
 //        //【可选配置】是否开启顺滑(DDC)
 //        mSpeechEngine!!.setOptionBoolean(

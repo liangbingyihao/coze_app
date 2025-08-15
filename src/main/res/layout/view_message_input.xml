@@ -1,59 +1,99 @@
-<com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     app:cardBackgroundColor="@color/white"
-    app:cardCornerRadius="16dp"
     app:cardElevation="4dp"
+    app:shapeAppearanceOverlay="@style/TopRoundedCard"
     app:strokeColor="#E0E0E0"
     app:strokeWidth="1dp">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingBottom="32dp">
+        android:layout_gravity="bottom|center_horizontal"
+        android:orientation="vertical">
 
-        <ImageButton
-            android:id="@id/attachmentButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:src="@mipmap/ic_audio" />
-
-        <android.widget.Space
-            android:id="@id/attachmentButtonSpace"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_toEndOf="@id/attachmentButton"
-            android:layout_toRightOf="@id/attachmentButton" />
-
-        <EditText
-            android:id="@id/messageInput"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_toStartOf="@id/sendButtonSpace"
-            android:layout_toLeftOf="@id/sendButtonSpace"
-            android:layout_toEndOf="@id/attachmentButtonSpace"
-            android:layout_toRightOf="@id/attachmentButtonSpace"
-            android:inputType="textAutoCorrect|textAutoComplete|textMultiLine|textCapSentences" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingTop="10dp"
+            android:paddingBottom="35dp">
 
-        <android.widget.Space
-            android:id="@id/sendButtonSpace"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_toStartOf="@id/messageSendButton"
-            android:layout_toLeftOf="@id/messageSendButton" />
+            <ImageView
+                android:id="@id/attachmentButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:layout_marginStart="26dp"
+                android:padding="8dp"
+                android:src="@mipmap/ic_audio" />
 
-        <ImageButton
-            android:id="@id/messageSendButton"
+
+            <EditText
+                android:id="@id/messageInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="16dp"
+                android:layout_weight="1"
+                android:background="@drawable/edittext_rounded_bg"
+                android:inputType="textAutoCorrect|textAutoComplete|textMultiLine|textCapSentences"
+                android:minHeight="42dp"
+                android:padding="8dp" />
+
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:layout_marginRight="26dp">
+
+                <ImageView
+                    android:id="@+id/messageStopButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:src="@mipmap/ic_stop_ai"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@id/messageSendButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:text="@string/send"
+                    android:textColor="@color/item_text_selected"
+                    android:textSize="14sp" />
+            </FrameLayout>
+
+        </LinearLayout>
+
+
+        <FrameLayout
+            android:id="@+id/asrContainer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentRight="true"
-            android:layout_centerVertical="true" />
+            android:layout_gravity="bottom"
+            android:visibility="gone">
 
-    </RelativeLayout>
+
+            <sdk.chat.demo.robot.ui.SoundWaveView
+                android:id="@+id/soundWave"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:layout_gravity="center"
+                android:background="@android:color/white" />
+
+            <ImageView
+                android:id="@+id/stopAsr"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:padding="8dp"
+                android:src="@mipmap/ic_stop_asr" />
+        </FrameLayout>
+    </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

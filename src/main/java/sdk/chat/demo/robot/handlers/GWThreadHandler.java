@@ -182,9 +182,9 @@ public class GWThreadHandler extends AbstractThreadHandler {
 
                         Message message = ChatSDK.db().fetchMessageWithEntityID(msgId);
                         if (message != null) {
-                            message.setMetaValue("summary", summary);
-                            ChatSDK.db().update(message, false);
-                            ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
+                            JsonObject data = gson.fromJson(message.stringForKey(KEY_AI_FEEDBACK), JsonObject.class);
+                            data.addProperty("summary", summary);
+                            updateMessage(message, data);
                             return true;
                         }
                         return false;

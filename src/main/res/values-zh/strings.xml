@@ -16,7 +16,7 @@
     <string name="remove">移除</string>
     <string name="remove_topic">删除整个时间轴</string>
     <string name="change_topic">切换时间轴</string>
-    <string name="renamne_topic">重命名时间轴</string>
+    <string name="rename_topic">重命名时间轴</string>
     <string name="new_topic">新建</string>
     <string name="hint_no_record">这里还没有记录，欢迎从会话中添加</string>
     <string name="go_to_record">去记录</string>
@@ -37,6 +37,7 @@
     <string name="unfold">全文</string>
     <string name="fold">收起</string>
     <string name="next">下一步</string>
+    <string name="send">发送</string>
     <string name="enter">进入主页</string>
     <string name="failed_and_retry">操作失败，稍后重试</string>
     <string name="added_to_timeline">已帮你收录进时间轴</string>
