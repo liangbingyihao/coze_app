@@ -607,9 +607,9 @@ object TTSHelper {
     }
 
     private fun AcquireAudioFocus() {
-
+//AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE or AUDIOFOCUS_GAIN
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+            val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
                 .setAudioAttributes(
                     AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_MEDIA)
@@ -632,7 +632,7 @@ object TTSHelper {
             val result = mAudioManager?.requestAudioFocus(
                 mAFChangeListener,
                 AudioManager.STREAM_MUSIC,
-                AudioManager.AUDIOFOCUS_GAIN
+                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE
             )
             if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                 mPlaybackNowAuthorized = true

@@ -1,6 +1,5 @@
 package sdk.chat.demo.robot.audio
 
-import android.os.Handler
 import android.util.Log
 import com.bytedance.speech.speechengine.SpeechEngine
 import com.bytedance.speech.speechengine.SpeechEngineDefines
@@ -245,6 +244,31 @@ object AsrHelper {
                 SpeechEngineDefines.PARAMS_KEY_ASR_AUTO_STOP_BOOL,
                 false
             )
+
+            //【可选配置】是否开启顺滑(DDC)
+            mSpeechEngine!!.setOptionBoolean(
+                SpeechEngineDefines.PARAMS_KEY_ASR_ENABLE_DDC_BOOL,
+                true
+            )
+
+            //【可选配置】是否开启标点
+            mSpeechEngine!!.setOptionBoolean(
+                SpeechEngineDefines.PARAMS_KEY_ASR_SHOW_NLU_PUNC_BOOL,
+                true
+            )
+            //【可选配置】是否隐藏句尾标点
+            mSpeechEngine!!.setOptionBoolean(
+                SpeechEngineDefines.PARAMS_KEY_ASR_DISABLE_END_PUNC_BOOL,
+                false
+            )
+
+
+            //【可选配置】控制识别结果返回的形式，全量返回或增量返回，默认为全量
+            mSpeechEngine!!.setOptionString(
+                SpeechEngineDefines.PARAMS_KEY_ASR_RESULT_TYPE_STRING,
+                SpeechEngineDefines.ASR_RESULT_TYPE_SINGLE
+            )
+
 
             // Directive：启动引擎前调用SYNC_STOP指令，保证前一次请求结束。
             Log.i(TAG, "关闭引擎（同步）")
