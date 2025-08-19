@@ -75,12 +75,16 @@ public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
     }
 
     public static void ensureDatabase() throws Exception {
+        Log.w("MainApp", "ensureDatabase");
         if (!GWApiManager.shared().isAuthenticated()) {
             initDatabaseByUser(ChatSDK.currentUserID());
         }
     }
 
     public static void initDatabaseByUser(String userId) throws Exception {
+        if(userId==null||userId.isEmpty()){
+            throw new Exception("no userId");
+        }
         ChatSDK.db().openDatabase(userId);
         User user = ChatSDK.db().fetchOrCreateEntityWithEntityID(User.class, userId);
         List<User> robot = ChatSDK.contact().contacts();

@@ -86,7 +86,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="40dp"
-                        android:lineHeight="28dp"
+                        android:lineSpacingMultiplier="1.2"
                         android:padding="32dp"
                         android:textSize="14sp" />
                 </LinearLayout>

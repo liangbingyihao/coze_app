@@ -34,7 +34,7 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
     private lateinit var adapter: ImagePagerAdapter
     private var dateStr: String? = null
     private lateinit var imageHandler: GWClickListener<ImageHolder>
-    private lateinit var taskDetail: TaskDetail
+    private var taskDetail: TaskDetail? = null
 
     companion object {
         private const val EXTRA_INITIAL_DATA = "initial_data"
@@ -167,7 +167,7 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
                     { data ->
                         if (data != null) {
                             taskDetail = data.taskDetail
-                            taskDetail.completeTaskByIndex(0)
+                            taskDetail?.completeTaskByIndex(0)
                             DailyTaskHandler.setTaskDetail(taskDetail)
                         } else {
                             throw IllegalArgumentException("获取数据失败")
@@ -220,7 +220,7 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
                     var date = adapter.getUrlAt(viewPager.currentItem)?.date
 
                     var action = GWThreadHandler.action_daily_gw
-                    if (!taskDetail.isTaskCompleted(TaskDetail.TASK_PRAY_MASK)) {
+                    if (!taskDetail!!.isTaskCompleted(TaskDetail.TASK_PRAY_MASK)) {
                         action = GWThreadHandler.action_daily_gw_pray
                     }
 //                threadHandler.aiExplore.contextId

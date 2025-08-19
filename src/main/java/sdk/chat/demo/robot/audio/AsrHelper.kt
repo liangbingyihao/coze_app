@@ -6,6 +6,7 @@ import com.bytedance.speech.speechengine.SpeechEngineDefines
 import com.bytedance.speech.speechengine.SpeechEngineGenerator
 import org.json.JSONException
 import org.json.JSONObject
+import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.MainApp
@@ -276,17 +277,24 @@ object AsrHelper {
             var ret =
                 mSpeechEngine!!.sendDirective(SpeechEngineDefines.DIRECTIVE_SYNC_STOP_ENGINE, "")
             if (ret != SpeechEngineDefines.ERR_NO_ERROR) {
-                Log.e(TAG, "send directive syncstop failed, " + ret)
+                var msg = "directive DIRECTIVE_SYNC_STOP_ENGINE failed, $ret"
+                Log.e(TAG, msg)
+                ChatSDK.events().source().accept(NetworkEvent.errorEvent("asr",msg))
             } else {
                 Log.i(TAG, "启动引擎")
                 Log.i(TAG, "Directive: DIRECTIVE_START_ENGINE")
                 ret = mSpeechEngine!!.sendDirective(SpeechEngineDefines.DIRECTIVE_START_ENGINE, "")
                 if (ret == SpeechEngineDefines.ERR_REC_CHECK_ENVIRONMENT_FAILED) {
-                    Log.e(TAG, "send directive start failed, ERR_REC_CHECK_ENVIRONMENT_FAILED")
+
+                    var msg = "ERR_REC_CHECK_ENVIRONMENT_FAILED"
+                    Log.e(TAG, msg)
+                    ChatSDK.events().source().accept(NetworkEvent.errorEvent("asr",msg))
 //                    mEngineStatusTv.setText(R.string.check_rec_permission)
 //                    requestPermission(com.bytedance.speech.speechdemo.AsrActivity.ASR_PERMISSIONS)
                 } else if (ret != SpeechEngineDefines.ERR_NO_ERROR) {
-                    Log.e(TAG, "send directive start failed, " + ret)
+                    var msg = "send directive start failed, $ret"
+                    Log.e(TAG, msg)
+                    ChatSDK.events().source().accept(NetworkEvent.errorEvent("asr",msg))
                 }
             }
         }

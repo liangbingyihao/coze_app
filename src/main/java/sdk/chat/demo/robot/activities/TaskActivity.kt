@@ -16,8 +16,6 @@ import androidx.lifecycle.Lifecycle
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.load.engine.GlideException
-import com.bumptech.glide.request.RequestListener
 import com.gyf.immersionbar.ImmersionBar
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
@@ -186,6 +184,9 @@ class TaskActivity : BaseActivity(), View.OnClickListener {
         } else {
             storyContainer.visibility = View.VISIBLE
             tvStory.text = HtmlCompat.fromHtml(taskProcess.chapters[index].content, HtmlCompat.FROM_HTML_MODE_LEGACY);
+
+//            tvStory.text = HtmlCompat.fromHtml(
+//                "<font color=\"#00FF00\" size=\"10\">This text is green and size 5.</font>", HtmlCompat.FROM_HTML_MODE_LEGACY);
         }
     }
 }

@@ -86,7 +86,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:padding="4dp"
-                android:text="debug"
+                android:text="debug1"
                 android:textColor="@color/item_text_normal" />
             <!--            <LinearLayout-->
             <!--                android:id="@+id/settings"-->

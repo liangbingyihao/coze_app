@@ -20,6 +20,7 @@ import sdk.chat.core.utils.StringChecker;
 import sdk.chat.demo.MainApp;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.api.GWApiManager;
+import sdk.chat.ui.utils.ToastHelper;
 // 基础导入
 import android.view.View;
 import android.view.Window;
@@ -99,12 +100,12 @@ public class SplashScreenActivity extends AppCompatActivity {
 
     private void proceedToMain() {
         // 确保主界面启动前所有服务就绪
-        if (ChatSDK.db().getDaoCore()!=null) {
+        if (ChatSDK.currentUser()!=null) {
             startActivity(new Intent(this, MainDrawerActivity.class));
-            finish();
         } else {
-            showErrorAndRetry();
+            ToastHelper.show(this,R.string.network_error);
         }
+        finish();
     }
 
     private void showErrorAndRetry() {

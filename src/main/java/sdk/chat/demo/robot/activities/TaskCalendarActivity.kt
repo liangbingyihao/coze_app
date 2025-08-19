@@ -31,9 +31,6 @@ import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
 
 class TaskCalendarActivity : BaseActivity(), View.OnClickListener {
-    private lateinit var pieContainer: ViewGroup
-    private lateinit var taskContainer: TaskList
-    private lateinit var taskDetail: TaskDetail
     private lateinit var taskProcess: TaskHistory
     private lateinit var taskPieAdapter: TaskPieAdapter
     private lateinit var vPre: ImageView

@@ -33,6 +33,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 import io.reactivex.Completable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import sdk.chat.core.dao.Keys;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.dao.MessageMetaValue;
@@ -50,6 +51,7 @@ import sdk.chat.core.types.MessageType;
 import sdk.chat.core.ui.AbstractKeyboardOverlayFragment;
 import sdk.chat.core.ui.KeyboardOverlayHandler;
 import sdk.chat.core.ui.Sendable;
+import sdk.chat.core.utils.PermissionRequestHandler;
 import sdk.chat.core.utils.StringChecker;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
@@ -65,6 +67,7 @@ import sdk.chat.ui.fragments.AbstractChatFragment;
 import sdk.chat.ui.interfaces.TextInputDelegate;
 import sdk.chat.ui.keyboard.KeyboardAwareFrameLayout;
 import sdk.chat.ui.module.UIModule;
+import sdk.chat.ui.utils.ToastHelper;
 import sdk.chat.ui.views.ReplyView;
 import sdk.guru.common.DisposableMap;
 import sdk.guru.common.RX;
@@ -384,14 +387,29 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                     Logger.debug(typingText);
                 }));
 
-//        dm.add(ChatSDK.events().sourceOnMain()
-//                .filter(NetworkEvent.filterRoleUpdated(thread, ChatSDK.currentUser()))
-//                .subscribe(networkEvent -> {
-//                    showOrHideTextInputView();
-//                }));
+
+        dm.add(ChatSDK.events().sourceOnSingle()
+                .filter(NetworkEvent.filterType(EventType.MessageAdded))
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(networkEvent -> {
+                    input.onMsgStatusChanged(0);
+                }));
+
+        dm.add(ChatSDK.events().sourceOnSingle()
+                .filter(NetworkEvent.filterType(EventType.MessageUpdated))
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(networkEvent -> {
+                    GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
+                    if (handler.pendingMsgId() == null) {
+                        input.onMsgStatusChanged(1);
+                    }else{
+                        input.onMsgStatusChanged(0);
+                    }
+                }));
 
         dm.add(ChatSDK.events().sourceOnMain()
                 .filter(NetworkEvent.filterType(EventType.MessageInputPrompt))
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(networkEvent -> {
                     showTextInput();
                     EditText editText = input.getInputEditText();
@@ -407,6 +425,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
         dm.add(ChatSDK.events().sourceOnMain()
                 .filter(NetworkEvent.filterType(EventType.MessageInputAsr))
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(networkEvent -> {
                     if (networkEvent.getIsOnline()) {
                         showTextInput();
@@ -416,14 +435,25 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                         input.startSimulation(50);
                     } else {
                         Log.e("AsrHelper", "onAsrStop");
-                        input.onAsrStop();
+                        input.onAsrStop(false);
                     }
-//                    editText.setText(networkEvent.getText());
-//                    Log.e("input", "MessageInputPrompt:" + networkEvent.getText());
-//                    editText.postDelayed(() -> {
-//                        editText.setSelection(editText.getText().length());
-////                        showKeyboard();
-//                    },500);
+                }));
+        dm.add(ChatSDK.events().sourceOnMain()
+                .filter(NetworkEvent.filterType(EventType.Error))
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(networkEvent -> {
+                    Map<String, Object> params = networkEvent.getData();
+                    String errType = (String) params.getOrDefault("type", "0");
+                    if ("asr".equals(errType)) {
+                        String msg = (String) params.getOrDefault("msg", "asr error...");
+                        ToastHelper.show(getActivity(), msg);
+                        input.onAsrStop(true);
+                        if ("ERR_REC_CHECK_ENVIRONMENT_FAILED".equals(msg)) {
+                            dm.add(PermissionRequestHandler.requestRecordAudio(getActivity()).subscribe(() -> {
+                            }, throwable -> ToastHelper.show(getActivity(), throwable.getLocalizedMessage())));
+
+                        }
+                    }
                 }));
         if (chatView != null) {
             chatView.addListeners();
@@ -451,7 +481,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
             // 查找新文本开头在光标前内容中的最长匹配
             int matchLength = 0;
-            if (lastMsg != null && !lastMsg.isEmpty()&& newText.startsWith(lastMsg)&&beforeCursor.endsWith(lastMsg)) {
+            if (lastMsg != null && !lastMsg.isEmpty() && newText.startsWith(lastMsg) && beforeCursor.endsWith(lastMsg)) {
                 matchLength = lastMsg.length();
             }
 

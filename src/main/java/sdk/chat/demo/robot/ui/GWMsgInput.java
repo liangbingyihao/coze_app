@@ -11,6 +11,7 @@ import android.os.Message;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -31,6 +32,7 @@ public class GWMsgInput extends RelativeLayout
     public EditText messageInput;
     public View asrContainer;
     public View messageSendButton;
+    public View stopSendButton;
     public ImageView attachmentButton;
     public SoundWaveView soundWaveView;
 //    public Space sendButtonSpace, attachmentButtonSpace;
@@ -135,14 +137,28 @@ public class GWMsgInput extends RelativeLayout
         handler.removeMessages(MSG_UPDATE_WAVE);
     }
 
-    public void onAsrStop() {
-        if (System.currentTimeMillis() - whenStartAsrMillis < 700) {
+    public void onAsrStop(boolean error) {
+        if (!error && System.currentTimeMillis() - whenStartAsrMillis < 700) {
             return;
         }
         attachmentButton.setImageResource(R.mipmap.ic_audio);
         asrContainer.setVisibility(View.GONE);
         if (attachmentsListener != null) attachmentsListener.onChangeKeyboard(true);
         stopSimulation();
+        messageInput.setShowSoftInputOnFocus(true);
+    }
+
+    public void onMsgStatusChanged(int status){
+        //status: 0: pending,1:idle
+        Log.e("input", "onMsgStatusChanged:" + status);
+        if(status==0){
+            messageSendButton.setVisibility(GONE);
+            stopSendButton.setVisibility(VISIBLE);
+        }else{
+            messageSendButton.setVisibility(VISIBLE);
+            stopSendButton.setVisibility(GONE);
+        }
+
     }
 
     @Override
@@ -165,6 +181,7 @@ public class GWMsgInput extends RelativeLayout
                 if (attachmentsListener != null) attachmentsListener.onChangeKeyboard(false);
                 whenStartAsrMillis = System.currentTimeMillis();
                 AsrHelper.INSTANCE.startAsr();
+                messageInput.setShowSoftInputOnFocus(false);
             }
 //            onAddAttachments();
         } else if (id == R.id.stopAsr) {
@@ -243,12 +260,14 @@ public class GWMsgInput extends RelativeLayout
 
         messageInput = findViewById(R.id.messageInput);
         messageSendButton = findViewById(R.id.messageSendButton);
+        stopSendButton = findViewById(R.id.messageStopButton);
         attachmentButton = findViewById(R.id.attachmentButton);
         asrContainer = findViewById(R.id.asrContainer);
         soundWaveView = findViewById(R.id.soundWave);
 //        attachmentButtonSpace = findViewById(R.id.attachmentButtonSpace);
 
         messageSendButton.setOnClickListener(this);
+        stopSendButton.setOnClickListener(this);
         attachmentButton.setOnClickListener(this);
         findViewById(R.id.stopAsr).setOnClickListener(this);
         messageInput.addTextChangedListener(this);

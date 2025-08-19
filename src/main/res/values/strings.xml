@@ -62,4 +62,5 @@
     <string name="guide_drawer_desc">已将您的记录归入时间轴“%s”\n您的每次分享都会自动整理在侧边栏 时间轴中，可以随时回顾与管理哦~</string>
     <string name="guide_pray_desc">试试点击这里\n帮你生成专属的祷告默想建议。</string>
     <string name="guide_pic_desc">试试点击这里，可以将经文生成图片，更好保存与分享</string>
+    <string name="network_error">网络不可用，请检查网络状况</string>
   </resources>

@@ -18,7 +18,9 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.button.MaterialButton;
 import com.gyf.immersionbar.ImmersionBar;
 
+import sdk.chat.core.session.ChatSDK;
 import sdk.chat.demo.pre.R;
+import sdk.chat.ui.utils.ToastHelper;
 
 public class GuideActivity extends AppCompatActivity {
 
@@ -115,7 +117,11 @@ public class GuideActivity extends AppCompatActivity {
     }
 
     private void launchMainActivity() {
-        startActivity(new Intent(this, MainDrawerActivity.class));
+        if (ChatSDK.currentUser()!=null) {
+            startActivity(new Intent(this, MainDrawerActivity.class));
+        }else{
+            ToastHelper.show(this,R.string.network_error);
+        }
         finish();
     }
 

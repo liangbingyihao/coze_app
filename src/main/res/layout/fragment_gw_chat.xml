@@ -34,6 +34,7 @@
             android:orientation="vertical"
             android:layout_gravity="bottom"
             >
+<!--            app:layout_behavior="sdk.chat.demo.robot.ui.InputLayoutBehavior"-->
 
             <sdk.chat.ui.views.ReplyView
                 android:id="@+id/replyView"

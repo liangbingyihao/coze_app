@@ -122,12 +122,14 @@ class SpeechToTextActivity : AppCompatActivity(), View.OnClickListener, SpeechEn
     fun setVoiceTypeSpinner() {
         ttsVoiceTypeSpinner = findViewById(R.id.ttsVoiceTypeSpinner)
         val languages = listOf(
-            SpinnerItem("港剧男神", "BV026_streaming"),
-            SpinnerItem("广东女仔", "BV424_streaming"),
-            SpinnerItem("通用女声", "BV001_streaming"),
-            SpinnerItem("通用男声", "BV002_streaming"),
-            SpinnerItem("通用女声 2.0", "BV001_V2_streaming"),
-            SpinnerItem("擎苍 2.0", "BV701_V2_streaming")
+            SpinnerItem("通用-灿灿", "BV700_streaming"),
+            SpinnerItem("通用-女声", "BV001_streaming"),
+            SpinnerItem("通用-男声", "BV002_streaming"),
+            SpinnerItem("有声阅读-擎苍", "BV701_streaming"),
+            SpinnerItem("有声阅读-通用赘婿", "BV119_streaming"),
+            SpinnerItem("有声阅读-儒雅青年", "BV102_streaming"),
+            SpinnerItem("有声阅读-甜宠少御", "BV113_streaming"),
+            SpinnerItem("有声阅读-甜宠少御", "BV115_streaming"),
         )
 
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, languages)
@@ -135,7 +137,10 @@ class SpeechToTextActivity : AppCompatActivity(), View.OnClickListener, SpeechEn
         ttsVoiceTypeSpinner.adapter = adapter
 
         var voiceType =
-            getSharedPreferences("app_prefs", MODE_PRIVATE).getString("db_voice_type", "BV026_streaming")
+            getSharedPreferences("app_prefs", MODE_PRIVATE).getString(
+                "db_voice_type",
+                "BV026_streaming"
+            )
 
         for (i in 0..<adapter.getCount()) {
             if (adapter.getItem(i)?.value == voiceType) {

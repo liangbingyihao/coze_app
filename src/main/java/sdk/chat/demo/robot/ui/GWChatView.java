@@ -176,40 +176,6 @@ public class GWChatView extends LinearLayout implements MessagesListAdapter.OnLo
         }
         listenersAdded = true;
 
-//        dm.add(ChatSDK.events().sourceOnSingle()
-//                .filter(NetworkEvent.filterType(
-//                        EventType.ThreadMessagesUpdated
-////                        EventType.MessageSendStatusUpdated,
-////                        EventType.MessageReadReceiptUpdated
-//                ))
-////                .filter(NetworkEvent.filterThreadEntityID(delegate.getThread().getEntityID()))
-//                .subscribe(networkEvent -> {
-//
-//                    Message message = networkEvent.getMessage();
-//                    if (message != null) {
-//                        MessageHolder holder = ChatSDKUI.provider().holderProvider().getMessageHolder(message);
-//                        if (holder != null && !messageHolders.contains(holder)) {
-//                            Logger.debug("Missing");
-//                        }
-//                    }
-//
-//                    Logger.warn("ChatView: " + networkEvent.debugText());
-//
-//                    messagesList.post(() -> {
-//                        synchronize(null, true);
-//                    });
-//                }));
-
-//        dm.add(
-//                ChatSDK.events().sourceOnSingle()
-//                        .filter(NetworkEvent.filterType(EventType.MessageUpdated))
-//                        .subscribe(networkEvent -> {
-//                            messagesList.post(() -> {
-//                                updateMessage(networkEvent.getMessage());
-//                            });
-//                        })
-//        );
-
         dm.add(ChatSDK.events().sourceOnSingle()
                 .filter(NetworkEvent.filterType(EventType.MessageAdded))
                 .subscribe(networkEvent -> {
