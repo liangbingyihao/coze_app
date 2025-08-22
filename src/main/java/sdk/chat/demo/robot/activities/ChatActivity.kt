@@ -28,15 +28,7 @@ import java.util.Locale
 
 class ChatActivity : BaseActivity(), View.OnClickListener,
     GWClickListener.TTSSpeaker {
-    open lateinit var drawerLayout: DrawerLayout
-    open lateinit var searchView: MaterialSearchView
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var sessions: List<Thread>
-    private var currentSession: Thread? = null
-    private lateinit var sessionAdapter: SessionAdapter
-    private val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
     private val chatTag = "tag_chat";
-    private var toReloadSessions = false
     private var textToSpeech: TextToSpeech? = null
     private lateinit var ttsCheckLauncher: ActivityResultLauncher<Intent>
 
@@ -162,9 +154,7 @@ class ChatActivity : BaseActivity(), View.OnClickListener,
     }
 
     override fun speek(text: String, msgId: String) {
-        var rawText = text.replace("*", "").replace("<br>|</br>|<br/>".toRegex(), "")
-        textToSpeech?.language = LanguageUtils.getTextLanguage(rawText)
-        textToSpeech?.speak(rawText, TextToSpeech.QUEUE_FLUSH, null, msgId)
+        TTSHelper.speek(text, msgId)
     }
 
     override fun getCurrentUtteranceId(): String? {
@@ -172,6 +162,7 @@ class ChatActivity : BaseActivity(), View.OnClickListener,
     }
 
     override fun stop() {
+        TTSHelper.stop()
         if (textToSpeech!=null&& textToSpeech!!.isSpeaking) {
             textToSpeech!!.stop()
         }

@@ -28,6 +28,7 @@ object DeviceIdHelper {
 
         // 2. 获取设备硬件特征（修正后的版本）
         val hardwareId = """
+            $androidId
         ${Build.BRAND}
         ${Build.MODEL}
         ${Build.BOARD}
@@ -41,7 +42,7 @@ object DeviceIdHelper {
         val storagePath = context.filesDir.absolutePath
 
         // 4. 组合生成最终ID
-        return ((androidId ?: (hardwareId + storagePath))).let {
+        return ((hardwareId + storagePath)).let {
             UUID.nameUUIDFromBytes(it.toByteArray()).toString()
         }.also { id ->
             // 保存到 SharedPreferences 作为后备

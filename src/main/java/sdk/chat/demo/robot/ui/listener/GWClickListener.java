@@ -9,50 +9,41 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.view.View;
-import android.widget.ImageView;
 
 import com.stfalcon.chatkit.commons.models.IMessage;
 
-import org.pmw.tinylog.Logger;
-
-import io.reactivex.Completable;
-import sdk.chat.core.rigs.MessageSendRig;
-import sdk.chat.demo.robot.audio.TTSHelper;
-import sdk.chat.demo.robot.activities.ArticleListActivity;
-
 import java.lang.ref.WeakReference;
 
+import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import kotlin.Unit;
-import kotlin.jvm.functions.Function0;
 import sdk.chat.core.dao.Keys;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.events.NetworkEvent;
+import sdk.chat.core.rigs.MessageSendRig;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.utils.PermissionRequestHandler;
 import sdk.chat.demo.MainApp;
 import sdk.chat.demo.pre.R;
+import sdk.chat.demo.robot.activities.ArticleListActivity;
 import sdk.chat.demo.robot.activities.ImageViewerActivity;
 import sdk.chat.demo.robot.adpter.ChatAdapter;
 import sdk.chat.demo.robot.api.model.AIFeedback;
 import sdk.chat.demo.robot.api.model.ImageDaily;
 import sdk.chat.demo.robot.api.model.MessageDetail;
+import sdk.chat.demo.robot.audio.TTSHelper;
 import sdk.chat.demo.robot.extensions.ActivityExtensionsKt;
 import sdk.chat.demo.robot.extensions.ImageSaveUtils;
 import sdk.chat.demo.robot.handlers.CardGenerator;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
-import sdk.chat.demo.robot.holder.AIFeedbackType;
 import sdk.chat.demo.robot.holder.DailyGWHolder;
 import sdk.chat.demo.robot.holder.ImageHolder;
 import sdk.chat.demo.robot.holder.TextHolder;
-import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.activities.BaseActivity;
-import sdk.chat.ui.chat.model.MessageHolder;
 import sdk.chat.ui.utils.ToastHelper;
 import sdk.guru.common.RX;
 
@@ -93,7 +84,9 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
         adapter.registerViewClickListener(R.id.btn_share_user_text, listener);
         adapter.registerViewClickListener(R.id.btn_del_user_text, listener);
         adapter.registerViewClickListener(R.id.session_name, listener);
-        adapter.registerViewClickListener(R.id.hint_container, listener);
+        adapter.registerViewClickListener(R.id.process_container, listener);
+        adapter.registerViewClickListener(R.id.reply_error_hint, listener);
+        adapter.registerViewClickListener(R.id.send_error_hint, listener);
     }
 
     @Override
@@ -328,14 +321,16 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
                     GWThreadHandler.action_daily_pray,
                     params
             ).subscribe();
-        } else if (id == R.id.hint_container) {
+        } else if (id == R.id.reply_error_hint || id == R.id.send_error_hint) {
+            assert message != null;
+            view.setVisibility(View.INVISIBLE);
             Completable completable = new MessageSendRig(message).run();
             completable.observeOn(RX.main()).doOnError(throwable -> {
-                Logger.warn("");
                 ToastHelper.show(
                         weakContext.get(),
                         throwable.getLocalizedMessage()
                 );
+                view.setVisibility(View.VISIBLE);
             }).subscribe(weakContext.get());
         }
     }

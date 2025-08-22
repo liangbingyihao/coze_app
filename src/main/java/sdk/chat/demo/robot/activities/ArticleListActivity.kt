@@ -1,5 +1,7 @@
 package sdk.chat.demo.robot.activities
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -229,7 +231,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                     val articleSessions = sessions.map { session ->
                         ArticleSession(
                             id = session.entityID,
-                            title = session.name,
+                            title = session.entityID+","+session.name,
                         )
                     }
                     Single.just(articleSessions)
@@ -487,6 +489,11 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                             "修改失败: ${error.message}",
                             Toast.LENGTH_SHORT
                         ).show()
+//                        //FIXME
+//                        var clipboard:ClipboardManager =
+//                            getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager;
+//                        val clip = ClipData.newPlainText("恩语", error.message)
+//                        clipboard.setPrimaryClip(clip)
                         hideEditDialog()
                     })
         )

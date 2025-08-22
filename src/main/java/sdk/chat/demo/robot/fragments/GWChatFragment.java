@@ -331,14 +331,11 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
             hideTextInput();
         }
 
-//        if (ChatSDK.audioMessage() != null && getActivity() != null) {
-//            addAudioBinder();
-//        } else {
         input.setInputListener(input -> {
             sendMessage(String.valueOf(input));
             return true;
         });
-//        }
+
 
         addTypingListener();
 
@@ -396,7 +393,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                 }));
 
         dm.add(ChatSDK.events().sourceOnSingle()
-                .filter(NetworkEvent.filterType(EventType.MessageUpdated))
+                .filter(NetworkEvent.filterType(EventType.MessageUpdated,EventType.MessageSendStatusUpdated))
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(networkEvent -> {
                     GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
@@ -431,7 +428,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                         showTextInput();
                         EditText editText = input.getInputEditText();
                         Map<String, Object> params = networkEvent.getData();
-                        smartInsertAtCursor(editText, (String) params.get("lastMsg"), (String) params.get("newMsg"));
+                        input.smartInsertAtCursor((Boolean) params.get("definite"), (String) params.get("newMsg"));
                         input.startSimulation(50);
                     } else {
                         Log.e("AsrHelper", "onAsrStop");
@@ -443,10 +440,10 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(networkEvent -> {
                     Map<String, Object> params = networkEvent.getData();
-                    String errType = (String) params.getOrDefault("type", "0");
+                    String errType = (String) params.getOrDefault("type", "");
+                    String msg = (String) params.getOrDefault("msg", "error...");
+                    ToastHelper.show(getActivity(), msg);
                     if ("asr".equals(errType)) {
-                        String msg = (String) params.getOrDefault("msg", "asr error...");
-                        ToastHelper.show(getActivity(), msg);
                         input.onAsrStop(true);
                         if ("ERR_REC_CHECK_ENVIRONMENT_FAILED".equals(msg)) {
                             dm.add(PermissionRequestHandler.requestRecordAudio(getActivity()).subscribe(() -> {
@@ -462,48 +459,6 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
     }
 
-    public static void smartInsertAtCursor(EditText editText, String lastMsg, String newText) {
-        if (editText == null || newText == null || newText.isEmpty()) {
-            return;
-        }
-
-        try {
-            Editable editable = editText.getText();
-            int cursorPos = editText.getSelectionStart();
-
-            // 处理没有光标位置的情况
-            if (cursorPos < 0) {
-                cursorPos = editable.length();
-            }
-
-            // 获取光标前的内容
-            String beforeCursor = editable.subSequence(0, cursorPos).toString();
-
-            // 查找新文本开头在光标前内容中的最长匹配
-            int matchLength = 0;
-            if (lastMsg != null && !lastMsg.isEmpty() && newText.startsWith(lastMsg) && beforeCursor.endsWith(lastMsg)) {
-                matchLength = lastMsg.length();
-            }
-
-            if (matchLength > 0) {
-                // 如果找到匹配，只插入变更部分
-                String textToInsert = newText.substring(matchLength);
-
-                Log.e("AsrHelper", "matchLength:" + matchLength + ",textToInsert:" + textToInsert);
-                editable.insert(cursorPos, textToInsert);
-                editText.setSelection(cursorPos + textToInsert.length());
-            } else {
-                // 没有匹配，插入完整新字符串
-                Log.e("AsrHelper", "matchLength:" + matchLength + ",all textToInsert:" + newText);
-                editable.insert(cursorPos, newText);
-                editText.setSelection(cursorPos + newText.length());
-            }
-        } catch (Exception e) {
-            Log.e("EditTextUtils", "Error inserting text", e);
-            // 回退到简单追加
-            editText.append(newText);
-        }
-    }
 
     /**
      * 查找新字符串开头在已有字符串中的最长匹配长度

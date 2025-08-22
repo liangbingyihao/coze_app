@@ -1,9 +1,9 @@
 package sdk.chat.demo.robot.holder
 
 //import sdk.chat.ui.R
-import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.text.util.Linkify
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -26,8 +26,10 @@ import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.manager.DownloadablePayload
 import sdk.chat.core.session.ChatSDK
+import sdk.chat.core.types.MessageSendStatus
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.api.model.MessageDetail
+import sdk.chat.demo.robot.audio.TTSHelper
 import sdk.chat.demo.robot.extensions.StateStorage
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.ui.chat.model.MessageHolder
@@ -36,8 +38,6 @@ import sdk.chat.ui.views.ProgressView
 import sdk.guru.common.DisposableMap
 import sdk.guru.common.RX
 import java.text.DateFormat
-import androidx.core.graphics.toColorInt
-import sdk.chat.demo.robot.audio.TTSHelper
 
 open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
     MessageHolders.BaseMessageViewHolder<T>(itemView, null),
@@ -51,9 +51,9 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
 
     open var text: TextView? = itemView.findViewById(R.id.messageText)
     open var feedback: TextView? = itemView.findViewById(R.id.feedback)
-    open var imageFeedbackHint: ImageView? = itemView.findViewById(R.id.loadingImage)
-    open var feedbackHint: TextView? = itemView.findViewById(R.id.feedbackHint)
-    open var hintContainer: View? = itemView.findViewById(R.id.hint_container)
+    open var sendErrorHint: TextView? = itemView.findViewById(R.id.send_error_hint)
+    open var replyErrorHint: TextView? = itemView.findViewById(R.id.reply_error_hint)
+    open var processContainer: View? = itemView.findViewById(R.id.process_container)
     open var time: TextView? = itemView.findViewById(R.id.messageTime)
 
     open var readStatus: ImageView? = itemView.findViewById(R.id.readStatus)
@@ -104,19 +104,23 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
     }
 
     open fun bind(t: T) {
-        progressView?.actionButton?.setOnClickListener(View.OnClickListener {
-            actionButtonPressed(t)
-        })
-        progressView?.bringToFront()
-
-        bubble?.let {
-            it.isSelected = isSelected
-        }
+//        progressView?.actionButton?.setOnClickListener(View.OnClickListener {
+//            actionButtonPressed(t)
+//        })
+//        progressView?.bringToFront()
+//
+//        bubble?.let {
+//            it.isSelected = isSelected
+//        }
 
         val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
         var action = (t as? TextHolder)?.action
         if (action != GWThreadHandler.action_daily_pray && t.text != null && !t.text.isEmpty()) {
-            setText(t.message.id.toString() + "," + t.text, t.enableLinkify())
+            setText(
+                t.message.threadId.toString() +"," + t.text,
+//                t.message.id.toString() + "," + t.message.messageStatus.name + ","+ (t as? TextHolder)?.aiFeedback?.status +"," + t.text,
+                t.enableLinkify()
+            )
             var topic = threadHandler.getSessionName(t.message.threadId)
             if (topic != null) {
                 sessionContainer?.visibility = View.VISIBLE
@@ -130,7 +134,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
         } else {
             sessionContainer?.visibility = View.GONE
             if (action != GWThreadHandler.action_daily_pray && !t.message.entityID.equals("welcome")) {
-                setText(t.message.id.toString() + ",原消息已删除", t.enableLinkify())
+                setText("原消息已删除", t.enableLinkify())
             } else {
                 setText("", false);
             }
@@ -155,51 +159,49 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
             imageLikeContent?.setImageResource(R.mipmap.ic_like_black)
         }
 
-        if (t.message.equals(TTSHelper.getPlayingMsg())&&!TTSHelper.isPlayerPaused()) {
+        if (t.message.equals(TTSHelper.getPlayingMsg()) && !TTSHelper.isPlayerPaused()) {
             btnPlay?.setImageResource(R.mipmap.ic_pause_black);
         } else {
             btnPlay?.setImageResource(R.mipmap.ic_play_black);
         }
+
+        bindSendStatus(t)
+
         var aiFeedback: MessageDetail? = (t as? TextHolder)?.getAiFeedback();
 
 //        t.message.metaValuesAsMap
-        var feedbackText = aiFeedback?.feedbackText ?: t.message.stringForKey("feedback")
+        var feedbackText = aiFeedback?.feedback?.view ?: aiFeedback?.feedbackText ?: ""
+//        feedbackText = aiFeedback?.feedbackText ?: t.message.stringForKey("feedback")
         feedback?.let {
-//            it.text = t.message.stringForKey("feedback")+t.message.id+t.message.type;
-//            val markdown = "**Hello** _Markdown_"
+            it.visibility = View.VISIBLE
             Markwon.create(it.context)
                 .setMarkdown(it, feedbackText)
         }
-//        if (t.message.entityID.equals("welcome")||action == GWThreadHandler.action_daily_pray) {
-//            contentMenu?.visibility = View.GONE
-//        }
 
 
         if (t.message.entityID.equals("welcome")) {
-            contentMenu?.visibility = View.GONE
+            contentMenu?.visibility = View.VISIBLE
             feedbackMenu?.visibility = View.GONE
-            hintContainer?.visibility = View.GONE
+            processContainer?.visibility = View.GONE
+            sendErrorHint?.visibility = View.GONE
         } else {
-            if (aiFeedback?.status != 2 || feedbackText.isEmpty()) {
-                feedbackMenu?.visibility = View.GONE
-            } else {
-                feedbackMenu?.visibility = View.VISIBLE
-            }
-            //FIXME
-            if (aiFeedback?.status == MessageDetail.STATUS_SUCCESS) {
-                hintContainer?.visibility = View.GONE
-            } else {
-                hintContainer?.visibility = View.VISIBLE
-                if (t.message.id == threadHandler.pendingMsgId()) {
-                    feedbackHint?.setText(R.string.loading);
-                    feedbackHint?.setTextColor("#919191".toColorInt())
-                    imageFeedbackHint?.setImageResource(R.drawable.loading_animation)
-                } else {
-                    feedbackHint?.setText(R.string.msg_failed);
-                    feedbackHint?.setTextColor("#FFCF4B40".toColorInt())
-                    imageFeedbackHint?.setImageResource(R.mipmap.ic_redo_red)
-                }
-            }
+//            if (feedbackText.isEmpty()) {
+//                feedbackMenu?.visibility = View.GONE
+//            }
+//            if (aiFeedback?.status == MessageDetail.STATUS_SUCCESS) {
+//                processContainer?.visibility = View.GONE
+//            } else {
+//                processContainer?.visibility = View.VISIBLE
+//                if (t.message.id == threadHandler.pendingMsgId()) {
+//                    feedbackHint?.setText(R.string.loading);
+//                    feedbackHint?.setTextColor("#919191".toColorInt())
+//                    imageFeedbackHint?.setImageResource(R.drawable.loading_animation)
+//                } else {
+//                    feedbackHint?.setText(R.string.ai_failed);
+//                    feedbackHint?.setTextColor("#FFCF4B40".toColorInt())
+//                    imageFeedbackHint?.setImageResource(R.mipmap.ic_redo_red)
+//                }
+//            }
             if (t.message.text.isEmpty() || action == GWThreadHandler.action_daily_pray) {
                 contentMenu?.visibility = View.GONE
             } else {
@@ -271,22 +273,77 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
     }
 
     open fun bindSendStatus(holder: T): Boolean {
-        val showOverlay =
-            progressView?.bindSendStatus(holder.sendStatus, holder.payload) ?: false
-        bubbleOverlay?.visibility = if (showOverlay) View.VISIBLE else View.INVISIBLE
 
-        // If we are showing overlay, hide icon
-        messageIcon?.let {
-            if (showOverlay) {
-                it.visibility = View.INVISIBLE
+        var aiFeedback: MessageDetail? = (holder as? TextHolder)?.getAiFeedback();
+        var status = holder.message.messageStatus
+//        Log.d("sending", "bindSendStatus:" + status.name)
+        if (status.ordinal < MessageSendStatus.Replying.ordinal) {
+            feedbackMenu?.visibility = View.GONE
+            feedback?.visibility = View.GONE
+            contentMenu?.visibility = View.GONE
+            if (aiFeedback == null && status == MessageSendStatus.UploadFailed) {
+                sendErrorHint?.visibility = View.VISIBLE
             } else {
-                UIModule.shared().iconBinder.bind(it, holder)
+                sendErrorHint?.visibility = View.GONE
             }
+
+            if (status == MessageSendStatus.Uploading) {
+                processContainer?.visibility = View.VISIBLE
+            } else {
+                processContainer?.visibility = View.GONE
+            }
+            replyErrorHint?.visibility = View.GONE
+        } else {
+            feedback?.visibility = View.VISIBLE
+            processContainer?.visibility = View.GONE
+            feedbackMenu?.visibility = View.GONE
+            if (status == MessageSendStatus.Sent) {
+                feedbackMenu?.visibility = View.VISIBLE
+            } else if (status == MessageSendStatus.Replying) {
+                processContainer?.visibility = View.VISIBLE
+            }
+
+            if (status == MessageSendStatus.Failed) {
+                replyErrorHint?.visibility = View.VISIBLE
+            } else {
+                replyErrorHint?.visibility = View.GONE
+            }
+            sendErrorHint?.visibility = View.GONE
         }
+        return true
 
-        bindResend(holder)
 
-        return showOverlay
+//        if (aiFeedback == null && status == MessageSendStatus.UploadFailed) {
+//            //消息也没发出去
+//            sendErrorHint?.visibility = View.VISIBLE
+//            replyErrorHint?.visibility = View.GONE
+//            contentMenu?.visibility = View.GONE
+//            processContainer?.visibility = View.GONE
+//            imageContainer?.visibility = View.GONE
+//            imageMenu?.visibility = View.GONE
+//            return true
+//        }
+//        sendErrorHint?.visibility = View.GONE
+//        if (status == MessageSendStatus.Uploading || status == MessageSendStatus.Replying) {
+//            feedbackHint?.setText(R.string.uploading);
+//            feedbackHint?.setTextColor("#919191".toColorInt())
+//            imageFeedbackHint?.setImageResource(R.drawable.loading_animation)
+//            return true
+//        } else if (holder.message.messageStatus == MessageSendStatus.Failed) {
+//            feedbackHint?.setText(R.string.ai_failed);
+//            feedbackHint?.setTextColor("#FFCF4B40".toColorInt())
+//            imageFeedbackHint?.setImageResource(R.mipmap.ic_redo_red)
+//        } else if (holder.message.messageStatus == MessageSendStatus.Replying) {
+//            val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
+//            if (holder.message.id == threadHandler.pendingMsgId()) {
+//                processContainer?.visibility = View.VISIBLE
+//                feedbackHint?.setText(R.string.loading);
+//                feedbackHint?.setTextColor("#919191".toColorInt())
+//                imageFeedbackHint?.setImageResource(R.drawable.loading_animation)
+//            }
+//        }
+//        return false
+
     }
 
     open fun bindResend(holder: T) {
@@ -314,9 +371,9 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
                         EventType.MessageReadReceiptUpdated
                     )
                 )
-                .filter(NetworkEvent.filterMessageEntityID(t.id))
+                .filter(filterById(t.message.id))
                 .doOnError(this)
-                .subscribe {
+                .subscribe { networkEvent ->
                     RX.main().scheduleDirect {
                         bindReadStatus(t)
                         bindSendStatus(t)
@@ -326,7 +383,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
         dm.add(
             ChatSDK.events().sourceOnSingle()
                 .filter(NetworkEvent.filterType(EventType.MessageProgressUpdated))
-                .filter(NetworkEvent.filterMessageEntityID(t.id))
+                .filter(filterById(t.message.id))
                 .doOnError(this)
                 .subscribe {
                     RX.main().scheduleDirect {
@@ -336,8 +393,10 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
 
         dm.add(
             ChatSDK.events().sourceOnSingle()
-                .filter { networkEvent: NetworkEvent? -> networkEvent!!.type == EventType.ThreadsUpdated
-                        && networkEvent.threadId == t.message.threadId }
+                .filter { networkEvent: NetworkEvent? ->
+                    networkEvent!!.type == EventType.ThreadsUpdated
+                            && networkEvent.threadId == t.message.threadId
+                }
 //                .filter { networkEvent: NetworkEvent? -> networkEvent!!.type == EventType.ThreadsUpdated }
                 .doOnError(this)
                 .subscribe {

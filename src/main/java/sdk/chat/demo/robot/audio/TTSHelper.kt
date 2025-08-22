@@ -24,6 +24,7 @@ import org.json.JSONObject
 import sdk.chat.core.dao.Message
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.session.ChatSDK
+import sdk.chat.core.utils.AppBackgroundMonitor.StopListener
 import sdk.chat.demo.robot.extensions.LanguageUtils
 import java.util.Locale
 
@@ -70,7 +71,8 @@ object TTSHelper {
         // 注册 ActivityResultLauncher
 
         voiceType =
-            context.getSharedPreferences("app_prefs", MODE_PRIVATE).getString("db_voice_type", "BV026_streaming")
+            context.getSharedPreferences("app_prefs", MODE_PRIVATE)
+                .getString("db_voice_type", "BV026_streaming")
                 .toString()
 
         ttsCheckLauncher =
@@ -178,7 +180,16 @@ object TTSHelper {
         initEngineInternal()
         mAudioManager =
             context.applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager?
+        ChatSDK.appBackgroundMonitor().addListener(mBackgroundListener);
     }
+
+    private var mBackgroundListener: StopListener =
+        object : StopListener {
+            override fun didStop() {
+                pausePlayback()
+            }
+
+        }
 
     private var mAFChangeListener: OnAudioFocusChangeListener =
         object : OnAudioFocusChangeListener {
@@ -609,15 +620,16 @@ object TTSHelper {
     private fun AcquireAudioFocus() {
 //AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE or AUDIOFOCUS_GAIN
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
-                .setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build()
-                )
-                .setOnAudioFocusChangeListener(mAFChangeListener)
-                .build()
+            val focusRequest =
+                AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
+                    .setAudioAttributes(
+                        AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build()
+                    )
+                    .setOnAudioFocusChangeListener(mAFChangeListener)
+                    .build()
 
             audioFocusRequest = focusRequest
             val result = mAudioManager?.requestAudioFocus(focusRequest)

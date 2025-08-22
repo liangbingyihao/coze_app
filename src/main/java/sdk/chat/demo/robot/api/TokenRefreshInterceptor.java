@@ -32,6 +32,8 @@ public class TokenRefreshInterceptor implements Interceptor {
                             // 使用新Token重试请求
                             return chain.proceed(addAuthHeader(originalRequest, newToken));
                         }
+                    } catch (Exception e) {
+//                        throw NeedLoginException("Token刷新失败，请重新登录");
                     } finally {
                         isRefreshing.set(false);
                     }

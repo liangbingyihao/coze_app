@@ -13,6 +13,7 @@ import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -23,8 +24,10 @@ import android.widget.TextView;
 
 import java.lang.reflect.Field;
 
+import sdk.chat.core.session.ChatSDK;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.audio.AsrHelper;
+import sdk.chat.demo.robot.handlers.GWThreadHandler;
 
 public class GWMsgInput extends RelativeLayout
         implements View.OnClickListener, TextWatcher, View.OnFocusChangeListener {
@@ -145,16 +148,15 @@ public class GWMsgInput extends RelativeLayout
         asrContainer.setVisibility(View.GONE);
         if (attachmentsListener != null) attachmentsListener.onChangeKeyboard(true);
         stopSimulation();
-        messageInput.setShowSoftInputOnFocus(true);
     }
 
-    public void onMsgStatusChanged(int status){
+    public void onMsgStatusChanged(int status) {
         //status: 0: pending,1:idle
         Log.e("input", "onMsgStatusChanged:" + status);
-        if(status==0){
+        if (status == 0) {
             messageSendButton.setVisibility(GONE);
             stopSendButton.setVisibility(VISIBLE);
-        }else{
+        } else {
             messageSendButton.setVisibility(VISIBLE);
             stopSendButton.setVisibility(GONE);
         }
@@ -171,10 +173,13 @@ public class GWMsgInput extends RelativeLayout
             }
             removeCallbacks(typingTimerRunnable);
             post(typingTimerRunnable);
+            whenStartAsrMillis = 0;
+            AsrHelper.INSTANCE.stopAsr();
         } else if (id == R.id.attachmentButton) {
             if (asrContainer.getVisibility() == View.VISIBLE) {
                 whenStartAsrMillis = 0;
                 AsrHelper.INSTANCE.stopAsr();
+                messageInput.setShowSoftInputOnFocus(true);
             } else {
                 attachmentButton.setImageResource(R.mipmap.ic_show_kb);
                 asrContainer.setVisibility(View.VISIBLE);
@@ -187,10 +192,15 @@ public class GWMsgInput extends RelativeLayout
         } else if (id == R.id.stopAsr) {
             whenStartAsrMillis = 0;
             AsrHelper.INSTANCE.stopAsr();
+            messageInput.setShowSoftInputOnFocus(true);
 //            attachmentButton.setImageResource(R.mipmap.ic_audio);
 //            asrContainer.setVisibility(View.GONE);
 //            if (attachmentsListener != null) attachmentsListener.onChangeKeyboard(true);
 //            stopSimulation();
+        } else if (id == R.id.messageStopButton) {
+            ((GWThreadHandler) ChatSDK.thread()).stopPolling();
+            view.setVisibility(INVISIBLE);
+//            messageSendButton.setVisibility(VISIBLE);
         }
     }
 
@@ -273,6 +283,98 @@ public class GWMsgInput extends RelativeLayout
         messageInput.addTextChangedListener(this);
         messageInput.setText("");
         messageInput.setOnFocusChangeListener(this);
+
+
+        messageInput.setOnTouchListener(new View.OnTouchListener() {
+            private long lastClickTime = 0;
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+
+                    long currentTime = System.currentTimeMillis();
+                    if (currentTime - lastClickTime < 1000) {
+                        return false;
+                    }
+                    lastClickTime = currentTime;
+
+                    // 处理点击抬起事件
+                    int cursorPosition = ((EditText) v).getOffsetForPosition(event.getX(), event.getY());
+                    Log.d("TouchEvent", "点击位置: " + cursorPosition);
+                    startPos = cursorPosition;
+                    AsrHelper.INSTANCE.stopAsr();
+
+                    // 执行点击后的操作
+//                    handleClickAtPosition(cursorPosition);
+
+                    // 为了可访问性，调用performClick()
+                    v.performClick();
+                }
+                return false; // 返回false允许事件继续传递
+            }
+        });
+//        messageInput.setOnTouchListener { v, event ->
+//            if (event.action == MotionEvent.ACTION_UP) {
+//                val editText = v as EditText
+//                val offset = editText.getOffsetForPosition(event.x, event.y)
+//                Log.d("Cursor", "Tapped at position: $offset")
+//            }
+//            false // 必须返回false以保证正常处理事件
+//        }
+    }
+
+    private int startPos = -1;
+    private int lastLength = 0;
+    public  void smartInsertAtCursor(Boolean definite, String newText) {
+        if (newText == null || newText.isEmpty()) {
+            return;
+        }
+
+        try {
+            Editable editable = messageInput.getText();
+
+            if(startPos<0){
+                startPos = messageInput.getSelectionStart();
+
+                // 处理没有光标位置的情况
+                if (startPos < 0) {
+                    startPos = editable.length();
+                }
+            }
+//            editable.insert(startPos, newText);
+            editable.replace(startPos,startPos+lastLength,newText);
+            lastLength = newText.length();
+//            messageInput.setSelection(startPos + lastLength);
+            if(definite){
+                startPos += newText.length();
+                lastLength = 0;
+            }
+
+//            // 获取光标前的内容
+//            String beforeCursor = editable.subSequence(0, cursorPos).toString();
+//
+//            // 查找新文本开头在光标前内容中的最长匹配
+//            int matchLength = 0;
+//            if (lastMsg != null && !lastMsg.isEmpty() && newText.startsWith(lastMsg) && beforeCursor.endsWith(lastMsg)) {
+//                matchLength = lastMsg.length();
+//            }
+//
+//            if (matchLength > 0) {
+//                // 如果找到匹配，只插入变更部分
+//                String textToInsert = newText.substring(matchLength);
+//
+//                Log.e("AsrHelper", "matchLength:" + matchLength + ",textToInsert:" + textToInsert);
+//                editable.insert(cursorPos, textToInsert);
+//                editText.setSelection(cursorPos + textToInsert.length());
+//            } else {
+//                // 没有匹配，插入完整新字符串
+//                Log.e("AsrHelper", "matchLength:" + matchLength + ",all textToInsert:" + newText);
+//                editable.insert(cursorPos, newText);
+//                editText.setSelection(cursorPos + newText.length());
+//            }
+        } catch (Exception e) {
+            Log.e("AsrHelper", "Error inserting text", e);
+        }
     }
 
     private void setCursor(Drawable drawable) {

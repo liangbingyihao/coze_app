@@ -73,6 +73,7 @@ public class GWApiManager {
                 .readTimeout(30, TimeUnit.SECONDS)
                 .writeTimeout(30, TimeUnit.SECONDS)
                 .addInterceptor(new TokenRefreshInterceptor())
+                .addInterceptor(new ErrorClassifierInterceptor()) // 然后添加错误分类拦截器
 //                .addNetworkInterceptor(new SelectiveDiskCacheInterceptor())
                 .build();
     }
@@ -431,6 +432,7 @@ public class GWApiManager {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException error) {
                     Logger.warn("Message: " + message.getText() + "请求失败: " + error.getMessage());
+                    message.setMessageStatus(MessageSendStatus.Failed, true);
                     emitter.onError(new Exception(error.getMessage()));
                 }
 
@@ -439,9 +441,6 @@ public class GWApiManager {
                     try {
                         String responseBody = response.body() != null ? response.body().string() : "";
                         if (!response.isSuccessful()) {
-                            if (response.message().equals("UNAUTHORIZED")) {
-                                ChatSDK.auth().logout();
-                            }
                             message.setMessageStatus(MessageSendStatus.Failed, true);
                             emitter.onError(new IOException("HTTP error: " + response.code() + "," + responseBody));
                             return;
@@ -450,6 +449,7 @@ public class GWApiManager {
                         JsonObject data = gson.fromJson(responseBody, JsonObject.class).getAsJsonObject("data");
                         emitter.onSuccess(data); // 请求成功
                     } catch (Exception e) {
+                        message.setMessageStatus(MessageSendStatus.Failed, true);
                         emitter.onError(e);
                     } finally {
                         response.close(); // 关闭 Response
@@ -513,12 +513,13 @@ public class GWApiManager {
         accessToken = null;
     }
 
-    public Single<JsonObject> getMessageDetail(String contextId,int retry) {
+    public Single<JsonObject> getMessageDetail(String contextId,int retry,int stop) {
         return Single.create(emitter -> {
 
             HttpUrl url = Objects.requireNonNull(HttpUrl.parse(URL_MESSAGE + "/" + contextId))
                     .newBuilder()
                     .addQueryParameter("retry", Integer.toString(retry))
+                    .addQueryParameter("stop", Integer.toString(stop))
                     .build();
 
             Request request = new Request.Builder()

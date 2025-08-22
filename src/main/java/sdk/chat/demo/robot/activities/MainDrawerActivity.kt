@@ -8,12 +8,14 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.edit
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.transition.Visibility
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
@@ -47,6 +49,7 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
     open lateinit var searchView: MaterialSearchView
     private lateinit var recyclerView: RecyclerView
     private lateinit var vHomeMenu: View
+    private lateinit var vErrorHint: TextView
     private lateinit var sessions: List<Thread>
     private var highlightOverlay: HighlightOverlayView? = null
     private lateinit var sessionAdapter: SessionAdapter
@@ -78,6 +81,7 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
         findViewById<View>(R.id.menu_gw_daily).setOnClickListener(this)
         findViewById<View>(R.id.menu_search).setOnClickListener(this)
         findViewById<View>(R.id.debug).setOnClickListener(this)
+        vErrorHint = findViewById<View>(R.id.error_hint) as TextView
         vHomeMenu = findViewById<View>(R.id.menu_home)
         vHomeMenu.setOnClickListener(this)
         findViewById<View>(R.id.menu_task).setOnClickListener(this)
@@ -136,6 +140,15 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
                         this@MainDrawerActivity,
                         "networkEvent:${networkEvent?.isOnline}"
                     )
+                    if(networkEvent!=null){
+                        if (!networkEvent.isOnline) {
+                            vErrorHint.visibility = View.VISIBLE
+                            vErrorHint.setText(R.string.network_error)
+                        }else{
+                            vErrorHint.visibility = View.GONE
+                        }
+                    }
+
                 })
         )
 
@@ -378,6 +391,12 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
 
     override fun onResume() {
         super.onResume()
+        if (!ChatSDK.connectionStateMonitor().isOnline()) {
+            vErrorHint.visibility = View.VISIBLE
+            vErrorHint.setText(R.string.network_error)
+        }else{
+            vErrorHint.visibility = View.GONE
+        }
         if (threadHandler.isCustomPrompt) {
             toolbar?.title = "自定义提示语中"
         } else {

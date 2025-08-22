@@ -37,7 +37,6 @@ import sdk.chat.core.dao.MessageDao;
 import sdk.chat.core.dao.Thread;
 import sdk.chat.core.dao.ThreadDao;
 import sdk.chat.core.dao.User;
-import sdk.chat.core.events.EventType;
 import sdk.chat.core.events.NetworkEvent;
 import sdk.chat.core.interfaces.ThreadType;
 import sdk.chat.core.rigs.MessageSendRig;
@@ -60,6 +59,7 @@ import sdk.chat.demo.robot.holder.AIFeedbackType;
 import sdk.chat.demo.robot.holder.DailyGWRegistration;
 import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.chat.model.MessageHolder;
+import sdk.chat.ui.utils.ToastHelper;
 import sdk.guru.common.RX;
 
 public class GWThreadHandler extends AbstractThreadHandler {
@@ -67,7 +67,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
     private List<Thread> sessionCache;
     private Message welcome;
     private AIExplore aiExplore;
-//    private Message playingMsg;
+    //    private Message playingMsg;
     private Boolean isCustomPrompt = null;
     private SystemConf serverPrompt = null;
     private final static Gson gson = new Gson();
@@ -183,8 +183,10 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         Message message = ChatSDK.db().fetchMessageWithEntityID(msgId);
                         if (message != null) {
                             JsonObject data = gson.fromJson(message.stringForKey(KEY_AI_FEEDBACK), JsonObject.class);
-                            data.addProperty("summary", summary);
-                            updateMessage(message, data);
+                            if (data != null) {
+                                data.addProperty("summary", summary);
+                                updateMessage(message, data);
+                            }
                             return true;
                         }
                         return false;
@@ -436,13 +438,17 @@ public class GWThreadHandler extends AbstractThreadHandler {
      */
     public Completable sendMessage(final Message message) {
 
-        if (message.getEntityID() != null && message.getEntityID().length() > 20) {
+        if (!message.isLocalMessage()) {
+            //重试查看AI回复
             try {
-                JsonObject data = gson.fromJson(message.stringForKey(KEY_AI_FEEDBACK), JsonObject.class);
-                if (data.has("status")) {
-                    data.addProperty("status", MessageDetail.STATUS_PENDING);
-                }
-                updateMessage(message, data);
+//                JsonObject data = gson.fromJson(message.stringForKey(KEY_AI_FEEDBACK), JsonObject.class);
+//                if(data==null){
+//                    data = new JsonObject();
+//                }
+//                if (data.has("status")) {
+//                    data.addProperty("status", MessageDetail.STATUS_PENDING);
+//                }
+//                updateMessage(message, data);
                 startPolling(message.getId(), message.getEntityID(), 1);
                 return Completable.complete();
             } catch (Exception e) {
@@ -479,13 +485,25 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         if (!aiFeedback.getFunction().isEmpty()) {
                             updateMessage(message, gson.toJsonTree(messageDetail).getAsJsonObject());
                         }
+
                         if (action == action_daily_gw_pray) {
-                            sendExploreMessage(
-                                    "关于以上内容的祷告和默想建议",
-                                    message,
-                                    action_daily_pray,
-                                    m.getScripture()
-                            ).subscribe();
+                            // 处理数据
+                            Observable.just(data)
+                                    .delay(1, TimeUnit.SECONDS) // 延迟2秒
+                                    .ignoreElements() // 转换为Completable
+                                    .andThen(sendExploreMessage(
+                                            "关于以上内容的祷告和默想建议",
+                                            message,
+                                            action_daily_pray,
+                                            m.getScripture()
+                                    )).subscribe(
+                                    );
+//                            sendExploreMessage(
+//                                    "关于以上内容的祷告和默想建议",
+//                                    message,
+//                                    action_daily_pray,
+//                                    m.getScripture()
+//                            ).subscribe();
                         }
                     }
                     return Single.just(message);
@@ -509,7 +527,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
             ).getString(k, null);
         }
 
-        ChatSDK.events().source().accept(NetworkEvent.messageSendStatusChanged(message));
+        message.setMessageStatus(MessageSendStatus.Uploading, true);
         pendingMsgId = message.getId();
         return GWApiManager.shared().askRobot(message, prompt)
                 .subscribeOn(RX.io()).flatMap(data -> {
@@ -584,10 +602,10 @@ public class GWThreadHandler extends AbstractThreadHandler {
                             ChatSDK.events().source().accept(NetworkEvent.messageRemoved(message));
                         } else {
                             JsonObject data = gson.fromJson(message.stringForKey(KEY_AI_FEEDBACK), JsonObject.class);
-                            if (data.has("feedback_text")) {
+                            if (data != null && data.has("feedback_text")) {
                                 data.addProperty("feedback_text", "");
+                                updateMessage(message, data);
                             }
-                            updateMessage(message, data);
                         }
 
                         return result;
@@ -919,26 +937,30 @@ public class GWThreadHandler extends AbstractThreadHandler {
     }
 
     public Thread createChatSessions() {
-//        DaoCore daoCore = ChatSDK.db().getDaoCore();
-//        QueryBuilder<Message> qb = daoCore.getDaoSession().queryBuilder(Message.class);
-//        qb.where(MessageDao.Properties.Type.eq(MessageType.Text));
-//        List<Message> data = qb.list();
-//        for (Message d : data) {
-//            MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(d);
-//            if (aiFeedback == null || aiFeedback.getFeedbackText().isEmpty()) {
-//                if (d.getText().isEmpty()) {
-//                    d.cascadeDelete();
-//                }
-//            }
-////            Integer action = d.integerForKey("action");
-////            if (action == action_daily_gw) {
-////                d.setType(DailyGWRegistration.GWMessageType);
-////                daoCore.updateEntity(d);
-////            } else if (action == action_bible_pic) {
-////                daoCore.deleteEntity(d);
-////            }
-////            daoCore.deleteEntity(d);
-//        }
+        //FIXME
+        DaoCore daoCore = ChatSDK.db().getDaoCore();
+        QueryBuilder<Message> qb = daoCore.getDaoSession().queryBuilder(Message.class);
+        qb.where(MessageDao.Properties.Type.eq(MessageType.Text));
+        List<Message> data = qb.list();
+        long notTime = new Date().getTime();
+        int expireMs = 2 * 60 * 1000;
+        for (Message d : data) {
+            MessageSendStatus status = d.getMessageStatus();
+            if (status != MessageSendStatus.Sent) {
+                if (d.isLocalMessage()) {
+                    d.setMessageStatus(MessageSendStatus.UploadFailed, false);
+                } else {
+                    MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(d);
+                    if (aiFeedback != null && aiFeedback.getStatus() == MessageDetail.STATUS_SUCCESS) {
+                        d.setMessageStatus(MessageSendStatus.Sent, false);
+                    } else {
+                        d.setMessageStatus(MessageSendStatus.Failed, false);
+                        //TODO isExpired
+//                        boolean isExpired = d.getDate() == null || (notTime - d.getDate().getTime() > expireMs);
+                    }
+                }
+            }
+        }
 
         String entityID = "0";
         Thread thread = ChatSDK.db().fetchThreadWithEntityID(entityID);
@@ -1028,7 +1050,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 List<Message> data = qb.list();
 
                 if (data.isEmpty()) {
-                    GWApiManager.shared().getMessageDetail("welcome", 0)
+                    GWApiManager.shared().getMessageDetail("welcome", 0, 0)
                             .subscribeOn(RX.io())
                             .subscribe(
                                     json -> {
@@ -1069,38 +1091,45 @@ public class GWThreadHandler extends AbstractThreadHandler {
             return;
         }
         try {
-            MessageDetail messageDetail = gson.fromJson(json, MessageDetail.class);
-            if (messageDetail == null) {
+            MessageDetail aiFeedback = gson.fromJson(json, MessageDetail.class);
+            if (aiFeedback == null) {
                 return;
             }
             String jsonStr = json.toString();
             message.setMetaValue(KEY_AI_FEEDBACK, jsonStr);
-            MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(message);
+//            MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(message);
 
-            Long sid = messageDetail.getSessionId();
-            if (sid != null && sid > 0 && !sid.equals(message.getThreadId())) {
-                message.setThreadId(sid);
-                updateThread(Long.toString(sid), messageDetail.getFeedback().getTopic(), new Date());
-            }
-            if (messageDetail.getStatus() != MessageDetail.STATUS_PENDING) {
+            if (aiFeedback.getStatus() != MessageDetail.STATUS_PENDING) {
+                Log.d("sending", "aiFeedback.getStatus()=" + aiFeedback.getStatus());
                 disposables.clear();
             }
 
-            if (messageDetail.getStatus() == MessageDetail.STATUS_SUCCESS) {
+            Long sid = aiFeedback.getSessionId();
+            if (sid != null && sid > 0 && !sid.equals(message.getThreadId())) {
+                message.setThreadId(sid);
+                updateThread(Long.toString(sid), aiFeedback.getFeedback().getTopic(), new Date());
+            }
+
+            if (aiFeedback.getStatus() > MessageDetail.STATUS_SUCCESS) {
+                AIFeedback fb = aiFeedback.getFeedback();
+                if (aiFeedback.getStatus() == MessageDetail.STATUS_CANCEL || (fb != null && fb.getView() != null && !fb.getView().isEmpty())) {
+                    message.setMessageStatus(MessageSendStatus.Sent, false);
+                } else {
+                    message.setMessageStatus(MessageSendStatus.Failed, false);
+                }
+            }
+
+            if (aiFeedback.getStatus() == MessageDetail.STATUS_SUCCESS) {
+                message.setMessageStatus(MessageSendStatus.Sent, false);
                 if (sid != null && sid > 0 && !sid.equals(message.getThreadId())) {
                     message.setThreadId(sid);
-                    updateThread(Long.toString(sid), messageDetail.getFeedback().getTopic(), new Date());
+                    updateThread(Long.toString(sid), aiFeedback.getFeedback().getTopic(), new Date());
                 }
 
-                if (aiFeedback != null && aiFeedback.getFeedback() != null) {
+                if (aiFeedback.getFeedback() != null) {
                     AIExplore newAIExplore = AIExplore.loads(message, aiFeedback.getFeedback().getFunction());
                     if (newAIExplore != null) {
-                        Message oldMsg = aiExplore != null ? aiExplore.getMessage() : null;
                         aiExplore = newAIExplore;
-                        Log.d("sending", "aiExplore3=" + aiExplore.getMessage().getId());
-//                        if (oldMsg != null) {
-//                            ChatSDK.events().source().accept(NetworkEvent.messageUpdated(oldMsg));
-//                        }
                     }
                 }
                 int action = message.integerForKey("action");
@@ -1121,7 +1150,6 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 aiHolder.setAiFeedback(aiFeedback);
             }
 
-            ChatSDK.db().update(message, false);
             ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
         } catch (Exception e) {
             Logger.warn(e.getMessage());
@@ -1147,8 +1175,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
     }
 
     public synchronized void stopPolling() {
-        disposables.clear();
-        pendingMsgId = null;
+        retryCount.set(0);
     }
 
     public synchronized void startPolling(Long localId, String contextId, int retry) throws Exception {
@@ -1159,6 +1186,9 @@ public class GWThreadHandler extends AbstractThreadHandler {
 
         Log.d("sending", "startPolling:" + localId.toString());
         pendingMsgId = localId;
+        retryCount.set(1);
+        Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
+        message.setMessageStatus(MessageSendStatus.Replying, true);
         Disposable disposable = Observable.interval(INITIAL_DELAY, POLL_INTERVAL, TimeUnit.SECONDS)
                 .doOnDispose(() -> {
                             Log.d("sending", "doOnDispose:" + localId.toString());
@@ -1166,9 +1196,16 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         }
                 )
                 .flatMap(tick -> {
-                    Log.d("sending", "tick:" + tick);
-                    retryCount.set(0);
-                    return GWApiManager.shared().getMessageDetail(contextId, tick == 0 ? retry : 0)
+                    int stop = retryCount.get();
+                    if (stop == 0) {
+                        retryCount.decrementAndGet();
+                    }
+                    if (stop < 0) {
+                        disposables.clear();
+                        return Observable.empty();
+                    }
+                    Log.d("sending", "tick:" + tick + ",stop:" + stop);
+                    return GWApiManager.shared().getMessageDetail(contextId, tick == 0 ? retry : 0, stop == 0 ? 1 : 0)
                             .subscribeOn(RX.io())
                             .flatMap(Single::just).toObservable();
                 })
@@ -1176,7 +1213,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 .flatMapCompletable(json ->
                         {
                             if (json != null) {
-                                Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
+//                                Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
                                 updateMessage(message, json);
                                 return Completable.complete();
                             } else {
@@ -1191,7 +1228,9 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         },
                         error -> {
                             Log.d("sending", "error:" + localId.toString() + "," + error.getMessage());
-
+//                            Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
+                            message.setMessageStatus(MessageSendStatus.Failed, true);
+                            ChatSDK.events().source().accept(NetworkEvent.errorEvent(message, "message", error.getMessage()));
                         });
 
         disposables.add(disposable);

@@ -404,6 +404,7 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
         var action = imageHolder.action;
         var imageDaily: ImageDaily? = imageHolder.getImageDaily()
         if (imageDaily == null) {
+            Log.d("imageDaily", "imageDaily==null")
             return
         }
         if (action == GWThreadHandler.action_bible_pic) {

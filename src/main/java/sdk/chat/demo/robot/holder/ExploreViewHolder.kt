@@ -41,11 +41,11 @@ open class ExploreViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         var i = 0
         var aiExplore: AIExplore? = threadHandler.aiExplore
         val aiFeedback = GWMsgHandler.getAiFeedback(aiExplore?.message)
-        Log.d("sending","threadHandler.isSendingMsg:${threadHandler.pendingMsgId()},aiExplore:${aiExplore?.message?.id},${aiExplore?.itemList?.size}");
+//        Log.d("sending","threadHandler.isSendingMsg:${threadHandler.pendingMsgId()},aiExplore:${aiExplore?.message?.id},${aiExplore?.itemList?.size}");
         while (i < 3) {
             var v: TextView = exploreView.getValue("explore$i")
             if (threadHandler.pendingMsgId()==null && aiExplore != null && i < aiExplore.itemList.size) {
-                Log.d("sending", "bindExplore:visible $i");
+//                Log.d("sending", "bindExplore:visible $i");
                 var data = aiExplore.itemList[i]
                 v.visibility = View.VISIBLE
                 v.text = data.text
@@ -89,7 +89,7 @@ open class ExploreViewHolder(view: View) : RecyclerView.ViewHolder(view) {
                     }
                 }
             } else {
-                Log.d("sending", "bindExplore:gone $i");
+//                Log.d("sending", "bindExplore:gone $i");
                 v.visibility = View.GONE
             }
             ++i

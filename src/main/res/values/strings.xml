@@ -53,8 +53,10 @@
     <string name="task_action_d">已完成</string>
     <string name="task_action_p">待开启</string>
     <string name="loading">耐心是圣灵的果子，我们在努力加载中</string>
+    <string name="uploading">耐心是圣灵的果子，我们在努力上传中</string>
     <string name="sending">存在发送中的信息，请稍后</string>
-    <string name="msg_failed">回复失败，请重试</string>
+    <string name="ai_failed">回复失败，请重试</string>
+    <string name="msg_failed">发送失败，请重试</string>
     <string name="task_calendar">打卡日记</string>
     <string name="guide_drawer">侧边栏</string>
     <string name="guide_pic">生成经文图</string>

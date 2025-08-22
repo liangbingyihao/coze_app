@@ -47,7 +47,7 @@ object AsrHelper {
 //                resultTextView.setText(resultTextView.text.toString()+"\nCallback: 引擎关闭: data:  " + stdData)
                         mEngineStarted = false
                         ChatSDK.events().source()
-                            .accept(NetworkEvent.messageInputAsr(null,null, false))
+                            .accept(NetworkEvent.messageInputAsr(null, null, false))
 //                speechStop()
                     }
 
@@ -91,16 +91,22 @@ object AsrHelper {
             if (!reader.has("result")) {
                 return
             }
-            var text = reader.getJSONArray("result").getJSONObject(0).getString("text")
+            var result = reader.getJSONArray("result").getJSONObject(0)
+            var text = result.getString("text")
             if (text.isEmpty()) {
                 return
             }
+            var utterances = result.getJSONArray("utterances")
+            var definite = utterances.getJSONObject(0).getBoolean("definite")
 
-//            Log.i(TAG, text)
-            if (text != lastAsrResult) {
-                ChatSDK.events().source()
-                    .accept(NetworkEvent.messageInputAsr(lastAsrResult, text, true))
-            }
+            Log.i(TAG, "got $isFinal,$text,${definite}")
+//            if (definite) {
+//                ChatSDK.events().source()
+//                    .accept(NetworkEvent.messageInputAsr(definite, text, true))
+//            }
+            ChatSDK.events().source()
+                .accept(NetworkEvent.messageInputAsr(definite, text, true))
+
             lastAsrResult = text
 //            if (isFinal) {
 //                text += "\nreqid: " + reader.getString("reqid")
@@ -269,7 +275,10 @@ object AsrHelper {
                 SpeechEngineDefines.PARAMS_KEY_ASR_RESULT_TYPE_STRING,
                 SpeechEngineDefines.ASR_RESULT_TYPE_SINGLE
             )
-
+            mSpeechEngine!!.setOptionBoolean(
+                SpeechEngineDefines.PARAMS_KEY_ASR_SHOW_UTTER_BOOL,
+                true
+            )
 
             // Directive：启动引擎前调用SYNC_STOP指令，保证前一次请求结束。
             Log.i(TAG, "关闭引擎（同步）")
@@ -279,7 +288,7 @@ object AsrHelper {
             if (ret != SpeechEngineDefines.ERR_NO_ERROR) {
                 var msg = "directive DIRECTIVE_SYNC_STOP_ENGINE failed, $ret"
                 Log.e(TAG, msg)
-                ChatSDK.events().source().accept(NetworkEvent.errorEvent("asr",msg))
+                ChatSDK.events().source().accept(NetworkEvent.errorEvent(null,"asr", msg))
             } else {
                 Log.i(TAG, "启动引擎")
                 Log.i(TAG, "Directive: DIRECTIVE_START_ENGINE")
@@ -288,13 +297,13 @@ object AsrHelper {
 
                     var msg = "ERR_REC_CHECK_ENVIRONMENT_FAILED"
                     Log.e(TAG, msg)
-                    ChatSDK.events().source().accept(NetworkEvent.errorEvent("asr",msg))
+                    ChatSDK.events().source().accept(NetworkEvent.errorEvent(null,"asr", msg))
 //                    mEngineStatusTv.setText(R.string.check_rec_permission)
 //                    requestPermission(com.bytedance.speech.speechdemo.AsrActivity.ASR_PERMISSIONS)
                 } else if (ret != SpeechEngineDefines.ERR_NO_ERROR) {
                     var msg = "send directive start failed, $ret"
                     Log.e(TAG, msg)
-                    ChatSDK.events().source().accept(NetworkEvent.errorEvent("asr",msg))
+                    ChatSDK.events().source().accept(NetworkEvent.errorEvent(null,"asr", msg))
                 }
             }
         }

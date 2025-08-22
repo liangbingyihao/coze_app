@@ -7,6 +7,6 @@
         android:topLeftRadius="12dp"
         android:topRightRadius="12dp" />
 
-    <solid android:color="@color/selector_outcoming_bubble" />
+    <solid android:color="@color/selector_feed_button" />
 
 </shape>

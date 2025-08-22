@@ -161,6 +161,7 @@ class HighlightOverlayView @JvmOverloads constructor(
 
 
     fun handleFirst(context: BaseActivity, message: Message?) {
+
         if (hasShownGuideOverlay(context)) {
             return
         }

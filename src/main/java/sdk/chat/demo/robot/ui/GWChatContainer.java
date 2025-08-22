@@ -250,11 +250,11 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
                 Message msg = ChatSDK.db().fetchMessageWithEntityID(messageId);
                 if(msg!=null){
                     startId = msg.getId()+1;
-                    Toast.makeText(
-                            getContext(),
-                            "准加载id: " + msg.getId(),
-                            Toast.LENGTH_SHORT
-                    ).show();
+//                    Toast.makeText(
+//                            getContext(),
+//                            "准加载id: " + msg.getId(),
+//                            Toast.LENGTH_SHORT
+//                    ).show();
                 }
             }
         }

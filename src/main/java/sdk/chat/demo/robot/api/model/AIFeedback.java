@@ -14,6 +14,7 @@ public class AIFeedback {
     private String topic;
     private String tag;
     private String bible;
+    private String view;
 
     public String getColorTag() {
         return colorTag;
@@ -53,5 +54,13 @@ public class AIFeedback {
 
     public void setBible(String bible) {
         this.bible = bible;
+    }
+
+    public String getView() {
+        return view;
+    }
+
+    public void setView(String view) {
+        this.view = view;
     }
 }

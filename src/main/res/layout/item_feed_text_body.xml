@@ -26,6 +26,19 @@
             android:textSize="17sp" />
     </FrameLayout>
 
+    <TextView
+        android:id="@+id/send_error_hint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_click_shadow"
+        android:text="@string/msg_failed"
+        android:textColor="@color/item_text_selected"
+        android:textSize="17sp"
+        android:layout_gravity="right"
+        android:drawablePadding="4dp"
+        app:drawableLeftCompat="@mipmap/ic_redo_red" />
+
     <LinearLayout
         android:id="@+id/user_text_menu"
         android:layout_width="wrap_content"
@@ -86,14 +99,11 @@
             tools:text="session_name" />
     </LinearLayout>
 
-    <View
-        android:layout_width="1dp"
-        android:layout_height="14dp" />
-
     <LinearLayout
-        android:id="@+id/hint_container"
+        android:id="@+id/process_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
         android:paddingTop="4dp"
         android:paddingBottom="8dp"
         android:gravity="center_vertical"
@@ -103,34 +113,43 @@
         app:layout_alignSelf="flex_start">
 
         <ImageView
-            android:id="@+id/loadingImage"
             android:layout_width="16dp"
             android:layout_height="16dp"
             android:src="@drawable/loading_animation" />
 
         <TextView
-            android:id="@+id/feedbackHint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp"
+            android:layout_marginLeft="4dp"
             android:lineSpacingExtra="8dp"
             android:lineSpacingMultiplier="1"
             android:text="@string/loading"
             android:textColor="@color/text_gray2"
             android:textIsSelectable="true"
             android:textSize="17sp"
-            android:clickable="false"
-            android:focusable="false"
             app:layout_alignSelf="flex_start" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/reply_error_hint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_click_shadow"
+        android:text="@string/ai_failed"
+        android:textColor="@color/item_text_selected"
+        android:textSize="17sp"
+        android:layout_gravity="left"
+        android:drawablePadding="4dp"
+        app:drawableLeftCompat="@mipmap/ic_redo_red" />
 
     <TextView
         android:id="@+id/feedback"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
         android:lineSpacingExtra="8dp"
         android:lineSpacingMultiplier="1"
-        android:text="1221334"
         android:textColor="@color/item_text_normal"
         android:textIsSelectable="true"
         android:textSize="17sp"

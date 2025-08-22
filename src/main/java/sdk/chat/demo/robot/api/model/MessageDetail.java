@@ -5,6 +5,7 @@ import com.google.gson.annotations.SerializedName;
 public class MessageDetail {
     public static final int STATUS_PENDING = 1;
     public static final int STATUS_SUCCESS = 2;
+    public static final int STATUS_CANCEL = 6;
     private String id;
     private int status;
     private String summary;
@@ -29,7 +30,13 @@ public class MessageDetail {
     }
 
     public int getStatus() {
-        //0:未开始，1：生成中，2：生成成功，3：生成失败
+//    status_init = 0
+//    status_pending = 1
+//    status_success = 2
+//    status_del = 3
+//    status_err = 4
+//    status_timeout = 5
+//    status_cancel = 6
         return status;
     }
 

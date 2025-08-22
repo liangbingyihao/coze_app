@@ -31,7 +31,7 @@ class SessionAdapter(
         private const val TYPE_DATE = 0
         private const val TYPE_ARTICLE = 1
         private const val TYPE_HEADER = 2
-        private var cornerSize = 16f.dpToPx(MainApp.getContext())
+        private var cornerSize = 10f.dpToPx(MainApp.getContext())
     }
 
 
@@ -53,9 +53,9 @@ class SessionAdapter(
         }
     }
 
-    fun setSelectItemName(name:String) {
+    fun setSelectItemName(name: String) {
         if (selectedPosition in items.indices) {
-            val item:HistoryItem.SessionItem = items[selectedPosition] as HistoryItem.SessionItem
+            val item: HistoryItem.SessionItem = items[selectedPosition] as HistoryItem.SessionItem
             item.title = name
             notifyItemChanged(selectedPosition)
         }
@@ -117,7 +117,7 @@ class SessionAdapter(
         fun bind(item: HistoryItem.SessionItem, position: Int) {
             titleText.text = item.title
             if (position == 0) {
-                val bg = GradientDrawable().apply {
+                titleText.background = GradientDrawable().apply {
                     // 设置四角半径（顺序：左上,右上,右下,左下）
                     cornerRadii = floatArrayOf(
                         cornerSize, cornerSize,
@@ -127,19 +127,30 @@ class SessionAdapter(
                     )
                     setColor(Color.WHITE)
                 }
-                titleText.background = bg
-            } else if (position == 1 && items.size > 2 && (items[0] as HistoryItem.SessionItem).title == headTopic) {
-                val bg = GradientDrawable().apply {
-                    // 设置四角半径（顺序：左上,右上,右下,左下）
-                    cornerRadii = floatArrayOf(
-                        cornerSize, cornerSize,
-                        cornerSize, cornerSize,
-                        0f, 0f,
-                        0f, 0f,
-                    )
-                    setColor(Color.WHITE)
+            } else if (position == 1 && (items[0] as HistoryItem.SessionItem).title == headTopic) {
+                if (items.size > 2) {
+                    itemView.background = GradientDrawable().apply {
+                        // 设置四角半径（顺序：左上,右上,右下,左下）
+                        cornerRadii = floatArrayOf(
+                            cornerSize, cornerSize,
+                            cornerSize, cornerSize,
+                            0f, 0f,
+                            0f, 0f,
+                        )
+                        setColor(Color.WHITE)
+                    }
+                } else {
+                    itemView.background = GradientDrawable().apply {
+                        // 设置四角半径（顺序：左上,右上,右下,左下）
+                        cornerRadii = floatArrayOf(
+                            cornerSize, cornerSize,
+                            cornerSize, cornerSize,
+                            cornerSize, cornerSize,
+                            cornerSize, cornerSize,
+                        )
+                        setColor(Color.WHITE)
+                    }
                 }
-                itemView.background = bg
             } else if (position == items.size - 1) {
                 val bg = GradientDrawable().apply {
                     // 设置四角半径（顺序：左上,右上,右下,左下）
