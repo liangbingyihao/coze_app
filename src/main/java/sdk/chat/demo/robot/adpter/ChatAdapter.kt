@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.util.size
-import androidx.core.widget.ContentLoadingProgressBar
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.stfalcon.chatkit.commons.models.IMessage
@@ -142,6 +141,7 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                 items.clear()
                 items.addAll(newList)
                 diffResult.dispatchUpdatesTo(this@ChatAdapter)
+//                notifyDataSetChanged()
                 onComplete?.invoke()
             }, { error ->
                 Log.e("ChatAdapter", "DiffUtil计算失败", error)
@@ -191,10 +191,13 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         val deletePos = items.indexOfFirst { it.id == message.id }
 
         if (deletePos == -1) {
+            Log.e("delmsg", "message.id:${message.id},del:-1,size:${items.size}")
             onComplete?.invoke()
             return
         }
-        val newList = ArrayList(items).apply { removeAt(deletePos) }
+        Log.e("delmsg", "message.id:${message.id},del:${deletePos}:${items[deletePos].id},size:${items.size}")
+        val newList = ArrayList(items).apply { removeAt(deletePos + headerOffset()) }
+        //status: 0: pending,1:idle
         submitList(newList, onComplete)
     }
 
@@ -283,6 +286,7 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                 holder.bind(header)
 //                bindListeners(holder, null)
             }
+
             is FooterViewHolder -> holder.bind(footer)
         }
     }
@@ -300,7 +304,7 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private fun isHeaderPosition(pos: Int) = hasHeader() && pos == 0
     private fun isFooterPosition(pos: Int) = hasFooter() && pos == itemCount - 1
-    private fun hasHeader() = true
+    private fun hasHeader() = false
     private fun hasFooter() = footer != null
     private fun headerOffset() = if (hasHeader()) 1 else 0
     private fun footerOffset() = if (hasFooter()) 1 else 0

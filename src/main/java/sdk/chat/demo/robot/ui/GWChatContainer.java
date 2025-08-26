@@ -499,7 +499,7 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
 
         long end = System.currentTimeMillis();
         long diff = end - start;
-        System.out.println("Diff: " + diff);
+//        System.out.println("Diff: " + diff);
 
     }
 

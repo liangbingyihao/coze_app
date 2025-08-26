@@ -1,20 +1,16 @@
 package sdk.chat.demo.robot.activities
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.text.Html
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.WebSettings
+import android.webkit.WebView
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.text.HtmlCompat
-import androidx.lifecycle.Lifecycle
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.gyf.immersionbar.ImmersionBar
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -38,8 +34,8 @@ class TaskActivity : BaseActivity(), View.OnClickListener {
     private lateinit var taskProcess: TaskProgress
     private lateinit var taskPieAdapter: TaskPieAdapter
     private lateinit var storyContainer: View
-    private lateinit var tvStory: TextView
-    private lateinit var tvStoryTitle: TextView
+    private lateinit var tvStory: WebView
+//    private lateinit var tvStoryTitle: TextView
     private lateinit var tvStoryName: TextView
     private lateinit var imTaskImage: ImageView
 
@@ -66,8 +62,9 @@ class TaskActivity : BaseActivity(), View.OnClickListener {
         pieContainer = findViewById<LinearLayout>(R.id.pieContainer)
         imTaskImage = findViewById<ImageView>(R.id.fullscreenImageView)
         storyContainer = findViewById<LinearLayout>(R.id.storyContainer)
-        tvStory = findViewById<TextView>(R.id.story)
-        tvStoryTitle = findViewById<TextView>(R.id.storyTitle)
+        tvStory = findViewById<WebView>(R.id.story)
+        configureWebView()
+//        tvStoryTitle = findViewById<TextView>(R.id.storyTitle)
         tvStoryName = findViewById<TextView>(R.id.storyName)
         findViewById<View>(R.id.calendar_enter).setOnClickListener(this)
         taskPieAdapter = TaskPieAdapter(
@@ -181,12 +178,66 @@ class TaskActivity : BaseActivity(), View.OnClickListener {
             storyContainer.visibility = View.GONE
         } else if (index == taskDetail.index && !taskDetail.isAllCompleted) {
             storyContainer.visibility = View.GONE
-        } else {
+        } else if (taskProcess.chapters.size > index) {
             storyContainer.visibility = View.VISIBLE
-            tvStory.text = HtmlCompat.fromHtml(taskProcess.chapters[index].content, HtmlCompat.FROM_HTML_MODE_LEGACY);
+//            tvStory.text = HtmlCompat.fromHtml(
+//                taskProcess.chapters[index].content,
+//                HtmlCompat.FROM_HTML_MODE_LEGACY
+//            );
+            val htmlContent = "<!DOCTYPE html>" +
+                    "<html>" +
+                    "<head>" +
+                    "<meta name='viewport' content='width=device-width, initial-scale=1'>" +
+                    "<style>body{font-family:Arial;padding:20px;font-size: 12px;}</style>" +
+                    "</head>" +
+                    "<body>" +
+                    "<h1>Android WebView Demo</h1>" +
+                    "<p>This content is loaded from HTML string.</p>" +
+                    "<p>This content is loaded from HTML string.</p>" +
+                    "<p>This content is loaded from HTML string.</p>" +
+                    "<p>This content is loaded from HTML string.</p>" +
+                    "<p>This content is loaded from HTML string.</p>" +
+                    "<p>This content is loaded from HTML string.</p>" +
+                    "<p>This content is loaded from HTML string.</p>" +
+                    "<p>This content is loaded from HTML string.</p>" +
+                    "<p>This content is loaded from HTML string.</p>" +
+                    "<p>This content is loaded from HTML string.</p>" +
+                    "<p>This content is loaded from HTML string.</p>" +
+                    "<p>This content is loaded from HTML string.</p>" +
+                    "<p>This content is loaded from HTML string.</p>" +
+                    "<p>This content is loaded from HTML string.</p>" +
+                    "<p>This content1 is loaded from HTML string.</p>" +
+                    "<button onclick='Android.showToast(\"Hello from WebView\")'>Click Me</button>" +
+                    "</body>" +
+                    "</html>"
+            tvStory.loadDataWithBaseURL(null, htmlContent, "text/html", "UTF-8", null);
+//            tvStory.loadDataWithBaseURL(null, taskProcess.chapters[index].content, "text/html", "UTF-8", null);
 
 //            tvStory.text = HtmlCompat.fromHtml(
 //                "<font color=\"#00FF00\" size=\"10\">This text is green and size 5.</font>", HtmlCompat.FROM_HTML_MODE_LEGACY);
         }
+    }
+
+
+    private fun configureWebView() {
+        val settings: WebSettings = tvStory.getSettings()
+        settings.setJavaScriptEnabled(true)
+        settings.setDomStorageEnabled(true)
+        settings.setLoadWithOverviewMode(true)
+        settings.setUseWideViewPort(true)
+
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE)
+
+//        tvStory.setWebViewClient(object : WebViewClient() {
+//            public override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+//                progressBar.setVisibility(View.VISIBLE)
+//            }
+//
+//            public override fun onPageFinished(view: WebView?, url: String?) {
+//                progressBar.setVisibility(View.GONE)
+//            }
+//        })
+
+//        tvStory.addJavascriptInterface(WebAppInterface(this), "Android")
     }
 }

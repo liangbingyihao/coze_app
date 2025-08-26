@@ -533,6 +533,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 .subscribeOn(RX.io()).flatMap(data -> {
                     String entityId = data.get("id").getAsString();
                     message.setEntityID(entityId);
+                    message.setMessageStatus(MessageSendStatus.Replying, false);
                     ChatSDK.db().update(message);
                     startPolling(message.getId(), entityId, 0);
 //                    message.setMessageStatus(MessageSendStatus.Uploading,true);
@@ -623,7 +624,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                     return Single.fromCallable(() -> {
 
                         MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(message);
-                        if (aiFeedback == null || aiFeedback.getFeedbackText().isEmpty()) {
+                        if (message.getMessageStatus() != MessageSendStatus.Sent || aiFeedback == null || aiFeedback.getFeedbackText().isEmpty()) {
                             message.cascadeDelete();
                             ChatSDK.events().source().accept(NetworkEvent.messageRemoved(message));
                         } else {
@@ -1090,6 +1091,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
         if (json == null || message == null) {
             return;
         }
+        Log.d("sending", "updateMessage:" + json.toString());
         try {
             MessageDetail aiFeedback = gson.fromJson(json, MessageDetail.class);
             if (aiFeedback == null) {
@@ -1107,7 +1109,9 @@ public class GWThreadHandler extends AbstractThreadHandler {
             Long sid = aiFeedback.getSessionId();
             if (sid != null && sid > 0 && !sid.equals(message.getThreadId())) {
                 message.setThreadId(sid);
-                updateThread(Long.toString(sid), aiFeedback.getFeedback().getTopic(), new Date());
+                if (aiFeedback.getFeedback() != null) {
+                    updateThread(Long.toString(sid), aiFeedback.getFeedback().getTopic(), new Date());
+                }
             }
 
             if (aiFeedback.getStatus() > MessageDetail.STATUS_SUCCESS) {
@@ -1123,7 +1127,9 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 message.setMessageStatus(MessageSendStatus.Sent, false);
                 if (sid != null && sid > 0 && !sid.equals(message.getThreadId())) {
                     message.setThreadId(sid);
-                    updateThread(Long.toString(sid), aiFeedback.getFeedback().getTopic(), new Date());
+                    if (aiFeedback.getFeedback() != null) {
+                        updateThread(Long.toString(sid), aiFeedback.getFeedback().getTopic(), new Date());
+                    }
                 }
 
                 if (aiFeedback.getFeedback() != null) {
@@ -1150,9 +1156,12 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 aiHolder.setAiFeedback(aiFeedback);
             }
 
+            Log.d("sending", "send event");
             ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
         } catch (Exception e) {
-            Logger.warn(e.getMessage());
+            Log.d("sending", "update Exception =" + e.getMessage());
+            ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
+//            Logger.warn(e.getMessage());
         }
 
     }
@@ -1184,11 +1193,16 @@ public class GWThreadHandler extends AbstractThreadHandler {
             throw new Exception(MainApp.getContext().getString(R.string.sending));
         }
 
-        Log.d("sending", "startPolling:" + localId.toString());
         pendingMsgId = localId;
         retryCount.set(1);
+        Log.d("sending", "startPolling:" + localId.toString());
         Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
-        message.setMessageStatus(MessageSendStatus.Replying, true);
+        if (message == null) {
+            Log.d("sending", "message==null," + localId.toString());
+        } else if (message.getMessageStatus() != MessageSendStatus.Replying) {
+            message.setMessageStatus(MessageSendStatus.Replying, true);
+            Log.d("sending", "startPolling replying:" + localId.toString());
+        }
         Disposable disposable = Observable.interval(INITIAL_DELAY, POLL_INTERVAL, TimeUnit.SECONDS)
                 .doOnDispose(() -> {
                             Log.d("sending", "doOnDispose:" + localId.toString());

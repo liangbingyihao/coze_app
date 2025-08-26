@@ -117,7 +117,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
         var action = (t as? TextHolder)?.action
         if (action != GWThreadHandler.action_daily_pray && t.text != null && !t.text.isEmpty()) {
             setText(
-                t.message.threadId.toString() +"," + t.text,
+                t.message.id.toString() + "," + t.text,
 //                t.message.id.toString() + "," + t.message.messageStatus.name + ","+ (t as? TextHolder)?.aiFeedback?.status +"," + t.text,
                 t.enableLinkify()
             )
@@ -170,7 +170,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
         var aiFeedback: MessageDetail? = (t as? TextHolder)?.getAiFeedback();
 
 //        t.message.metaValuesAsMap
-        var feedbackText = aiFeedback?.feedback?.view ?: aiFeedback?.feedbackText ?: ""
+        var feedbackText = aiFeedback?.feedbackText ?: ""
 //        feedbackText = aiFeedback?.feedbackText ?: t.message.stringForKey("feedback")
         feedback?.let {
             it.visibility = View.VISIBLE
@@ -180,14 +180,16 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
 
 
         if (t.message.entityID.equals("welcome")) {
-            contentMenu?.visibility = View.VISIBLE
-            feedbackMenu?.visibility = View.GONE
+            contentMenu?.visibility = View.GONE
+            bubble?.visibility = View.GONE
+            feedbackMenu?.visibility = View.VISIBLE
+            sessionContainer?.visibility = View.GONE
             processContainer?.visibility = View.GONE
             sendErrorHint?.visibility = View.GONE
         } else {
-//            if (feedbackText.isEmpty()) {
-//                feedbackMenu?.visibility = View.GONE
-//            }
+            if (feedbackText.isEmpty()) {
+                feedbackMenu?.visibility = View.GONE
+            }
 //            if (aiFeedback?.status == MessageDetail.STATUS_SUCCESS) {
 //                processContainer?.visibility = View.GONE
 //            } else {
@@ -298,7 +300,10 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
             processContainer?.visibility = View.GONE
             feedbackMenu?.visibility = View.GONE
             if (status == MessageSendStatus.Sent) {
-                feedbackMenu?.visibility = View.VISIBLE
+                var feedbackText = aiFeedback?.feedbackText ?: ""
+                if (!feedbackText.isEmpty()) {
+                    feedbackMenu?.visibility = View.VISIBLE
+                }
             } else if (status == MessageSendStatus.Replying) {
                 processContainer?.visibility = View.VISIBLE
             }

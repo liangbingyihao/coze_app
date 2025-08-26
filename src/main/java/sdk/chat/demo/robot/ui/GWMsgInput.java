@@ -144,15 +144,17 @@ public class GWMsgInput extends RelativeLayout
         if (!error && System.currentTimeMillis() - whenStartAsrMillis < 700) {
             return;
         }
+        startPos = -1;
         attachmentButton.setImageResource(R.mipmap.ic_audio);
         asrContainer.setVisibility(View.GONE);
+        messageInput.setShowSoftInputOnFocus(true);
         if (attachmentsListener != null) attachmentsListener.onChangeKeyboard(true);
         stopSimulation();
     }
 
     public void onMsgStatusChanged(int status) {
         //status: 0: pending,1:idle
-        Log.e("input", "onMsgStatusChanged:" + status);
+        Log.e("sending", "onMsgStatusChanged:" + status);
         if (status == 0) {
             messageSendButton.setVisibility(GONE);
             stopSendButton.setVisibility(VISIBLE);
@@ -199,7 +201,8 @@ public class GWMsgInput extends RelativeLayout
 //            stopSimulation();
         } else if (id == R.id.messageStopButton) {
             ((GWThreadHandler) ChatSDK.thread()).stopPolling();
-            view.setVisibility(INVISIBLE);
+            onMsgStatusChanged(1);
+//            view.setVisibility(INVISIBLE);
 //            messageSendButton.setVisibility(VISIBLE);
         }
     }
@@ -301,7 +304,7 @@ public class GWMsgInput extends RelativeLayout
                     // 处理点击抬起事件
                     int cursorPosition = ((EditText) v).getOffsetForPosition(event.getX(), event.getY());
                     Log.d("TouchEvent", "点击位置: " + cursorPosition);
-                    startPos = cursorPosition;
+                    startPos = -1;
                     AsrHelper.INSTANCE.stopAsr();
 
                     // 执行点击后的操作

@@ -45,7 +45,7 @@ public class GWExtrasModule extends AbstractModule {
     public static class Config<T> extends BaseConfig<T> {
 
         public boolean drawerEnabled = true;
-        public boolean qrCodesEnabled = true;
+        public boolean qrCodesEnabled = false;
 
         /**
          * Default image drawer header area

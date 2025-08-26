@@ -71,8 +71,10 @@ public class MainApp extends Application implements Configuration.Provider, Appl
         context = getApplicationContext();
         scheduleTokenUpdate();
 
+        Log.i("MainApp", "MainApp.PrepareEnvironment");
         SpeechEngineGenerator.PrepareEnvironment(getApplicationContext(), this);
 
+        Log.i("MainApp", "MainApp.ChatSDKCoze");
         try {
             // Setup Chat SDK
             boolean drawerEnabled = !Device.honor();
@@ -86,6 +88,7 @@ public class MainApp extends Application implements Configuration.Provider, Appl
                     .doFinally(GWAuthenticationHandler::ensureDatabase)
                     .subscribe(
                             () -> {
+                                Log.w("MainApp", "authenticate done");
                                 isInitialized = true;
                             },
                             error -> { /* 错误处理 */
@@ -109,6 +112,7 @@ public class MainApp extends Application implements Configuration.Provider, Appl
                 FirebaseCrashlytics crashlytics = FirebaseCrashlytics.getInstance();
 
                 // 添加上下文信息
+                crashlytics.setCustomKey("process",getApplicationInfo().processName);
                 crashlytics.setCustomKey("last_activity",
                         currentActivity != null ? currentActivity.getClass().getSimpleName() : "none");
                 crashlytics.setCustomKey("app_version",

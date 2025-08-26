@@ -136,7 +136,9 @@ public class DailyTaskHandler {
             String cachedData = JsonCacheManager.INSTANCE.get(MainApp.getContext(), KEY_CACHE_TASK_PROCESS);
             if (cachedData != null&&!cachedData.isEmpty()) {
                 TaskProgress progress = gson.fromJson(cachedData, TaskProgress.class);
-                if (progress!=null&&taskToday.getCntComplete() == progress.getUnlocked()&&!progress.getProgressImage().isEmpty()) {
+                if (progress!=null&&taskToday.getCntComplete() == progress.getUnlocked()
+                        &&!progress.getProgressImage().isEmpty()
+                        &&(progress.getUnlocked()==0||progress.getUnlocked()==progress.getChapters().size())) {
                     progress.setTaskDetail(taskToday);
                     emitter.onSuccess(progress);
                     return;

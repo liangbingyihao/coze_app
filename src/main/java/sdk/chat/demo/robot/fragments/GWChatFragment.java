@@ -351,7 +351,6 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
         addListeners();
 
-
     }
 
     protected void addListeners() {
@@ -460,32 +459,6 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
     }
 
 
-    /**
-     * 查找新字符串开头在已有字符串中的最长匹配长度
-     */
-    private static int findLongestPrefixMatch(String existingText, String newText) {
-        if (existingText.isEmpty() || newText.isEmpty()) {
-            return 0;
-        }
-
-        int maxMatch = Math.min(existingText.length(), newText.length());
-        int matchLength = 0;
-
-        for (int i = 1; i <= maxMatch; i++) {
-            String existingSuffix = existingText.substring(existingText.length() - i);
-            String newPrefix = newText.substring(0, i);
-
-            if (existingSuffix.equals(newPrefix)) {
-                matchLength = i;
-            } else {
-                break;
-            }
-        }
-
-        Log.e("AsrHelper", "existingText:" + existingText + ",newText:" + newText + ",matchLength:" + matchLength);
-        return matchLength;
-    }
-
     @Override
     public void clearData() {
 
@@ -529,7 +502,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
     protected void handleMessageSend(Completable completable) {
         completable.observeOn(RX.main()).doOnError(throwable -> {
-            Logger.warn("");
+            Log.e("sending", throwable.getLocalizedMessage());
             showToast(throwable.getLocalizedMessage());
         }).subscribe(this);
     }
@@ -554,12 +527,11 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 //        }
 
         if (!StringChecker.isNullOrEmpty(thread.getDraft())) {
-            Log.e("input", thread.getDraft());
             input.getInputEditText().setText(thread.getDraft());
         }
 
         // Put it here in the case that they closed the app with this screen open
-        thread.markReadAsync().subscribe();
+//        thread.markReadAsync().subscribe();
 
         showOrHideTextInputView();
 
