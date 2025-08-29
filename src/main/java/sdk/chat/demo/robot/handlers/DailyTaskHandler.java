@@ -48,7 +48,6 @@ public class DailyTaskHandler {
     private final static String URL_UNLOCK_STORY = ImageApi.URL2 + "story/unlock";
     private final static String URL_STORY_PROGRESS = ImageApi.URL2 + "story/progress";
     private final static String URL_STORY_HISTORY = ImageApi.URL2 + "story/history";
-    private final static String timeZoneId = TimeZone.getDefault().getID();
 
     public static void testTaskDetail(Integer completeIndex) {
         String today = DateLocalizationUtil.INSTANCE.formatDayAgo(0);
@@ -146,8 +145,6 @@ public class DailyTaskHandler {
             }
             HttpUrl url = Objects.requireNonNull(HttpUrl.parse(URL_STORY_PROGRESS))
                     .newBuilder()
-                    .addQueryParameter("tz", timeZoneId)
-                    .addQueryParameter("lang", Locale.getDefault().toString())
                     .build();
 
             Request request = new Request.Builder()
@@ -177,7 +174,7 @@ public class DailyTaskHandler {
     public static Single<Boolean> unlockStory() {
         return Single.create(emitter -> {
             Map<String, String> params = new HashMap<>();
-            params.put("tz", timeZoneId);
+            params.put("tz", GWApiManager.timeZoneId);
 
             Request request = buildPostRequest(params, URL_UNLOCK_STORY);
 

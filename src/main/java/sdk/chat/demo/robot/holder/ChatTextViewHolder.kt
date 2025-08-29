@@ -15,6 +15,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
+import com.google.android.material.button.MaterialButton
 import com.stfalcon.chatkit.messages.MessageHolders
 import com.stfalcon.chatkit.messages.MessagesListAdapter
 import com.stfalcon.chatkit.messages.MessagesListStyle
@@ -49,6 +50,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
     open var messageIcon: ImageView? = itemView.findViewById(R.id.messageIcon)
 
 
+    open var replyText: MaterialButton? = itemView.findViewById(R.id.replyText)
     open var text: TextView? = itemView.findViewById(R.id.messageText)
     open var feedback: TextView? = itemView.findViewById(R.id.feedback)
     open var sendErrorHint: TextView? = itemView.findViewById(R.id.send_error_hint)
@@ -114,10 +116,16 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
 //        }
 
         val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
+        replyText?.visibility = View.GONE
         var action = (t as? TextHolder)?.action
-        if (action != GWThreadHandler.action_daily_pray && t.text != null && !t.text.isEmpty()) {
+        if (action != GWThreadHandler.action_daily_pray && t.message.text != null && !t.message.text.isEmpty()) {
+            var reply = t.message.stringForKey("reply");
+            if(reply!=null&&!reply.isEmpty()){
+                replyText?.visibility = View.VISIBLE
+                replyText?.text = reply
+            }
             setText(
-                t.message.id.toString() + "," + t.text,
+                t.message.text,
 //                t.message.id.toString() + "," + t.message.messageStatus.name + ","+ (t as? TextHolder)?.aiFeedback?.status +"," + t.text,
                 t.enableLinkify()
             )

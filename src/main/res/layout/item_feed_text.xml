@@ -71,6 +71,7 @@
         <ImageView
             android:id="@+id/btn_edit"
             style="@style/FeedOperator"
+            android:visibility="gone"
             android:src="@mipmap/ic_edit_black" />
 
         <ImageView

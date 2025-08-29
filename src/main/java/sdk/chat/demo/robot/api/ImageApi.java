@@ -1,5 +1,7 @@
 package sdk.chat.demo.robot.api;
 
+import static sdk.chat.demo.robot.api.GWApiManager.buildPostRequest;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
@@ -7,7 +9,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
@@ -21,7 +25,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.OkHttpClient;
 import sdk.chat.demo.MainApp;
-import sdk.chat.demo.robot.api.model.TaskDetail;
+import sdk.chat.demo.robot.api.model.ExportInfo;
 import sdk.chat.demo.robot.api.model.GWConfigs;
 import sdk.chat.demo.robot.api.model.ImageDaily;
 import sdk.chat.demo.robot.api.model.ImageDailyList;
@@ -37,6 +41,7 @@ public class ImageApi {
     private final static String URL_IMAGE_TAG = URL2 + "scripture/background";
     private final static String URL_IMAGE_DAILY_GW = URL2 + "scripture/daily";
     private final static String URL_CONFIGS = URL2 + "configs";
+    private final static String URL_EXPORT = URL2 + "export";
     private final static String KEY_CACHE_IMG_DAILY = "gwDaily";
     private final static String KEY_CACHE_CONFIGS = "gwConfigs";
     private static String oldestImageDailyDate = null;
@@ -158,7 +163,7 @@ public class ImageApi {
             List<ImageDaily> imageList = null;
             if (cachedImage != null) {
                 imageList = cachedImage.getImgs();
-                List<ImageDaily> result = filterBeforeDate(imageList, endDateStr);
+                List<ImageDaily> result = filterBeforeDate(imageList, endDateStr,true);
                 if (!result.isEmpty()) {
                     emitter.onSuccess(result);
                     return;
@@ -169,7 +174,7 @@ public class ImageApi {
             HttpUrl url = Objects.requireNonNull(HttpUrl.parse(URL_IMAGE_DAILY_GW))
                     .newBuilder()
                     .addQueryParameter("start_date", startDate)
-                    .addQueryParameter("end_date", endDateStr)
+//                    .addQueryParameter("end_date", endDateStr)
                     .build();
 
             Request request = new Request.Builder()
@@ -199,7 +204,7 @@ public class ImageApi {
                 } else {
                     newImageDailyList.setImgs(mergeImageLists(imageList, newList));
                     JsonCacheManager.INSTANCE.save(MainApp.getContext(), KEY_CACHE_IMG_DAILY, gson.toJson(newImageDailyList));
-                    newList = filterBeforeDate(newImageDailyList.getImgs(), endDateStr);
+                    newList = filterBeforeDate(newImageDailyList.getImgs(), endDateStr,false);
                 }
                 emitter.onSuccess(newList);
             } catch (IOException e) {
@@ -217,16 +222,16 @@ public class ImageApi {
      */
     public static List<ImageDaily> filterBeforeDate(
             List<ImageDaily> imageList,
-            String endDate) {
+            String endDate,boolean includeEndDate) {
 
         List<ImageDaily> result = new ArrayList<>();
-        boolean hitEnd = false;
+        boolean hitEnd = !includeEndDate;
         for (ImageDaily image : imageList) {
             int cmp = image.getDate().compareTo(endDate);
             if (cmp > 0) {
                 continue;
             }
-            if (cmp == 0) {
+            if (includeEndDate&&cmp == 0) {
                 hitEnd = true;
             } else if (!hitEnd) {
                 return result;
@@ -308,4 +313,37 @@ public class ImageApi {
     public static GWConfigs getGwConfigs() {
         return gwConfigs;
     }
+
+    public static Single<ExportInfo> getExploreInfo() {
+        return Single.create(emitter -> {
+            Map<String, String> params = new HashMap<>();
+            params.put("lang", Locale.getDefault().toLanguageTag());
+
+            Request request = buildPostRequest(params, URL_EXPORT);
+
+            OkHttpClient client = GWApiManager.shared().getClient();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    emitter.onError(e); // 请求失败
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    try {
+                        String responseBody = response.body() != null ? response.body().string() : "";
+                        JsonObject data = gson.fromJson(responseBody, JsonObject.class).getAsJsonObject("data");
+                        ExportInfo exportInfo = gson.fromJson(data, ExportInfo.class);
+                        emitter.onSuccess(exportInfo); // 请求成功
+                    } catch (Exception e) {
+                        emitter.onError(e);
+                    } finally {
+                        response.close(); // 关闭 Response
+                    }
+                }
+            });
+        });
+    }
+
 }

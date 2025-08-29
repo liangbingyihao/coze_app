@@ -7,7 +7,7 @@ import com.stfalcon.chatkit.commons.models.IUser;
 import java.util.Date;
 
 
-public class TimeHolder implements IMessage {
+public class ExploreHolder implements IMessage {
 
 
     @Override

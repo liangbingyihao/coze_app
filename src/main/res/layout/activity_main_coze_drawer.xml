@@ -2,14 +2,12 @@
     android:id="@+id/content_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:animateLayoutChanges="true"
-    android:fitsSystemWindows="true">
+    android:animateLayoutChanges="true">
 
     <androidx.drawerlayout.widget.DrawerLayout
         android:id="@+id/root_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
+        android:layout_height="match_parent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -89,14 +87,26 @@
 
             <!-- 底部 -->
 
+<!--            <TextView-->
+<!--                android:id="@+id/debug"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginStart="16dp"-->
+<!--                android:padding="4dp"-->
+<!--                android:text="debug1"-->
+<!--                android:textColor="@color/item_text_normal" />-->
+
             <TextView
-                android:id="@+id/debug"
+                android:id="@+id/menu_setting"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:padding="4dp"
-                android:text="debug1"
-                android:textColor="@color/item_text_normal" />
+                android:textSize="12sp"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp"
+                android:drawablePadding="8dp"
+                android:text="@string/settings"
+                android:textColor="@color/item_text_normal"
+                android:drawableLeft="@mipmap/ic_setting" />
         </LinearLayout>
 
     </androidx.drawerlayout.widget.DrawerLayout>

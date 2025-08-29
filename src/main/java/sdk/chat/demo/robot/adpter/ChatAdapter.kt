@@ -16,6 +16,7 @@ import org.pmw.tinylog.Logger
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.holder.ChatImageViewHolder
 import sdk.chat.demo.robot.holder.ChatTextViewHolder
+import sdk.chat.demo.robot.holder.ExploreHolder
 import sdk.chat.demo.robot.holder.ExploreViewHolder
 import sdk.chat.demo.robot.holder.ImageHolder
 import sdk.chat.demo.robot.holder.TextHolder
@@ -98,6 +99,12 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         fun onMessageViewClick(view: View?, message: IMessage?)
     }
 
+    init {
+        if (items.isEmpty()) {
+            items.add(ExploreHolder())
+        }
+    }
+
     var header = false
         set(value) {
             if (field != value) {
@@ -155,7 +162,7 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     // 添加新消息（自动插入到头部）
     fun addNewMessage(item: IMessage, onComplete: (() -> Unit)? = null) {
-        val newList = items.toMutableList().apply { add(0, item) }
+        val newList = items.toMutableList().apply { add(1, item) }
         submitList(newList, onComplete)
     }
 
@@ -171,8 +178,18 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         }
 
         val newList = ArrayList<IMessage>(items.size + newMessages.size).apply {
-            addAll(newMessages) // 先添加新消息
-            addAll(items)       // 追加旧数据
+            // 1. 添加旧数据的第一条（如果存在,这是探索...）
+            if (items.isNotEmpty()) {
+                add(items[0])
+            }
+
+            // 2. 追加所有新消息
+            addAll(newMessages)
+
+            // 3. 追加旧数据第二条及之后的数据（如果存在）
+            if (items.size > 1) {
+                addAll(items.subList(1, items.size))
+            }
         }
 
         submitList(newList, onComplete)
@@ -196,16 +213,15 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             return
         }
         Log.e("delmsg", "message.id:${message.id},del:${deletePos}:${items[deletePos].id},size:${items.size}")
-        val newList = ArrayList(items).apply { removeAt(deletePos + headerOffset()) }
+        val newList = ArrayList(items).apply { removeAt(deletePos) }
         //status: 0: pending,1:idle
         submitList(newList, onComplete)
     }
 
     override fun getItemViewType(position: Int): Int {
         return when {
-            isHeaderPosition(position) -> TYPE_HEADER
-            isFooterPosition(position) -> TYPE_FOOTER
             else -> when (getItem(position)) {
+                is ExploreHolder -> TYPE_HEADER
                 is TextHolder -> TYPE_TEXT
                 is ImageHolder -> TYPE_IMAGE
                 is TimeHolder -> TYPE_TIME
@@ -291,7 +307,7 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         }
     }
 
-    override fun getItemCount(): Int = items.size + headerOffset() + footerOffset()
+    override fun getItemCount(): Int = items.size
 
     /* 内部工具方法 */
     private fun inflateView(layoutId: Int, parent: ViewGroup): View {
@@ -299,16 +315,16 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     }
 
     private fun getItem(position: Int): IMessage {
-        return items[position - headerOffset()]
+        return items[position]
     }
 
-    private fun isHeaderPosition(pos: Int) = hasHeader() && pos == 0
-    private fun isFooterPosition(pos: Int) = hasFooter() && pos == itemCount - 1
-    private fun hasHeader() = false
-    private fun hasFooter() = footer != null
-    private fun headerOffset() = if (hasHeader()) 1 else 0
-    private fun footerOffset() = if (hasFooter()) 1 else 0
-    private fun getInsertPosition() = if (hasHeader()) 1 else 0
+//    private fun isHeaderPosition(pos: Int) = hasHeader() && pos == 0
+//    private fun isFooterPosition(pos: Int) = hasFooter() && pos == itemCount - 1
+//    private fun hasHeader() = false
+//    private fun hasFooter() = footer != null
+//    private fun headerOffset() = if (hasHeader()) 1 else 0
+//    private fun footerOffset() = if (hasFooter()) 1 else 0
+//    private fun getInsertPosition() = if (hasHeader()) 1 else 0
 
 
     inner class TimeViewHolder(view: View) : RecyclerView.ViewHolder(view) {

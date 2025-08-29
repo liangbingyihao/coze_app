@@ -42,9 +42,10 @@ public class ChatSDKCoze  extends QuickStart {
                         .setLocationMessagesEnabled(false)
                         .setPublicRoomsEnabled(false)
                         .setMessageSelectionEnabled(false)
+                        .setRequestPermissionsOnStartup(false)
 //                        .setPublicRoomsEnabled(true)
                         .build(),
-                ImageMessageModule.shared(),
+//                ImageMessageModule.shared(),
                 FirebasePushModule.shared(),
 
                 GWExtrasModule.builder(config -> {

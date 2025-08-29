@@ -13,7 +13,6 @@ import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.bytedance.speech.speechengine.SpeechEngine
 import com.bytedance.speech.speechengine.SpeechEngine.SpeechListener
@@ -75,30 +74,31 @@ object TTSHelper {
                 .getString("db_voice_type", "BV026_streaming")
                 .toString()
 
-        ttsCheckLauncher =
-            context.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result.resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
-                    initSystemTTS(context) // TTS 可用，初始化
-                } else {
-                    // 提示用户安装 TTS 数据
-                    val installIntent = Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA)
-                    context.startActivity(installIntent)
-                }
-            }
-
-        // 检查 TTS 数据
-        val checkIntent = Intent(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA)
-//        ttsCheckLauncher.launch(checkIntent)
-
-
-        if (checkIntent.resolveActivity(context.packageManager) != null) {
-            // 确认有 TTS 引擎后再启动
-            ttsCheckLauncher.launch(checkIntent)
-        } else {
-            // 设备完全无 TTS 支持时的处理
-//            handleNoTtsEngine()
-            Toast.makeText(context, "暂不支持语音播放", Toast.LENGTH_SHORT).show()
-        }
+        //FIXME 初始化系统tts
+//        ttsCheckLauncher =
+//            context.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+//                if (result.resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+//                    initSystemTTS(context) // TTS 可用，初始化
+//                } else {
+//                    // 提示用户安装 TTS 数据
+//                    val installIntent = Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA)
+//                    context.startActivity(installIntent)
+//                }
+//            }
+//
+//        // 检查 TTS 数据
+//        val checkIntent = Intent(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA)
+////        ttsCheckLauncher.launch(checkIntent)
+//
+//
+//        if (checkIntent.resolveActivity(context.packageManager) != null) {
+//            // 确认有 TTS 引擎后再启动
+//            ttsCheckLauncher.launch(checkIntent)
+//        } else {
+//            // 设备完全无 TTS 支持时的处理
+////            handleNoTtsEngine()
+//            Toast.makeText(context, "暂不支持语音播放", Toast.LENGTH_SHORT).show()
+//        }
 
         initDoubaoTTS(context)
     }
@@ -174,6 +174,13 @@ object TTSHelper {
         }
     }
 
+    fun resetVoiceType() {
+        Log.i(TAG, "resetVoiceType")
+        if (playingMsg != null) {
+            speek(mCurTtsText, playingMsg?.id.toString())
+        }
+    }
+
     //doubao
 
     private fun initDoubaoTTS(context: AppCompatActivity) {
@@ -224,6 +231,9 @@ object TTSHelper {
         }
 
     private fun pausePlayback() {
+        if (mSpeechEngine == null) {
+            return
+        }
         Log.i(TAG, "暂停播放")
         Log.i(TAG, "Directive: DIRECTIVE_PAUSE_PLAYER")
         val ret = mSpeechEngine!!.sendDirective(SpeechEngineDefines.DIRECTIVE_PAUSE_PLAYER, "")
@@ -234,6 +244,9 @@ object TTSHelper {
     }
 
     private fun resumePlayback() {
+        if (mSpeechEngine == null) {
+            return
+        }
         Log.i(TAG, "继续播放")
         Log.i(TAG, "Directive: DIRECTIVE_RESUME_PLAYER")
         val ret = mSpeechEngine!!.sendDirective(SpeechEngineDefines.DIRECTIVE_RESUME_PLAYER, "")
@@ -336,6 +349,7 @@ object TTSHelper {
 
     fun speechError(data: String) {
         try {
+            ChatSDK.events().source().accept(NetworkEvent.errorEvent(null, "tts", data))
             val reader = JSONObject(data)
             if (!reader.has("err_code") || !reader.has("err_msg")) {
                 return
@@ -474,33 +488,34 @@ object TTSHelper {
 
     private fun startEngine() {
         Log.d(TAG, "Start engine, current status: " + mEngineStarted)
-        if (true || !mEngineStarted) {
-            AcquireAudioFocus()
-            if (!mPlaybackNowAuthorized) {
-                Log.w(TAG, "Acquire audio focus failed, can't play audio")
-                return
-            }
+//        if (!mEngineStarted) {
+        AcquireAudioFocus()
+        if (!mPlaybackNowAuthorized) {
+            Log.w(TAG, "Acquire audio focus failed, can't play audio")
+            return
+        }
 
-            // Directive：启动引擎前调用SYNC_STOP指令，保证前一次请求结束。
-            Log.i(TAG, "关闭引擎（同步）")
-            Log.i(TAG, "Directive: DIRECTIVE_SYNC_STOP_ENGINE")
-            var ret =
-                mSpeechEngine!!.sendDirective(SpeechEngineDefines.DIRECTIVE_SYNC_STOP_ENGINE, "")
+        // Directive：启动引擎前调用SYNC_STOP指令，保证前一次请求结束。
+        Log.i(TAG, "关闭引擎（同步）")
+        Log.i(TAG, "Directive: DIRECTIVE_SYNC_STOP_ENGINE")
+        var ret =
+            mSpeechEngine!!.sendDirective(SpeechEngineDefines.DIRECTIVE_SYNC_STOP_ENGINE, "")
+        if (ret != SpeechEngineDefines.ERR_NO_ERROR) {
+            Log.e(TAG, "send directive syncstop failed, " + ret)
+        } else {
+            configStartTtsParams()
+            Log.i(TAG, "启动引擎")
+            Log.i(TAG, "Directive: DIRECTIVE_START_ENGINE")
+            ret = mSpeechEngine!!.sendDirective(SpeechEngineDefines.DIRECTIVE_START_ENGINE, "")
             if (ret != SpeechEngineDefines.ERR_NO_ERROR) {
-                Log.e(TAG, "send directive syncstop failed, " + ret)
-            } else {
-                configStartTtsParams()
-                Log.i(TAG, "启动引擎")
-                Log.i(TAG, "Directive: DIRECTIVE_START_ENGINE")
-                ret = mSpeechEngine!!.sendDirective(SpeechEngineDefines.DIRECTIVE_START_ENGINE, "")
-                if (ret != SpeechEngineDefines.ERR_NO_ERROR) {
-                    Log.e(TAG, "send directive start failed, " + ret)
-                }
+                Log.e(TAG, "send directive start failed, " + ret)
             }
         }
+//        }
     }
 
     private fun configStartTtsParams() {
+        Log.e(TAG, "configStartTtsParams")
         //【必需配置】TTS 使用场景
         mSpeechEngine!!.setOptionString(
             SpeechEngineDefines.PARAMS_KEY_TTS_SCENARIO_STRING,
@@ -579,6 +594,14 @@ object TTSHelper {
         mSpeechEngine!!.setOptionString(
             SpeechEngineDefines.PARAMS_KEY_TTS_VOICE_TYPE_ONLINE_STRING,
             voiceType
+        )
+
+        ChatSDK.events().source().accept(
+            NetworkEvent.errorEvent(
+                null,
+                "tts.params",
+                "voicetype:" + voiceType + "\n,voice:" + "volc.megatts.default"
+            )
         )
 
         //【可选配置】是否打开在线合成的服务端缓存，默认关闭

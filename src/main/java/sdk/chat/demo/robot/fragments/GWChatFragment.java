@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Debug;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,6 +18,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -53,7 +56,9 @@ import sdk.chat.core.ui.KeyboardOverlayHandler;
 import sdk.chat.core.ui.Sendable;
 import sdk.chat.core.utils.PermissionRequestHandler;
 import sdk.chat.core.utils.StringChecker;
+import sdk.chat.demo.examples.helper.CustomPrivateThreadsFragment;
 import sdk.chat.demo.pre.R;
+import sdk.chat.demo.robot.audio.AsrHelper;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
 import sdk.chat.demo.robot.ui.GWChatContainer;
 import sdk.chat.demo.robot.ui.GWMsgInput;
@@ -84,8 +89,9 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
     protected boolean removeUserFromChatOnExit = true;
     protected static boolean enableTrace = false;
     protected GWChatContainer chatView;
-    protected View divider;
-    protected ReplyView replyView;
+    //    protected View divider;
+    protected View replyView;
+    protected TextView replyText;
     protected GWMsgInput input;
     protected CoordinatorLayout listContainer;
     protected KeyboardAwareFrameLayout root;
@@ -219,55 +225,89 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
     public void hideTextInput() {
         input.setVisibility(View.GONE);
-        divider.setVisibility(View.GONE);
+//        divider.setVisibility(View.GONE);
         updateChatViewMargins(true);
     }
 
     public void showTextInput() {
         input.setVisibility(View.VISIBLE);
-        divider.setVisibility(View.VISIBLE);
+//        divider.setVisibility(View.VISIBLE);
         updateChatViewMargins(true);
     }
 
-//    public void hideReplyView() {
-//        if (audioBinder != null) {
-//            audioBinder.hideReplyView();
-//        }
-//        chatView.clearSelection();
-//        replyView.hide();
-//        updateOptionsButton();
-//        updateChatViewMargins(true);
-//    }
+    public void hideReplyView() {
+        replyView.setVisibility(View.GONE);
+        updateChatViewMargins(true);
+    }
 
-    public void updateChatViewMargins(boolean post) {
-        Runnable runnable = () -> {
+    public void showReplyView() {
+        replyView.setVisibility(View.VISIBLE);
+        updateChatViewMargins(true);
+    }
+
+
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Runnable marginUpdateRunnable = new Runnable() {
+        @Override
+        public void run() {
             int bottomMargin = bottomMargin();
 
             if (koh.keyboardOverlayVisible()) {
                 bottomMargin += getKeyboardAwareView().getKeyboardHeight();
             }
 
-            // TODO: Margins
-            CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) chatView.getLayoutParams();
-            params.setMargins(params.leftMargin, params.topMargin, params.rightMargin, bottomMargin);
+            CoordinatorLayout.LayoutParams params =
+                    (CoordinatorLayout.LayoutParams) chatView.getLayoutParams();
+            params.setMargins(
+                    params.leftMargin,
+                    params.topMargin,
+                    params.rightMargin,
+                    bottomMargin
+            );
             chatView.setLayoutParams(params);
-        };
+        }
+    };
+
+
+    public void updateChatViewMargins(boolean post) {
+//        Runnable runnable = () -> {
+//            int bottomMargin = bottomMargin();
+//
+//            if (koh.keyboardOverlayVisible()) {
+//                bottomMargin += getKeyboardAwareView().getKeyboardHeight();
+//            }
+//
+//            // TODO: Margins
+//            CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) chatView.getLayoutParams();
+//            params.setMargins(params.leftMargin, params.topMargin, params.rightMargin, bottomMargin);
+//            chatView.setLayoutParams(params);
+//        };
+//
+//        if (post) {
+//            input.post(runnable);
+//        } else {
+//            runnable.run();
+//        }
+
+        // 移除之前未执行的更新
+        handler.removeCallbacks(marginUpdateRunnable);
 
         if (post) {
-            input.post(runnable);
+            // 延迟100ms执行，确保短时间内多次调用只执行最后一次
+            handler.postDelayed(marginUpdateRunnable, 100);
         } else {
-            runnable.run();
+            marginUpdateRunnable.run();
         }
 
     }
 
     public int bottomMargin() {
         int bottomMargin = 0;
-        if (replyView.isVisible()) {
+        if (replyView.getVisibility() == View.VISIBLE) {
             bottomMargin += replyView.getHeight();
         }
         if (input.getVisibility() != View.GONE) {
-            bottomMargin += input.getHeight() + divider.getHeight();
+            bottomMargin += input.getHeight();
         }
         return bottomMargin;
     }
@@ -285,7 +325,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
     protected void initViews() {
         chatView = rootView.findViewById(sdk.chat.ui.R.id.chatView);
-        divider = rootView.findViewById(sdk.chat.ui.R.id.divider);
+        replyText = rootView.findViewById(R.id.tvReply);
         replyView = rootView.findViewById(sdk.chat.ui.R.id.replyView);
         input = rootView.findViewById(sdk.chat.ui.R.id.input);
         listContainer = rootView.findViewById(sdk.chat.ui.R.id.listContainer);
@@ -327,9 +367,9 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 //            });
 //        }
 
-        if (!hasVoice(ChatSDK.currentUser())) {
-            hideTextInput();
-        }
+//        if (!hasVoice(ChatSDK.currentUser())) {
+//            hideTextInput();
+//        }
 
         input.setInputListener(input -> {
             sendMessage(String.valueOf(input));
@@ -344,6 +384,14 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 //        replyView.setOnCancelListener(v -> hideReplyView());
 
         setChatState(TypingIndicatorHandler.State.active);
+
+        rootView.findViewById(R.id.closeReply).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                hideReplyView();
+            }
+        });
+        ;
 
         if (enableTrace) {
             Debug.startMethodTracing("chat");
@@ -389,16 +437,17 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(networkEvent -> {
                     input.onMsgStatusChanged(0);
+                    hideKeyboard();
                 }));
 
         dm.add(ChatSDK.events().sourceOnSingle()
-                .filter(NetworkEvent.filterType(EventType.MessageUpdated,EventType.MessageSendStatusUpdated))
+                .filter(NetworkEvent.filterType(EventType.MessageUpdated, EventType.MessageSendStatusUpdated))
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(networkEvent -> {
                     GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
                     if (handler.pendingMsgId() == null) {
                         input.onMsgStatusChanged(1);
-                    }else{
+                    } else {
                         input.onMsgStatusChanged(0);
                     }
                 }));
@@ -407,12 +456,17 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                 .filter(NetworkEvent.filterType(EventType.MessageInputPrompt))
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(networkEvent -> {
-                    showTextInput();
+//                    showTextInput();
                     EditText editText = input.getInputEditText();
                     editText.requestFocus();
-                    String rawText = networkEvent.getText().replaceAll("[.…]+$", "");
-                    editText.setText(rawText);
-                    Log.e("input", "MessageInputPrompt:" + networkEvent.getText());
+                    replyText.setText(networkEvent.getText());
+                    showReplyView();
+                    Map<String, Object> params = networkEvent.getData();
+                    Object placeHolder = params.get("default");
+                    if(placeHolder!=null){
+                        editText.setText((CharSequence) placeHolder);
+                    }
+
                     editText.postDelayed(() -> {
                         editText.setSelection(editText.getText().length());
                         showKeyboard();
@@ -441,8 +495,8 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                     Map<String, Object> params = networkEvent.getData();
                     String errType = (String) params.getOrDefault("type", "");
                     String msg = (String) params.getOrDefault("msg", "error...");
-                    ToastHelper.show(getActivity(), msg);
                     if ("asr".equals(errType)) {
+                        ToastHelper.show(getActivity(), msg);
                         input.onAsrStop(true);
                         if ("ERR_REC_CHECK_ENVIRONMENT_FAILED".equals(msg)) {
                             dm.add(PermissionRequestHandler.requestRecordAudio(getActivity()).subscribe(() -> {
@@ -486,17 +540,19 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
         // Clear the draft text
         thread.setDraft(null);
 
-        if (text == null || text.isEmpty() || text.replace(" ", "").isEmpty()) {
+        if (text == null || text.isEmpty()) {
             return;
         }
 
-        if (replyView.isVisible()) {
-//            MessageHolder holder = chatView.getSelectedMessages().get(0);
-//            handleMessageSend(ChatSDK.thread().replyToMessage(thread, holder.getMessage(), text.trim()));
-//            hideReplyView();
+        String prompt = replyText.getText().toString().trim();
+
+        if (replyView.getVisibility() == View.VISIBLE && !prompt.isEmpty()) {
+            GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
+            handleMessageSend(handler.sendExploreMessage(text, null, GWThreadHandler.action_input_prompt, prompt));
         } else {
             handleMessageSend(ChatSDK.thread().sendMessageWithText(text.trim(), thread));
         }
+        hideReplyView();
 
     }
 
@@ -511,6 +567,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
     @Override
     public void onResume() {
         super.onResume();
+        AsrHelper.INSTANCE.stopAsr();
 
         removeUserFromChatOnExit = !ChatSDK.config().publicChatAutoSubscriptionEnabled;
 
@@ -759,6 +816,12 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
             @Override
             public void onStopTyping() {
                 stopTyping();
+            }
+
+            @Override
+            public void onHeightChange() {
+
+                updateChatViewMargins(true);
             }
         });
     }

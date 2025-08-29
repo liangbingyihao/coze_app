@@ -33,11 +33,12 @@ public class GWMsgInput extends RelativeLayout
         implements View.OnClickListener, TextWatcher, View.OnFocusChangeListener {
 
     public EditText messageInput;
-    public View asrContainer;
+//    public View asrContainer;
     public View messageSendButton;
     public View stopSendButton;
     public ImageView attachmentButton;
     public SoundWaveView soundWaveView;
+    public CircleOverlayView circleOverlayView;
 //    public Space sendButtonSpace, attachmentButtonSpace;
 
     private CharSequence input;
@@ -47,6 +48,7 @@ public class GWMsgInput extends RelativeLayout
     private GWMsgInput.TypingListener typingListener;
     private int delayTypingStatusMillis;
     private long whenStartAsrMillis;
+    private Integer lastLineCount = 0;
     private final Runnable typingTimerRunnable = new Runnable() {
         @Override
         public void run() {
@@ -146,7 +148,8 @@ public class GWMsgInput extends RelativeLayout
         }
         startPos = -1;
         attachmentButton.setImageResource(R.mipmap.ic_audio);
-        asrContainer.setVisibility(View.GONE);
+        circleOverlayView.stopAnimation();
+        circleOverlayView.setVisibility(View.GONE);
         messageInput.setShowSoftInputOnFocus(true);
         if (attachmentsListener != null) attachmentsListener.onChangeKeyboard(true);
         stopSimulation();
@@ -178,14 +181,15 @@ public class GWMsgInput extends RelativeLayout
             whenStartAsrMillis = 0;
             AsrHelper.INSTANCE.stopAsr();
         } else if (id == R.id.attachmentButton) {
-            if (asrContainer.getVisibility() == View.VISIBLE) {
+            if (circleOverlayView.getVisibility() == View.VISIBLE) {
                 whenStartAsrMillis = 0;
                 AsrHelper.INSTANCE.stopAsr();
                 messageInput.setShowSoftInputOnFocus(true);
             } else {
-                attachmentButton.setImageResource(R.mipmap.ic_show_kb);
-                asrContainer.setVisibility(View.VISIBLE);
-                if (attachmentsListener != null) attachmentsListener.onChangeKeyboard(false);
+                attachmentButton.setImageResource(R.mipmap.ic_recording);
+                circleOverlayView.setVisibility(View.VISIBLE);
+                circleOverlayView.startAnimation();
+                if (attachmentsListener != null) attachmentsListener.onChangeKeyboard(true);
                 whenStartAsrMillis = System.currentTimeMillis();
                 AsrHelper.INSTANCE.startAsr();
                 messageInput.setShowSoftInputOnFocus(false);
@@ -239,7 +243,11 @@ public class GWMsgInput extends RelativeLayout
      */
     @Override
     public void afterTextChanged(Editable editable) {
-        //do nothing
+        if (messageInput.getLineCount() < lastLineCount) {
+            Log.e("typing", "afterTextChanged:" + lastLineCount.toString());
+            if (typingListener != null) typingListener.onHeightChange();
+        }
+        lastLineCount = messageInput.getLineCount();
     }
 
     @Override
@@ -275,8 +283,10 @@ public class GWMsgInput extends RelativeLayout
         messageSendButton = findViewById(R.id.messageSendButton);
         stopSendButton = findViewById(R.id.messageStopButton);
         attachmentButton = findViewById(R.id.attachmentButton);
-        asrContainer = findViewById(R.id.asrContainer);
+//        asrContainer = findViewById(R.id.asrContainer);
         soundWaveView = findViewById(R.id.soundWave);
+        circleOverlayView = findViewById(R.id.circleOverlay);
+//                circleOverlay.startAnimation()
 //        attachmentButtonSpace = findViewById(R.id.attachmentButtonSpace);
 
         messageSendButton.setOnClickListener(this);
@@ -303,7 +313,7 @@ public class GWMsgInput extends RelativeLayout
 
                     // 处理点击抬起事件
                     int cursorPosition = ((EditText) v).getOffsetForPosition(event.getX(), event.getY());
-                    Log.d("TouchEvent", "点击位置: " + cursorPosition);
+                    Log.d("AsrHelper", "点击位置: " + cursorPosition);
                     startPos = -1;
                     AsrHelper.INSTANCE.stopAsr();
 
@@ -328,7 +338,8 @@ public class GWMsgInput extends RelativeLayout
 
     private int startPos = -1;
     private int lastLength = 0;
-    public  void smartInsertAtCursor(Boolean definite, String newText) {
+
+    public void smartInsertAtCursor(Boolean definite, String newText) {
         if (newText == null || newText.isEmpty()) {
             return;
         }
@@ -336,19 +347,21 @@ public class GWMsgInput extends RelativeLayout
         try {
             Editable editable = messageInput.getText();
 
-            if(startPos<0){
+            if (startPos < 0) {
                 startPos = messageInput.getSelectionStart();
 
                 // 处理没有光标位置的情况
                 if (startPos < 0) {
                     startPos = editable.length();
                 }
+                lastLength = 0;
+                Log.e("AsrHelper", "set startPos: "+startPos);
             }
 //            editable.insert(startPos, newText);
-            editable.replace(startPos,startPos+lastLength,newText);
+            editable.replace(startPos, startPos + lastLength, newText);
             lastLength = newText.length();
 //            messageInput.setSelection(startPos + lastLength);
-            if(definite){
+            if (definite) {
                 startPos += newText.length();
                 lastLength = 0;
             }
@@ -448,6 +461,8 @@ public class GWMsgInput extends RelativeLayout
          * Fires when user presses stop typing
          */
         void onStopTyping();
+
+        void onHeightChange();
 
     }
 }

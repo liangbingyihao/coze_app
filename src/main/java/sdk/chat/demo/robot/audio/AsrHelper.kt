@@ -6,7 +6,6 @@ import com.bytedance.speech.speechengine.SpeechEngineDefines
 import com.bytedance.speech.speechengine.SpeechEngineGenerator
 import org.json.JSONException
 import org.json.JSONObject
-import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.MainApp
@@ -120,9 +119,11 @@ object AsrHelper {
         try {
             // 从回调的 json 数据中解析错误码和错误详细信息
             val reader = JSONObject(data)
-            if (!reader.has("err_code") || !reader.has("err_msg")) {
-                return
+            var msg = data
+            if (reader.has("err_msg")) {
+                msg = reader.getString("err_msg")
             }
+            ChatSDK.events().source().accept(NetworkEvent.errorEvent(null, "asr", msg))
             //notify data
         } catch (e: JSONException) {
             e.printStackTrace()
@@ -156,6 +157,9 @@ object AsrHelper {
     }
 
     private fun configInitParams() {
+        if (mSpeechEngine == null) {
+            return
+        }
         //【必需配置】Engine Name
         mSpeechEngine!!.setOptionString(
             SpeechEngineDefines.PARAMS_KEY_ENGINE_NAME_STRING,
@@ -226,6 +230,32 @@ object AsrHelper {
             "volcengine_input_common"
         )
 
+        //【可选配置】最大录音时长，默认60000ms，如果使用场景超过60s请修改该值，-1为不限制录音时长
+        mSpeechEngine!!.setOptionInt(
+            SpeechEngineDefines.PARAMS_KEY_VAD_MAX_SPEECH_DURATION_INT,
+            180000
+        );
+
+
+        //【可选配置】更新 ASR 热词
+//        if (!mSettings.getString(R.string.config_asr_hotwords).isEmpty()) {
+//            Log.d(SpeechDemoDefines.TAG, "Set hotwords.");
+//            setHotWords(mSettings.getString(R.string.config_asr_hotwords));
+//        }
+
+//        // scale为float类型参数，其中叠词的范围为[1.0,2.0]，非叠词的范围为[1.0,50.0]，scale值越大，结果中出现热词的概率越大
+        val hotWords = "{\"hotwords\":[{\"word\":\"属灵\",\"scale\":50.0}]}"
+        mSpeechEngine!!.sendDirective(SpeechEngineDefines.DIRECTIVE_UPDATE_ASR_HOTWORDS, hotWords)
+
+
+//        mSpeechEngine!!.setOptionString(
+//            SpeechEngineDefines.PARAMS_KEY_ASR_REQ_PARAMS_STRING,params
+//        );
+
+//        mSpeechEngine.setOptionString(SpeechEngineDefines.PARAMS_KEY_ASR_REQ_PARAMS_STRING,"{\"force_to_speech_time\":0, \"end_window_size\":800,\"corpus\":{\"boosting_table_id\":\"热词id\"}, \"context\": \"{\"correct_words\": {\"deep seek\": \"DeepSeek\"}}\"}");
+//        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_ASR_REQ_PARAMS_STRING,"{\"force_to_speech_time\":0, \"end_window_size\":800,\"corpus\":{\"boosting_table_id\":\"ec86438f-22e4-41ba-a714-af4a7b874cbf\"}, \"context\": \"{\"correct_words\": {\"deep seek\": \"DeepSeek\"}}\"}");
+
+
         //【可选配置】在线请求的建连与接收超时，一般不需配置使用默认值即可
         mSpeechEngine!!.setOptionInt(SpeechEngineDefines.PARAMS_KEY_ASR_CONN_TIMEOUT_INT, 3000)
         mSpeechEngine!!.setOptionInt(SpeechEngineDefines.PARAMS_KEY_ASR_RECV_TIMEOUT_INT, 5000)
@@ -288,7 +318,7 @@ object AsrHelper {
             if (ret != SpeechEngineDefines.ERR_NO_ERROR) {
                 var msg = "directive DIRECTIVE_SYNC_STOP_ENGINE failed, $ret"
                 Log.e(TAG, msg)
-                ChatSDK.events().source().accept(NetworkEvent.errorEvent(null,"asr", msg))
+                ChatSDK.events().source().accept(NetworkEvent.errorEvent(null, "asr", msg))
             } else {
                 Log.i(TAG, "启动引擎")
                 Log.i(TAG, "Directive: DIRECTIVE_START_ENGINE")
@@ -297,13 +327,13 @@ object AsrHelper {
 
                     var msg = "ERR_REC_CHECK_ENVIRONMENT_FAILED"
                     Log.e(TAG, msg)
-                    ChatSDK.events().source().accept(NetworkEvent.errorEvent(null,"asr", msg))
+                    ChatSDK.events().source().accept(NetworkEvent.errorEvent(null, "asr", msg))
 //                    mEngineStatusTv.setText(R.string.check_rec_permission)
 //                    requestPermission(com.bytedance.speech.speechdemo.AsrActivity.ASR_PERMISSIONS)
                 } else if (ret != SpeechEngineDefines.ERR_NO_ERROR) {
                     var msg = "send directive start failed, $ret"
                     Log.e(TAG, msg)
-                    ChatSDK.events().source().accept(NetworkEvent.errorEvent(null,"asr", msg))
+                    ChatSDK.events().source().accept(NetworkEvent.errorEvent(null, "asr", msg))
                 }
             }
         }

@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
-<!--    android:background="@color/gray_10"-->
+    <!--    android:background="@color/gray_10"-->
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/listContainer"
@@ -14,40 +14,35 @@
         android:layout_height="match_parent"
         android:animateLayoutChanges="true">
 
-<!--        <sdk.chat.ui.appbar.ChatActionBar-->
-<!--            android:id="@+id/chatActionBar"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content" />-->
+        <!--        <sdk.chat.ui.appbar.ChatActionBar-->
+        <!--            android:id="@+id/chatActionBar"-->
+        <!--            android:layout_width="match_parent"-->
+        <!--            android:layout_height="wrap_content" />-->
 
         <sdk.chat.demo.robot.ui.GWChatContainer
             android:id="@+id/chatView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/white"
             android:layout_above="@id/messageInputLinearLayout"
-            />
+            android:background="@color/white" />
 
         <LinearLayout
             android:id="@+id/messageInputLinearLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:layout_gravity="bottom"
-            >
-<!--            app:layout_behavior="sdk.chat.demo.robot.ui.InputLayoutBehavior"-->
+            android:background="@color/white"
+            android:orientation="vertical">
+            <!--            app:layout_behavior="sdk.chat.demo.robot.ui.InputLayoutBehavior"-->
 
-            <sdk.chat.ui.views.ReplyView
-                android:id="@+id/replyView"
-                android:layout_height="wrap_content"
-                android:layout_width="match_parent"
-                />
+            <include layout="@layout/item_input_prompt" />
 
             <sdk.chat.demo.robot.ui.GWMsgInput
                 android:id="@+id/input"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:showAttachmentButton="false"
-                android:background="?chatViewMessageInputBackgroundColor"/>
+                android:background="?chatViewMessageInputBackgroundColor"
+                app:showAttachmentButton="false" />
 
             <androidx.fragment.app.FragmentContainerView
                 android:id="@+id/keyboardOverlay"
@@ -64,9 +59,9 @@
 
     <materialsearchview.MaterialSearchView
         android:id="@+id/searchView"
-        android:visibility="gone"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
 
     <!--    <LinearLayout-->
     <!--        android:layout_width="match_parent"-->

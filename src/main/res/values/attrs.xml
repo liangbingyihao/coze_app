@@ -7,4 +7,19 @@
     <attr name="gradientStartColor" format="color"/>
     <attr name="gradientEndColor" format="color"/>
     <attr name="gradientAngle" format="integer"/>
+
+    <declare-styleable name="CircleOverlayView">
+
+        <attr name="ringColor" format="color" />
+        <attr name="ringWidth" format="dimension" />
+        <attr name="circleColor" format="color" />
+
+    </declare-styleable>
+
+    <declare-styleable name="VerticalDashedLineView">
+        <attr name="lineColor" format="color" />
+        <attr name="lineWidth" format="dimension" />
+        <attr name="dashLength" format="dimension" />
+        <attr name="gapLength" format="dimension" />
+    </declare-styleable>
 </resources>

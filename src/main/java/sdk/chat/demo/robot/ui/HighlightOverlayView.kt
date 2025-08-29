@@ -2,6 +2,7 @@ package sdk.chat.demo.robot.ui
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
+import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.util.Log
@@ -14,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import sdk.chat.core.dao.Message
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
+import sdk.chat.demo.robot.api.model.MessageDetail
 import sdk.chat.demo.robot.extensions.findTopmostVisibleViewByResId
 import sdk.chat.demo.robot.handlers.GWMsgHandler
 import sdk.chat.demo.robot.handlers.GWThreadHandler
@@ -84,10 +86,12 @@ class HighlightOverlayView @JvmOverloads constructor(
         if (mode == guideDrawer) {
             val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
             var topic = threadHandler.getSessionName(weakMessage?.get()?.threadId)
-            m = context.findViewById<ImageView>(R.id.menu_home)
-            highlightTarget.setText(R.string.guide_drawer)
-            var desc = context.getString(R.string.guide_drawer_desc,topic)
-            highlightDesc.setText(desc)
+            if (topic != null) {
+                m = context.findViewById<ImageView>(R.id.menu_home)
+                highlightTarget.setText(R.string.guide_drawer)
+                var desc = context.getString(R.string.guide_drawer_desc, topic)
+                highlightDesc.text = desc
+            }
         } else if (mode == guidePic) {
             var r: RecyclerView =
                 context.findViewById<View>(R.id.chatView)
@@ -106,7 +110,9 @@ class HighlightOverlayView @JvmOverloads constructor(
             return false
         }
         if (m != null) {
-            setHighlightView(m)
+            m.post {
+                setHighlightView(m)
+            }
             context.getSharedPreferences("app_prefs", MODE_PRIVATE)
                 .edit() {
                     putBoolean("has_shown_guide_$mode", true)
@@ -123,18 +129,36 @@ class HighlightOverlayView @JvmOverloads constructor(
     private fun setHighlightView(targetView: ImageView) {
         // 1. 获取目标 View 在屏幕中的位置
         val targetLocation = IntArray(2)
-        targetView.getLocationInWindow(targetLocation)
+        targetView.getLocationOnScreen(targetLocation)
 
         // 2. 获取 HighlightOverlayView 在屏幕中的位置
         val overlayLocation = IntArray(2)
-        this.getLocationInWindow(overlayLocation)
+        this.getLocationOnScreen(overlayLocation)
 
         // 3. 计算相对坐标（将目标 View 的坐标转换为相对于 HighlightOverlayView 的坐标）
-        val relativeX = targetLocation[0] - overlayLocation[0] - targetView.x
-        val relativeY = targetLocation[1] - overlayLocation[1] - targetView.y
+        val relativeLeft = targetLocation[0] - overlayLocation[0]
+        val relativeTop = targetLocation[1] - overlayLocation[1]
 
-        Log.e("setHighlightView", "relativeX:${relativeX},relativeY:${relativeY}")
+        Log.e(
+            "setHighlightView",
+            "relativeX:${relativeLeft},relativeY:${relativeTop},overlayRect:${overlayLocation},targetLocation[0]:${targetLocation}"
+        )
 
+
+//        // 1. 获取目标 View 在屏幕中的全局边界
+//        val targetRect = Rect()
+//        targetView.getGlobalVisibleRect(targetRect)
+//
+//        // 2. 获取 HighlightOverlayView 在屏幕中的全局边界
+//        val overlayRect = Rect()
+//        this.getGlobalVisibleRect(overlayRect)
+//
+//        // 3. 计算相对位置（考虑滚动视图等情况）
+//        val relativeLeft = targetRect.left - overlayRect.left
+//        val relativeTop = targetRect.top - overlayRect.top
+//
+//
+//
         val imageDrawable: Drawable? = targetView.drawable
 
         // 4. 调整指示 View 的位置和大小
@@ -142,8 +166,8 @@ class HighlightOverlayView @JvmOverloads constructor(
             LayoutParams.WRAP_CONTENT,
             LayoutParams.WRAP_CONTENT
         ).apply {
-            leftMargin = relativeX.toInt()
-            topMargin = relativeY.toInt()
+            leftMargin = relativeLeft.toInt()
+            topMargin = relativeTop.toInt()
         }
 
         highlightTarget.setCompoundDrawablesWithIntrinsicBounds(
@@ -162,6 +186,7 @@ class HighlightOverlayView @JvmOverloads constructor(
 
     fun handleFirst(context: BaseActivity, message: Message?) {
 
+        Log.e("MainApp", "highlight.handleFirst")
         if (hasShownGuideOverlay(context)) {
             return
         }
@@ -175,12 +200,12 @@ class HighlightOverlayView @JvmOverloads constructor(
             val contextId = message.stringForKey("context_id")
             if (contextId == null || contextId.isEmpty()) {
                 val aiFeedback = GWMsgHandler.getAiFeedback(message)
-                if (aiFeedback != null && aiFeedback.status == 2) {
+                if (aiFeedback != null && aiFeedback.status == MessageDetail.STATUS_SUCCESS) {
                     match = true
                 }
             }
         }
-        if(!match){
+        if (!match) {
             return
         }
 
@@ -192,20 +217,30 @@ class HighlightOverlayView @JvmOverloads constructor(
 
     fun handleNext() {
 
+        Log.e("MainApp", "highlight.handleNext")
+        var done = 0
         for (m in allModes) {
             if (!context.getSharedPreferences("app_prefs", MODE_PRIVATE)
                     .getBoolean("has_shown_guide_$m", false)
             ) {
                 this.mode = m
-                setHighlightMode(m)
-                return
+                Log.e("MainApp", "highlight.handleNext.${m}")
+                if (setHighlightMode(m)) {
+                    Log.e("MainApp", "highlight.handleNext.${m} done")
+                    return
+                }
+            } else {
+                ++done
             }
         }
-        context.getSharedPreferences("app_prefs", MODE_PRIVATE)
-            .edit() {
-                putBoolean("has_shown_guide_all", true)
-            }
-        hasShownGuideOverlay = true
+        if(done>=allModes.size){
+            Log.e("MainApp", "highlight.handleNext.all_done")
+            context.getSharedPreferences("app_prefs", MODE_PRIVATE)
+                .edit() {
+                    putBoolean("has_shown_guide_all", true)
+                }
+            hasShownGuideOverlay = true
+        }
         this.mode = null
         visibility = GONE
 

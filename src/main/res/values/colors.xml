@@ -16,4 +16,5 @@
     <color name="text_gray">#B1B1B1</color>
     <color name="text_gray2">#919191</color>
     <color name="button_pink">#FBEBEB</color>
+    <color name="bg_gray_button">#F5F5F5</color>
 </resources>

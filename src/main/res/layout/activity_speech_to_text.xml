@@ -5,7 +5,34 @@
     android:orientation="vertical"
     android:padding="16dp">
 
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@android:color/transparent"
+        android:clickable="true"
+        android:focusable="true">
+
+        <ImageView
+            android:id="@+id/home"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left|center"
+            android:layout_marginLeft="16dp"
+            android:padding="16dp"
+            android:src="@drawable/ic_back" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Debug"
+            android:textColor="@color/item_text_normal"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
     <TextView
+        android:id="@+id/ttsparams"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="豆包音色:"
@@ -15,6 +42,12 @@
         android:id="@+id/ttsVoiceTypeSpinner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/ttserror"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="14sp" />
 
     <Button
         android:id="@+id/updateToken"
@@ -78,24 +111,24 @@
             android:text="已完成打卡次数(0-7)" />
     </LinearLayout>
 
-    <Button
-        android:id="@+id/initdbasr"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:text="init豆包asr" />
+<!--    <Button-->
+<!--        android:id="@+id/initdbasr"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginBottom="8dp"-->
+<!--        android:text="init豆包asr" />-->
 
-    <Button
-        android:id="@+id/cleardbasr"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:text="clear豆包asr" />
+<!--    <Button-->
+<!--        android:id="@+id/cleardbasr"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginBottom="8dp"-->
+<!--        android:text="clear豆包asr" />-->
 
-    <Button
-        android:id="@+id/startdbasr"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:text="豆包asr" />
+<!--    <Button-->
+<!--        android:id="@+id/startdbasr"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginBottom="8dp"-->
+<!--        android:text="豆包asr" />-->
 </LinearLayout>

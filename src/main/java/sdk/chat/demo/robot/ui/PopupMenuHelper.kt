@@ -78,6 +78,7 @@ class PopupMenuHelper(
             setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
             elevation = 20f
             isOutsideTouchable = true
+            animationStyle = 0
             setOnDismissListener { this@PopupMenuHelper.isShowing = false }
         }
 

@@ -1,0 +1,43 @@
+<com.google.android.material.card.MaterialCardView
+    android:id="@+id/replyView"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="right"
+    android:layout_marginRight="26dp"
+    android:visibility="gone"
+    android:backgroundTint="@color/bg_gray_button"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="0dp"
+    app:strokeWidth="0dp">
+
+    <!--        android:background="#20000000"-->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="right|center"
+        android:orientation="horizontal">
+        <!--            android:background="#FFEEEB"-->
+
+        <TextView
+            android:id="@+id/tvReply"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxWidth="264dp"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:layout_gravity="right|center"
+            android:padding="6dp"
+            android:textColor="@color/item_text_normal"
+            android:textSize="12sp" />
+
+        <ImageView
+            android:id="@+id/closeReply"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:src="@mipmap/ic_close_tiny" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
+

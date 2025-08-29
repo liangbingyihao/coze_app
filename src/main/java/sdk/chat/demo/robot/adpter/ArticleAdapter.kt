@@ -28,7 +28,7 @@ class ArticleDiffCallback : DiffUtil.ItemCallback<Article>() {
 class ArticleAdapter(
     private val onItemClick: (Article) -> Unit,
     private val onEditClick: (Article) -> Unit,
-    private val onLongClick: (View,Article) -> Boolean,
+    private val onLongClick: (View, Article) -> Boolean,
 ) : ListAdapter<Article, RecyclerView.ViewHolder>(ArticleDiffCallback()) {
 
     private var _selectId: String? = null;
@@ -45,7 +45,7 @@ class ArticleAdapter(
         set(value) {
             if (field != value) {
                 field = value
-                notifyItemChanged(itemCount-1)
+                notifyItemChanged(itemCount - 1)
             }
         }
 
@@ -63,7 +63,7 @@ class ArticleAdapter(
         val updatedList = currentList.toMutableList().apply {
             addAll(newItems)
         }
-        submitList(updatedList,commitCallback)
+        submitList(updatedList, commitCallback)
     }
 
     fun updateSummaryById(id: String?, newSummary: String): Boolean {
@@ -110,15 +110,16 @@ class ArticleAdapter(
         val tvTitle: TextView = itemView.findViewById(R.id.tvTitle)
         val tvContent: TextView = itemView.findViewById(R.id.tvContent)
         val tvContentMask: View = itemView.findViewById(R.id.tvTimeMask)
+        val tvDashedLine: View = itemView.findViewById(R.id.vDashedLine)
 
         fun bind(article: Article) {
             tvDay.text = article.day
             tvTime.text = article.time
             tvTitle.text = article.title
             tvContent.text = article.content
-            tvCardView.setBackgroundColor(article.colorTag)
+//            tvCardView.setBackgroundColor(article.colorTag)
             itemView.setOnClickListener { onItemClick(article) }
-            itemView.setOnLongClickListener {v-> _selectId = article.id;onLongClick(v,article) }
+            itemView.setOnLongClickListener { v -> _selectId = article.id;onLongClick(v, article) }
             editTitle.setOnClickListener { _selectId = article.id;onEditClick(article) }
 
             if (!article.showDay) {
@@ -128,6 +129,12 @@ class ArticleAdapter(
                 tvDay.visibility = View.VISIBLE
                 tvContentMask.visibility = View.VISIBLE
             }
+
+            if (article.isFirstDay) {
+                tvDashedLine.visibility = View.GONE
+            } else {
+                tvDashedLine.visibility = View.VISIBLE
+            }
         }
 
         fun updateSummary(newSummary: String) {
@@ -136,8 +143,10 @@ class ArticleAdapter(
     }
 
     inner class FooterViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        var contentLoadingProgressBar: ContentLoadingProgressBar = itemView.findViewById<ContentLoadingProgressBar?>(
-            R.id.pb_progress)
+        var contentLoadingProgressBar: ContentLoadingProgressBar =
+            itemView.findViewById<ContentLoadingProgressBar?>(
+                R.id.pb_progress
+            )
     }
 
 
@@ -180,6 +189,7 @@ class ArticleAdapter(
                         }
                     }
                 }
+
                 is FooterViewHolder -> {
                     // 处理特色文章的部分更新
                 }

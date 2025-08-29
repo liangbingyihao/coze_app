@@ -3,6 +3,24 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/replyText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:lineSpacingExtra="8dp"
+        android:layout_gravity="right"
+        android:maxWidth="264dp"
+        android:gravity="left"
+        android:lineSpacingMultiplier="1"
+        android:stateListAnimator="@null"
+        android:textColor="@color/black"
+        android:textSize="12sp"
+        app:backgroundTint="@color/bg_gray_button"
+        app:cornerRadius="8dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="0dp" />
+
     <FrameLayout
         android:id="@id/bubble"
         android:layout_width="wrap_content"

@@ -133,6 +133,12 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
             }
         }
 
+        if (message != null && "welcome".equals(message.getEntityID())
+                && (id == R.id.btn_del || id == R.id.btn_play || id == R.id.btn_like_ai || id == R.id.btn_redo)) {
+            ToastHelper.show(getContext(), getContext().getString(R.string.error_msg_type));
+            return;
+        }
+
         if (id == R.id.btn_share_text || id == R.id.btn_share_user_text) {
             if (imessage.getClass() == TextHolder.class) {
                 String copyText = id == R.id.btn_share_text && aiFeedback != null ? aiFeedback.getFeedbackText() : message.getText();

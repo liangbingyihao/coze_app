@@ -1,5 +1,6 @@
 package sdk.chat.demo.robot.api
 import okhttp3.*
+import org.json.JSONObject
 import java.io.IOException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
@@ -21,8 +22,9 @@ class ServerUnavailableException(
 // 业务逻辑异常
 class BusinessException(
     val code: Int,
-    val response: Response? = null
-) : IOException("业务错误: $code")
+    val response: Response? = null,
+    val msg:String = "业务错误"
+) : IOException("$code:$msg")
 
 // 服务端不可用异常
 class HttpException(
@@ -37,12 +39,21 @@ class ErrorClassifierInterceptor : Interceptor {
             val response = chain.proceed(request)
 
             if (!response.isSuccessful) {
+                val errorBody = response.body?.string()
+                var errorMessage:String = errorBody.toString()
+                try {
+                    val json = JSONObject(errorBody ?: "")
+                    errorMessage = json.optString("msg", "Unknown error")
+                } catch (e: Exception) {
+                    println("Raw error response: $errorBody")
+                }
+
                 when (response.code) {
                     401 -> {
                         // 不直接抛出异常，而是返回401响应
                         return response
                     }
-                    in 400..499 -> throw BusinessException(response.code,response)
+                    in 400..499 -> throw BusinessException(response.code,response,errorMessage)
                     in 500..599 -> throw ServerUnavailableException(response.code,response)
                     else -> throw HttpException(response.code,response)
                 }

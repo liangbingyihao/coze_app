@@ -24,6 +24,9 @@
     <string name="share">Share</string>
     <string name="favorites">My Favorites</string>
     <string name="daily_gw">Daily Grace Word</string>
+    <string name="settings">设置</string>
+    <string name="setting_explore">导出我的恩语</string>
+    <string name="export_hint">已拷贝下载链接到粘贴板，请于1个小时内到浏览器内下载使用</string>
     <string name="search">Search</string>
     <string name="search_history">History</string>
     <string name="timeline">Timeline</string>
@@ -65,4 +68,6 @@
     <string name="guide_pray_desc">试试点击这里\n帮你生成专属的祷告默想建议。</string>
     <string name="guide_pic_desc">试试点击这里，可以将经文生成图片，更好保存与分享</string>
     <string name="network_error">网络不可用，请检查网络状况</string>
+    <string name="error_msg_type">不支持的消息类型</string>
+    <string name="error_no_data">没有更多数据</string>
   </resources>

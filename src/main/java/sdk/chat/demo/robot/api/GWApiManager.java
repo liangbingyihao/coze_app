@@ -14,8 +14,10 @@ import org.pmw.tinylog.Logger;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Single;
@@ -23,6 +25,7 @@ import io.reactivex.SingleOnSubscribe;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
+import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -56,6 +59,7 @@ public class GWApiManager {
 
     public final static int contentTypeUser = 1;
     public final static int contentTypeAI = 2;
+    public final static String timeZoneId = TimeZone.getDefault().getID();
 
     private final static GWApiManager instance = new GWApiManager();
 
@@ -72,6 +76,24 @@ public class GWApiManager {
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
                 .writeTimeout(30, TimeUnit.SECONDS)
+                .addInterceptor(new Interceptor() {
+                    @Override
+                    public Response intercept(Interceptor.Chain chain) throws IOException {
+                        Request request = chain.request();
+
+                        // 添加全局查询参数
+                        HttpUrl.Builder urlBuilder = request.url().newBuilder();
+                        urlBuilder.addQueryParameter("tz", timeZoneId);
+                        urlBuilder.addQueryParameter("lang", Locale.getDefault().toLanguageTag());
+
+                        // 构建新请求
+                        Request newRequest = request.newBuilder()
+                                .url(urlBuilder.build())
+                                .build();
+
+                        return chain.proceed(newRequest);
+                    }
+                })
                 .addInterceptor(new TokenRefreshInterceptor())
                 .addInterceptor(new ErrorClassifierInterceptor()) // 然后添加错误分类拦截器
 //                .addNetworkInterceptor(new SelectiveDiskCacheInterceptor())

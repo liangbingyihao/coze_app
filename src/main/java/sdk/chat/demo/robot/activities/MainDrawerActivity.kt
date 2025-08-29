@@ -3,6 +3,7 @@ package sdk.chat.demo.robot.activities
 import android.content.Intent
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -38,6 +39,7 @@ import sdk.chat.demo.robot.ui.listener.GWClickListener
 import sdk.chat.ui.activities.MainActivity
 import sdk.chat.ui.utils.ToastHelper
 import sdk.guru.common.RX
+import java.util.concurrent.TimeUnit
 import kotlin.math.min
 
 
@@ -77,7 +79,7 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
         findViewById<View>(R.id.menu_favorites).setOnClickListener(this)
         findViewById<View>(R.id.menu_gw_daily).setOnClickListener(this)
         findViewById<View>(R.id.menu_search).setOnClickListener(this)
-        findViewById<View>(R.id.debug).setOnClickListener(this)
+        findViewById<View>(R.id.menu_setting).setOnClickListener(this)
         vErrorHint = findViewById<View>(R.id.error_hint) as TextView
         vHomeMenu = findViewById<View>(R.id.menu_home)
         vHomeMenu.setOnClickListener(this)
@@ -111,9 +113,6 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
         recyclerView.layoutManager = LinearLayoutManager(this)
         createSessionMenu()
 
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, GWChatFragment(), chatTag).commit()
-
 
         dm.add(
             ChatSDK.events().sourceOnMain()
@@ -137,11 +136,11 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
                         this@MainDrawerActivity,
                         "networkEvent:${networkEvent?.isOnline}"
                     )
-                    if(networkEvent!=null){
+                    if (networkEvent != null) {
                         if (!networkEvent.isOnline) {
                             vErrorHint.visibility = View.VISIBLE
                             vErrorHint.setText(R.string.network_error)
-                        }else{
+                        } else {
                             vErrorHint.visibility = View.GONE
                         }
                     }
@@ -158,7 +157,11 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
         if (!hasShownGuideOverlay(this@MainDrawerActivity)) {
             dm.add(
                 ChatSDK.events().prioritySourceOnSingle()
-                    .filter(NetworkEvent.filterType(EventType.MessageUpdated))
+                    .filter(
+                        NetworkEvent.filterType(
+                            EventType.MessageUpdated
+                        )
+                    )
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(Consumer { networkEvent: NetworkEvent? ->
                         highlightOverlay?.handleFirst(
@@ -167,7 +170,29 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
                         )
                     }, this)
             )
+
+            dm.add(
+                threadHandler.welcomeMsg
+                    .delay(2, TimeUnit.SECONDS)
+                    .subscribeOn(RX.io())
+                    .observeOn(RX.main())
+                    .subscribe(
+                        { data ->
+                            if (data != null) {
+                                highlightOverlay?.handleFirst(
+                                    this@MainDrawerActivity,
+                                    data
+                                )
+                            }
+                        },
+                        { error ->
+                        }
+                    )
+            )
         }
+
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, GWChatFragment(), chatTag).commit()
 
         requestPermissions();
         TTSHelper.initTTS(this@MainDrawerActivity)
@@ -391,7 +416,7 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
         if (!ChatSDK.connectionStateMonitor().isOnline()) {
             vErrorHint.visibility = View.VISIBLE
             vErrorHint.setText(R.string.network_error)
-        }else{
+        } else {
             vErrorHint.visibility = View.GONE
         }
         if (threadHandler.isCustomPrompt) {
@@ -483,11 +508,11 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
                 )
             }
 
-            R.id.debug -> {
+            R.id.menu_setting -> {
                 startActivity(
                     Intent(
                         this@MainDrawerActivity,
-                        SpeechToTextActivity::class.java
+                        SettingsActivity::class.java
                     )
                 )
             }

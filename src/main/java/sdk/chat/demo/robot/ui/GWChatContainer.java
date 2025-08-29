@@ -431,7 +431,7 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
     protected void addMessageHoldersToEnd(List<MessageHolder> holders, boolean notify) {
         // Add to current holders at zero index
         // Newest first
-        if(holders==null||holders.size()==0){
+        if(holders==null|| holders.isEmpty()){
             return;
         }
         List<MessageHolder> toAdd = new ArrayList<>();

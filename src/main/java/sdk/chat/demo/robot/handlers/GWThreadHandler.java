@@ -371,11 +371,15 @@ public class GWThreadHandler extends AbstractThreadHandler {
         if (action == action_bible_pic) {
             return genBiblePic(contextMsg);
         }
-        Thread thread = contextMsg.getThread() != null ? contextMsg.getThread() : createChatSessions();
+        Thread thread = contextMsg != null && contextMsg.getThread() != null ? contextMsg.getThread() : ChatSDK.db().fetchThreadWithEntityID("0");
         return new MessageSendRig(new MessageType(MessageType.Text), thread, message -> {
             message.setText(text);
-            message.setMetaValue("context_id", contextMsg.getEntityID());
-            message.setMetaValue("action", action);
+            if (action == action_input_prompt) {
+                message.setMetaValue("reply", params);
+            } else {
+                message.setMetaValue("context_id", contextMsg.getEntityID());
+                message.setMetaValue("action", action);
+            }
 //    action_daily_ai = 0
 //    action_bible_pic = 1
 //    action_daily_gw = 2
@@ -534,7 +538,8 @@ public class GWThreadHandler extends AbstractThreadHandler {
                     String entityId = data.get("id").getAsString();
                     message.setEntityID(entityId);
                     message.setMessageStatus(MessageSendStatus.Replying, false);
-                    ChatSDK.db().update(message);
+                    ChatSDK.db().getDaoCore().getDaoSession().update(message);
+//                    ChatSDK.db().update(message);
                     startPolling(message.getId(), entityId, 0);
 //                    message.setMessageStatus(MessageSendStatus.Uploading,true);
 //                    ChatSDK.events().source().accept(NetworkEvent.messageProgressUpdated(message, new Progress(10,100)));
@@ -1009,6 +1014,10 @@ public class GWThreadHandler extends AbstractThreadHandler {
             entity.setType(ThreadType.None);
             modified = true;
         }
+        if (entity.getType() == null || entity.getType() != ThreadType.None) {
+            entity.setType(ThreadType.None);
+            modified = true;
+        }
         if (updateAt != null) {
             entity.setLastMessageDate(updateAt);
             modified = true;
@@ -1091,7 +1100,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
         if (json == null || message == null) {
             return;
         }
-        Log.d("sending", "updateMessage:" + json.toString());
+//        Log.d("sending", "updateMessage:" + json.toString());
         try {
             MessageDetail aiFeedback = gson.fromJson(json, MessageDetail.class);
             if (aiFeedback == null) {
@@ -1132,7 +1141,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                     }
                 }
 
-                if (aiFeedback.getFeedback() != null) {
+                if (aiFeedback.getFeedback() != null && (aiExplore == null || aiExplore.getMessage().getId() <= message.getId())) {
                     AIExplore newAIExplore = AIExplore.loads(message, aiFeedback.getFeedback().getFunction());
                     if (newAIExplore != null) {
                         aiExplore = newAIExplore;
@@ -1195,13 +1204,13 @@ public class GWThreadHandler extends AbstractThreadHandler {
 
         pendingMsgId = localId;
         retryCount.set(1);
-        Log.d("sending", "startPolling:" + localId.toString());
-        Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
-        if (message == null) {
-            Log.d("sending", "message==null," + localId.toString());
-        } else if (message.getMessageStatus() != MessageSendStatus.Replying) {
-            message.setMessageStatus(MessageSendStatus.Replying, true);
-            Log.d("sending", "startPolling replying:" + localId.toString());
+        {
+            Log.d("sending", "startPolling:" + localId.toString());
+            Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
+            if (message == null) {
+            } else if (message.getMessageStatus() != MessageSendStatus.Replying) {
+                message.setMessageStatus(MessageSendStatus.Replying, true);
+            }
         }
         Disposable disposable = Observable.interval(INITIAL_DELAY, POLL_INTERVAL, TimeUnit.SECONDS)
                 .doOnDispose(() -> {
@@ -1218,7 +1227,6 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         disposables.clear();
                         return Observable.empty();
                     }
-                    Log.d("sending", "tick:" + tick + ",stop:" + stop);
                     return GWApiManager.shared().getMessageDetail(contextId, tick == 0 ? retry : 0, stop == 0 ? 1 : 0)
                             .subscribeOn(RX.io())
                             .flatMap(Single::just).toObservable();
@@ -1227,7 +1235,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 .flatMapCompletable(json ->
                         {
                             if (json != null) {
-//                                Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
+                                Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
                                 updateMessage(message, json);
                                 return Completable.complete();
                             } else {
@@ -1242,9 +1250,11 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         },
                         error -> {
                             Log.d("sending", "error:" + localId.toString() + "," + error.getMessage());
-//                            Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
-                            message.setMessageStatus(MessageSendStatus.Failed, true);
-                            ChatSDK.events().source().accept(NetworkEvent.errorEvent(message, "message", error.getMessage()));
+                            Message message = ChatSDK.db().fetchMessageWithEntityID(contextId);
+                            if (message != null) {
+                                message.setMessageStatus(MessageSendStatus.Failed, true);
+                                ChatSDK.events().source().accept(NetworkEvent.errorEvent(message, "message", error.getMessage()));
+                            }
                         });
 
         disposables.add(disposable);

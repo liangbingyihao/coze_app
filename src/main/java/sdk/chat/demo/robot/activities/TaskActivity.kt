@@ -94,7 +94,7 @@ class TaskActivity : BaseActivity(), View.OnClickListener {
                     finish()
                 } else {
                     ChatSDK.events().source()
-                        .accept(NetworkEvent.messageInputPrompt(""))
+                        .accept(NetworkEvent.messageInputPrompt("",""))
                     finish()
                 }
             }
@@ -184,34 +184,34 @@ class TaskActivity : BaseActivity(), View.OnClickListener {
 //                taskProcess.chapters[index].content,
 //                HtmlCompat.FROM_HTML_MODE_LEGACY
 //            );
-            val htmlContent = "<!DOCTYPE html>" +
-                    "<html>" +
-                    "<head>" +
-                    "<meta name='viewport' content='width=device-width, initial-scale=1'>" +
-                    "<style>body{font-family:Arial;padding:20px;font-size: 12px;}</style>" +
-                    "</head>" +
-                    "<body>" +
-                    "<h1>Android WebView Demo</h1>" +
-                    "<p>This content is loaded from HTML string.</p>" +
-                    "<p>This content is loaded from HTML string.</p>" +
-                    "<p>This content is loaded from HTML string.</p>" +
-                    "<p>This content is loaded from HTML string.</p>" +
-                    "<p>This content is loaded from HTML string.</p>" +
-                    "<p>This content is loaded from HTML string.</p>" +
-                    "<p>This content is loaded from HTML string.</p>" +
-                    "<p>This content is loaded from HTML string.</p>" +
-                    "<p>This content is loaded from HTML string.</p>" +
-                    "<p>This content is loaded from HTML string.</p>" +
-                    "<p>This content is loaded from HTML string.</p>" +
-                    "<p>This content is loaded from HTML string.</p>" +
-                    "<p>This content is loaded from HTML string.</p>" +
-                    "<p>This content is loaded from HTML string.</p>" +
-                    "<p>This content1 is loaded from HTML string.</p>" +
-                    "<button onclick='Android.showToast(\"Hello from WebView\")'>Click Me</button>" +
-                    "</body>" +
-                    "</html>"
-            tvStory.loadDataWithBaseURL(null, htmlContent, "text/html", "UTF-8", null);
-//            tvStory.loadDataWithBaseURL(null, taskProcess.chapters[index].content, "text/html", "UTF-8", null);
+//            val htmlContent = "<!DOCTYPE html>" +
+//                    "<html>" +
+//                    "<head>" +
+//                    "<meta name='viewport' content='width=device-width, initial-scale=1'>" +
+//                    "<style>body{font-family:Arial;padding:20px;font-size: 12px;}</style>" +
+//                    "</head>" +
+//                    "<body>" +
+//                    "<h1>Android WebView Demo</h1>" +
+//                    "<p>This content is loaded from HTML string.</p>" +
+//                    "<p>This content is loaded from HTML string.</p>" +
+//                    "<p>This content is loaded from HTML string.</p>" +
+//                    "<p>This content is loaded from HTML string.</p>" +
+//                    "<p>This content is loaded from HTML string.</p>" +
+//                    "<p>This content is loaded from HTML string.</p>" +
+//                    "<p>This content is loaded from HTML string.</p>" +
+//                    "<p>This content is loaded from HTML string.</p>" +
+//                    "<p>This content is loaded from HTML string.</p>" +
+//                    "<p>This content is loaded from HTML string.</p>" +
+//                    "<p>This content is loaded from HTML string.</p>" +
+//                    "<p>This content is loaded from HTML string.</p>" +
+//                    "<p>This content is loaded from HTML string.</p>" +
+//                    "<p>This content is loaded from HTML string.</p>" +
+//                    "<p>This content1 is loaded from HTML string.</p>" +
+//                    "<button onclick='Android.showToast(\"Hello from WebView\")'>Click Me</button>" +
+//                    "</body>" +
+//                    "</html>"
+//            tvStory.loadDataWithBaseURL(null, htmlContent, "text/html", "UTF-8", null);
+            tvStory.loadDataWithBaseURL(null, taskProcess.chapters[index].content, "text/html", "UTF-8", null);
 
 //            tvStory.text = HtmlCompat.fromHtml(
 //                "<font color=\"#00FF00\" size=\"10\">This text is green and size 5.</font>", HtmlCompat.FROM_HTML_MODE_LEGACY);

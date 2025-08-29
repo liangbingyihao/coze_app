@@ -1,11 +1,11 @@
 package sdk.chat.demo.robot.activities
 
-import android.content.ClipData
-import android.content.ClipboardManager
+import android.view.ViewTreeObserver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.view.inputmethod.InputMethodManager
@@ -54,7 +54,8 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
     private lateinit var bConversations: View
     private lateinit var vEdSummary: EditText
     private lateinit var vEmptyContainer: View
-    private lateinit var vLineDash: View
+
+    //    private lateinit var vLineDash: View
     private lateinit var recyclerView: RecyclerView
     private lateinit var vMoreMenus: View
     private var editingMode = 0
@@ -88,7 +89,6 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         setupRecyclerView()
         setupRefreshLayout()
 
-        loadSessions()
         findViewById<View>(R.id.home).setOnClickListener(this)
         tvTitle = findViewById<View>(R.id.title) as TextView
         tvTitle.setOnClickListener(this)
@@ -101,7 +101,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         findViewById<View>(R.id.conversations1).setOnClickListener(this)
 
         vEmptyContainer = findViewById<View>(R.id.empty_container)
-        vLineDash = findViewById<View>(R.id.dash_line)
+//        vLineDash = findViewById<View>(R.id.dash_line)
 
         dm.add(
             ChatSDK.events().sourceOnSingle()
@@ -110,6 +110,11 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                     finish()
                 })
         )
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadSessions()
     }
 
     private fun setupRecyclerView() {
@@ -163,19 +168,55 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
 //            })
             setCanLoadMore(false)
         }
+
     }
 
     private fun setEmptyRecord(isEmpty: Boolean) {
         if (isEmpty) {
             vEmptyContainer.visibility = View.VISIBLE
-            vLineDash.visibility = View.INVISIBLE
+//            vLineDash.visibility = View.INVISIBLE
             bConversations.visibility = View.INVISIBLE
         } else {
             vEmptyContainer.visibility = View.INVISIBLE
-            vLineDash.visibility = View.VISIBLE
+//            vLineDash.visibility = View.VISIBLE
             bConversations.visibility = View.VISIBLE
         }
     }
+
+//    private fun checkHeight() {
+//        if(true){
+//            return
+//        }
+//
+//        val layoutManager = recyclerView.layoutManager as? LinearLayoutManager
+//        Log.d(
+//            "ViewHeight",
+//            "${sessionId} First: ${layoutManager?.findFirstVisibleItemPosition()},last:${layoutManager?.findLastVisibleItemPosition()},total:${articleAdapter.itemCount}"
+//        )
+//        layoutManager?.findLastVisibleItemPosition()?.let {
+//            if (it < articleAdapter.itemCount) {
+//                val childView = layoutManager.findViewByPosition(it)
+//
+//                if (childView != null) {
+//                    // 获取该View相对于RecyclerView的坐标
+//                    val left = childView.left   // 左边距相对于RecyclerView
+//                    val top = childView.top     // 上边距相对于RecyclerView
+//                    val right = childView.right // 右边距相对于RecyclerView
+//                    val bottom = childView.bottom // 下边距相对于RecyclerView
+//
+//                    Log.d("ViewHeight",
+//                        "位置findLastVisibleItemPosition: " +
+//                                "left=$left, top=$top, right=$right, bottom=$bottom")
+//
+//                    // 2. 为 independentView 设置布局参数，修改高度
+//                    val layoutParams = vLineDash.layoutParams
+//                    layoutParams.height = bottom
+//                    vLineDash.layoutParams = layoutParams
+//                }
+//            }
+//        }
+//
+//    }
 
     private fun initMenuPopup(items: MutableList<ArticleSession>) {
         var selectedPosition = items.indexOfFirst { it.id == sessionId }.let {
@@ -231,7 +272,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                     val articleSessions = sessions.map { session ->
                         ArticleSession(
                             id = session.entityID,
-                            title = session.entityID+","+session.name,
+                            title = session.name,
                         )
                     }
                     Single.just(articleSessions)
@@ -258,6 +299,8 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
             threadHandler.loadMessagesBySession(sessionId)
                 .flatMap(Function { messages: List<Message> ->
                     var lastDay = "";
+                    var firstDay =
+                        DateLocalizationUtil.dateStr(messages.lastOrNull()?.date).split(" ")[0]
                     val articleList = messages.map { message ->
                         var dateStr = DateLocalizationUtil.dateStr(message.date)
                         val parts = dateStr.split(" ")
@@ -285,8 +328,12 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                                 .getOrElse { exception ->
                                     "#FFFBE8".toColorInt()
                                 },
-                            showDay = showDay
+                            showDay = showDay,
+                            isFirstDay = thisDay == firstDay
                         )
+                    }.filter { article ->
+                        // 过滤条件：只保留符合条件的 message
+                        !article.content.isEmpty()
                     }
                     Single.just(articleList)
                 } as Function<List<Message?>?, SingleSource<List<Article?>?>?>)
@@ -301,6 +348,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                             setEmptyRecord(true)
                         }
                         recyclerView.scrollToPosition(0);
+//                        recyclerView.postDelayed({ checkHeight() }, 500)
                     },
                     { error -> // onError
                         swipeRefreshLayout.isRefreshing = false
@@ -321,8 +369,12 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
             }
 
             R.id.conversations, R.id.conversations1 -> {
-                finish()
                 ChatSDK.events().source().accept(NetworkEvent(EventType.HideDrawer))
+                val intent = Intent(this@ArticleListActivity, MainDrawerActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+                startActivity(intent)
+                finish()
             }
 
             R.id.title -> {
@@ -449,7 +501,8 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                             articleAdapter.deleteById(msgId)
                         } else {
 //                            sessionId = topicId.toString()
-                            loadSessions()
+                            //FIXME
+//                            loadSessions()
                             start(this@ArticleListActivity, topicId.toString())
                         }
                     },
@@ -548,7 +601,8 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                     { result ->
                         if (result > 0) {
 //                            sessionId = result.toString()
-                            loadSessions()
+//                            loadSessions()
+                            start(this@ArticleListActivity, result.toString())
                         }
                         vEdSummary.requestFocus()
                         hideKeyboard()

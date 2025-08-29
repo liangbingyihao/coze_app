@@ -44,7 +44,7 @@ open class ExploreViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 //        Log.d("sending","threadHandler.isSendingMsg:${threadHandler.pendingMsgId()},aiExplore:${aiExplore?.message?.id},${aiExplore?.itemList?.size}");
         while (i < 3) {
             var v: TextView = exploreView.getValue("explore$i")
-            if (threadHandler.pendingMsgId()==null && aiExplore != null && i < aiExplore.itemList.size) {
+            if (threadHandler.pendingMsgId() == null && aiExplore != null && i < aiExplore.itemList.size) {
 //                Log.d("sending", "bindExplore:visible $i");
                 var data = aiExplore.itemList[i]
                 v.visibility = View.VISIBLE
@@ -72,10 +72,9 @@ open class ExploreViewHolder(view: View) : RecyclerView.ViewHolder(view) {
                         }
                     }
                 } else if (data.action == GWThreadHandler.action_input_prompt) {
+                    var event = NetworkEvent.messageInputPrompt(data.text,data.params)
                     v.setOnClickListener { view ->
-                        view as TextView // 安全转换
-                        ChatSDK.events().source()
-                            .accept(NetworkEvent.messageInputPrompt(view.text.toString().trim()))
+                        ChatSDK.events().source().accept(event)
                     }
                 } else {
                     v.setOnClickListener { view ->

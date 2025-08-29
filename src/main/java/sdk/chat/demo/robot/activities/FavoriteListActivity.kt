@@ -119,6 +119,7 @@ class FavoriteListActivity : BaseActivity(), View.OnClickListener {
                             swipeRefreshLayout.setLoadingMore(false)
                         }
                         if (messages.items == null || messages.items.isEmpty()) {
+                            ToastHelper.show(this@FavoriteListActivity,R.string.error_no_data)
                             swipeRefreshLayout.setCanLoadMore(false)
                         } else {
                             swipeRefreshLayout.setCanLoadMore(true)

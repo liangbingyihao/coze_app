@@ -1,11 +1,92 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:clipToPadding="false"
-    android:clipChildren="false"
-    android:paddingBottom="4dp">
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:orientation="vertical"
+        android:paddingBottom="4dp">
+
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="94dp"
+            android:layout_marginTop="60dp"
+            android:layout_marginEnd="30dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp"
+            app:cardPreventCornerOverlap="false"
+            app:strokeColor="#6A6A6A">
+
+            <!--        android:background="#20000000"-->
+            <LinearLayout
+                android:id="@+id/cardView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+                <!--            android:background="#FFEEEB"-->
+
+                <TextView
+                    android:id="@+id/tvContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="16dp"
+                    android:paddingTop="15dp"
+                    android:paddingEnd="16dp"
+                    android:textColor="@color/item_text_normal"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/tvTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|end"
+                    android:layout_marginRight="4dp"
+                    android:padding="6dp"
+                    android:textColor="#B1B1B1"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!--    <com.google.android.material.card.MaterialCardView-->
+        <!--        android:id="@+id/cardView"-->
+        <!--        android:layout_width="match_parent"-->
+        <!--        android:layout_height="wrap_content"-->
+        <!--        android:layout_marginStart="94dp"-->
+        <!--        android:layout_marginEnd="30dp"-->
+        <!--        app:cardCornerRadius="12dp"-->
+        <!--        app:cardElevation="4dp"-->
+        <!--        app:strokeColor="#1F000000"-->
+        <!--        app:strokeWidth="1dp">-->
+
+        <!--        <TextView-->
+        <!--            android:id="@+id/tvContent"-->
+        <!--            android:layout_width="match_parent"-->
+        <!--            android:layout_height="wrap_content"-->
+        <!--            android:background="@color/accent"-->
+        <!--            android:paddingStart="16dp"-->
+        <!--            android:paddingTop="15dp"-->
+        <!--            android:paddingEnd="16dp"-->
+        <!--            android:paddingBottom="20dp"-->
+        <!--            android:textColor="@color/item_text_normal"-->
+        <!--            android:textSize="13sp" />-->
+        <!--    </com.google.android.material.card.MaterialCardView>-->
+    </LinearLayout>
+
+    <sdk.chat.demo.robot.ui.VerticalDashedLineView
+        android:id="@+id/vDashedLine"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_marginStart="64dp"
+        app:dashLength="1dp"
+        app:gapLength="4dp"
+        app:lineColor="#D6D6D6"
+        app:lineWidth="2dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -23,7 +104,7 @@
                 android:layout_height="match_parent"
                 android:layout_gravity="start"
                 android:layout_marginStart="64dp"
-                android:background="#CCFFF2F2" />
+                android:background="@color/white" />
 
             <TextView
                 android:id="@+id/tvDay"
@@ -56,70 +137,6 @@
             android:layout_height="wrap_content"
             android:padding="8dp"
             android:src="@mipmap/ic_edit" />
+
     </LinearLayout>
-
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="94dp"
-        android:layout_marginEnd="30dp"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="4dp"
-        app:strokeColor="#6A6A6A"
-        app:cardPreventCornerOverlap="false">
-
-<!--        android:background="#20000000"-->
-        <LinearLayout
-            android:id="@+id/cardView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#FFEEEB"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/tvContent"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingStart="16dp"
-                android:paddingTop="15dp"
-                android:paddingEnd="16dp"
-                android:textColor="@color/item_text_normal"
-                android:textSize="13sp" />
-
-            <TextView
-                android:id="@+id/tvTime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
-                android:layout_marginRight="4dp"
-                android:padding="6dp"
-                android:textColor="#B1B1B1"
-                android:textSize="12sp" />
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-
-    <!--    <com.google.android.material.card.MaterialCardView-->
-    <!--        android:id="@+id/cardView"-->
-    <!--        android:layout_width="match_parent"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:layout_marginStart="94dp"-->
-    <!--        android:layout_marginEnd="30dp"-->
-    <!--        app:cardCornerRadius="12dp"-->
-    <!--        app:cardElevation="4dp"-->
-    <!--        app:strokeColor="#1F000000"-->
-    <!--        app:strokeWidth="1dp">-->
-
-    <!--        <TextView-->
-    <!--            android:id="@+id/tvContent"-->
-    <!--            android:layout_width="match_parent"-->
-    <!--            android:layout_height="wrap_content"-->
-    <!--            android:background="@color/accent"-->
-    <!--            android:paddingStart="16dp"-->
-    <!--            android:paddingTop="15dp"-->
-    <!--            android:paddingEnd="16dp"-->
-    <!--            android:paddingBottom="20dp"-->
-    <!--            android:textColor="@color/item_text_normal"-->
-    <!--            android:textSize="13sp" />-->
-    <!--    </com.google.android.material.card.MaterialCardView>-->
-</LinearLayout>
+</FrameLayout>
