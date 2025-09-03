@@ -31,9 +31,9 @@ class ArticleAdapter(
     private val onLongClick: (View, Article) -> Boolean,
 ) : ListAdapter<Article, RecyclerView.ViewHolder>(ArticleDiffCallback()) {
 
-    private var _selectId: String? = null;
+    private var _selectId: Article? = null;
 
-    val selectId: String?
+    val selectArticle: Article?
         get() = _selectId
 
     companion object {
@@ -54,6 +54,10 @@ class ArticleAdapter(
     }
 
     override fun getItemCount(): Int = currentList.size + 1
+
+    fun getSelect(){
+
+    }
 
     fun clearAll() {
         submitList(emptyList()) // 清空并自动通知DiffUtil更新
@@ -119,8 +123,8 @@ class ArticleAdapter(
             tvContent.text = article.content
 //            tvCardView.setBackgroundColor(article.colorTag)
             itemView.setOnClickListener { onItemClick(article) }
-            itemView.setOnLongClickListener { v -> _selectId = article.id;onLongClick(v, article) }
-            editTitle.setOnClickListener { _selectId = article.id;onEditClick(article) }
+            itemView.setOnLongClickListener { v -> _selectId = article;onLongClick(v, article) }
+            editTitle.setOnClickListener { _selectId = article;onEditClick(article) }
 
             if (!article.showDay) {
                 tvDay.visibility = View.INVISIBLE

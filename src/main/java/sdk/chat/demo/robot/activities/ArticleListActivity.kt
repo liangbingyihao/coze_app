@@ -1,11 +1,11 @@
 package sdk.chat.demo.robot.activities
 
-import android.view.ViewTreeObserver
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.view.inputmethod.InputMethodManager
@@ -25,6 +25,7 @@ import sdk.chat.core.dao.Thread
 import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.session.ChatSDK
+import sdk.chat.demo.MainApp
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.ArticleAdapter
 import sdk.chat.demo.robot.adpter.GenericMenuPopupWindow
@@ -370,9 +371,10 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
 
             R.id.conversations, R.id.conversations1 -> {
                 ChatSDK.events().source().accept(NetworkEvent(EventType.HideDrawer))
-                val intent = Intent(this@ArticleListActivity, MainDrawerActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                }
+                val intent =
+                    Intent(this@ArticleListActivity, MainDrawerActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
                 startActivity(intent)
                 finish()
             }
@@ -410,8 +412,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                             R.id.delTopic -> {
                                 showMaterialConfirmationDialog(
                                     this@ArticleListActivity,
-                                    "",
-                                    getString(R.string.delete_confirm),
+                                    getString(R.string.delete_confirm), null, null,
                                     positiveAction = {
                                         val disposable = threadHandler.deleteSession(sessionId)
                                             .observeOn(AndroidSchedulers.mainThread())
@@ -464,8 +465,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                     R.id.delArticle -> {
                         showMaterialConfirmationDialog(
                             this@ArticleListActivity,
-                            "",
-                            getString(R.string.delete_confirm),
+                            getString(R.string.delete_confirm), null, null,
                             positiveAction = {
                                 changeTopic(-1)
                             })
@@ -474,23 +474,37 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                     R.id.changeTopic -> {
                         menuPopup.show(true)
                     }
+
+                    R.id.copy -> {
+                        val article = articleAdapter.selectArticle
+                        if (article != null) {
+                            val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+                            val clip = ClipData.newPlainText("恩语", article.content)
+                            clipboard.setPrimaryClip(clip)
+                            ToastHelper.show(
+                                MainApp.getContext(),
+                                MainApp.getContext().getString(R.string.copied)
+                            )
+                        }
+                    }
                 }
             },
             menuResId = R.layout.menu_article_popup,
             clickableResIds = intArrayOf(
-                R.id.delArticle,
+                R.id.copy,
                 R.id.changeTopic,
+                R.id.delArticle,
             )
         ).show()
     }
 
     fun changeTopic(topicId: Long) {
-        val msgId = articleAdapter.selectId
-        if (msgId == null) {
+        val article = articleAdapter.selectArticle
+        if (article == null) {
             return
         }
         dm.add(
-            threadHandler.setMsgSession(msgId, topicId)
+            threadHandler.setMsgSession(article.id, topicId)
                 .observeOn(RX.main())
                 .subscribe(
                     { result ->
@@ -498,7 +512,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                             if (articleAdapter.itemCount == 2) {
                                 setEmptyRecord(true)
                             }
-                            articleAdapter.deleteById(msgId)
+                            articleAdapter.deleteById(article.id)
                         } else {
 //                            sessionId = topicId.toString()
                             //FIXME
@@ -525,14 +539,17 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
 
     fun editSummary() {
         val newSummary = vEdSummary.text.toString()
-        val msgId = articleAdapter.selectId
+        val article = articleAdapter.selectArticle
+        if (article == null) {
+            return
+        }
         dm.add(
-            threadHandler.setSummary(msgId, newSummary)
+            threadHandler.setSummary(article.id, newSummary)
                 .observeOn(RX.main())
                 .subscribe(
                     { result ->
                         if (result) {
-                            articleAdapter.updateSummaryById(msgId, newSummary)
+                            articleAdapter.updateSummaryById(article.id, newSummary)
                         }
                         hideEditDialog()
                     },
@@ -593,9 +610,12 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
 
     fun newTopic() {
         val newSummary = vEdSummary.text.toString()
-        val msgId = articleAdapter.selectId
+        val article = articleAdapter.selectArticle
+        if (article == null) {
+            return
+        }
         dm.add(
-            threadHandler.newMsgSession(msgId, newSummary)
+            threadHandler.newMsgSession(article.id, newSummary)
                 .observeOn(RX.main())
                 .subscribe(
                     { result ->

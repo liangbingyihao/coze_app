@@ -12,9 +12,11 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -33,7 +35,8 @@ public class GWMsgInput extends RelativeLayout
         implements View.OnClickListener, TextWatcher, View.OnFocusChangeListener {
 
     public EditText messageInput;
-//    public View asrContainer;
+    public EditText messagePrompt;
+    //    public View asrContainer;
     public View messageSendButton;
     public View stopSendButton;
     public ImageView attachmentButton;
@@ -243,11 +246,14 @@ public class GWMsgInput extends RelativeLayout
      */
     @Override
     public void afterTextChanged(Editable editable) {
-        if (messageInput.getLineCount() < lastLineCount) {
-            Log.e("typing", "afterTextChanged:" + lastLineCount.toString());
+        if (messageInput.getLineCount() < lastLineCount || lastLineCount == 0) {
             if (typingListener != null) typingListener.onHeightChange();
         }
         lastLineCount = messageInput.getLineCount();
+        Log.e("AsrHelper1", messageInput.getLineCount() + ",lastLineCount:" + lastLineCount.toString());
+        Log.d("AsrHelper1", "afterTextChanged and stop");
+        startPos = -1;
+        AsrHelper.INSTANCE.stopAsr();
     }
 
     @Override
@@ -266,6 +272,25 @@ public class GWMsgInput extends RelativeLayout
 //        if (attachmentsListener != null) attachmentsListener.onAddAttachments();
 //    }
 
+    public String getMessagePrompt() {
+        if (messagePrompt.getVisibility() == VISIBLE) {
+            return messagePrompt.getText().toString();
+        } else {
+            return null;
+        }
+    }
+
+
+    public void setMessagePrompt(String prompt) {
+        if(prompt!=null&&!prompt.isEmpty()){
+            messagePrompt.setVisibility(VISIBLE);
+            messagePrompt.setText(prompt);
+        }else{
+            messagePrompt.setVisibility(GONE);
+        }
+        if (typingListener != null) typingListener.onHeightChange();
+    }
+
     public void init(Context context, AttributeSet attrs) {
         init(context);
 //
@@ -280,6 +305,7 @@ public class GWMsgInput extends RelativeLayout
 //        inflate(context, R.layout.view_message_input, this);
 
         messageInput = findViewById(R.id.messageInput);
+        messagePrompt = findViewById(R.id.messagePrompt);
         messageSendButton = findViewById(R.id.messageSendButton);
         stopSendButton = findViewById(R.id.messageStopButton);
         attachmentButton = findViewById(R.id.attachmentButton);
@@ -312,8 +338,8 @@ public class GWMsgInput extends RelativeLayout
                     lastClickTime = currentTime;
 
                     // 处理点击抬起事件
-                    int cursorPosition = ((EditText) v).getOffsetForPosition(event.getX(), event.getY());
-                    Log.d("AsrHelper", "点击位置: " + cursorPosition);
+//                    int cursorPosition = ((EditText) v).getOffsetForPosition(event.getX(), event.getY());
+                    Log.d("AsrHelper1", "onTouch and stop");
                     startPos = -1;
                     AsrHelper.INSTANCE.stopAsr();
 
@@ -326,14 +352,7 @@ public class GWMsgInput extends RelativeLayout
                 return false; // 返回false允许事件继续传递
             }
         });
-//        messageInput.setOnTouchListener { v, event ->
-//            if (event.action == MotionEvent.ACTION_UP) {
-//                val editText = v as EditText
-//                val offset = editText.getOffsetForPosition(event.x, event.y)
-//                Log.d("Cursor", "Tapped at position: $offset")
-//            }
-//            false // 必须返回false以保证正常处理事件
-//        }
+
     }
 
     private int startPos = -1;
@@ -355,9 +374,11 @@ public class GWMsgInput extends RelativeLayout
                     startPos = editable.length();
                 }
                 lastLength = 0;
-                Log.e("AsrHelper", "set startPos: "+startPos);
+                Log.e("AsrHelper1", "set startPos: " + startPos);
             }
+            Log.e("AsrHelper1", "definite: " + definite + ",newText:" + newText + ",startPos:" + startPos);
 //            editable.insert(startPos, newText);
+            messageInput.removeTextChangedListener(this);
             editable.replace(startPos, startPos + lastLength, newText);
             lastLength = newText.length();
 //            messageInput.setSelection(startPos + lastLength);
@@ -365,31 +386,9 @@ public class GWMsgInput extends RelativeLayout
                 startPos += newText.length();
                 lastLength = 0;
             }
-
-//            // 获取光标前的内容
-//            String beforeCursor = editable.subSequence(0, cursorPos).toString();
-//
-//            // 查找新文本开头在光标前内容中的最长匹配
-//            int matchLength = 0;
-//            if (lastMsg != null && !lastMsg.isEmpty() && newText.startsWith(lastMsg) && beforeCursor.endsWith(lastMsg)) {
-//                matchLength = lastMsg.length();
-//            }
-//
-//            if (matchLength > 0) {
-//                // 如果找到匹配，只插入变更部分
-//                String textToInsert = newText.substring(matchLength);
-//
-//                Log.e("AsrHelper", "matchLength:" + matchLength + ",textToInsert:" + textToInsert);
-//                editable.insert(cursorPos, textToInsert);
-//                editText.setSelection(cursorPos + textToInsert.length());
-//            } else {
-//                // 没有匹配，插入完整新字符串
-//                Log.e("AsrHelper", "matchLength:" + matchLength + ",all textToInsert:" + newText);
-//                editable.insert(cursorPos, newText);
-//                editText.setSelection(cursorPos + newText.length());
-//            }
+            messageInput.addTextChangedListener(this);
         } catch (Exception e) {
-            Log.e("AsrHelper", "Error inserting text", e);
+            Log.e("AsrHelper1", "Error inserting text", e);
         }
     }
 

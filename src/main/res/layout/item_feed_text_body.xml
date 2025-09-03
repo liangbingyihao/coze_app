@@ -14,7 +14,7 @@
         android:gravity="left"
         android:lineSpacingMultiplier="1"
         android:stateListAnimator="@null"
-        android:textColor="@color/black"
+        android:textColor="@color/text_prompt"
         android:textSize="12sp"
         app:backgroundTint="@color/bg_gray_button"
         app:cornerRadius="8dp"

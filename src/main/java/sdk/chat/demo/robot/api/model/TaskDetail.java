@@ -6,10 +6,11 @@ public class TaskDetail {
     private int status;
 
     // 任务掩码常量
-    public static final int TASK_GW_MASK = 0b0001; // 第一位
-    public static final int TASK_PRAY_MASK = 0b0010; // 第二位
-    public static final int TASK_RECORD_MASK = 0b0100; // 第三位
-    public static final int UNLOCK_STORY_MASK = 0b1000; // 第三位
+    public static final int TASK_GW_MASK = 0b00001; // 看每日恩语
+    public static final int TASK_PRAY_MASK = 0b00010; // 第二位
+    public static final int TASK_RECORD_MASK = 0b00100; // 第三位
+    public static final int UNLOCK_STORY_MASK = 0b01000; // 解锁
+    public static final int TASK_DONE = 0b10000; // 弹通知
 
     public TaskDetail(String taskDate) {
         this.taskDate = taskDate;
@@ -79,6 +80,12 @@ public class TaskDetail {
                 break;
             case 2:
                 status |= TASK_RECORD_MASK;
+                break;
+            case 3:
+                status |= UNLOCK_STORY_MASK;
+                break;
+            case 4:
+                status |= TASK_DONE;
                 break;
         }
     }

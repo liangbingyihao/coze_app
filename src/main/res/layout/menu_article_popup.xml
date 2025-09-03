@@ -25,21 +25,32 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/delArticle"
+                android:id="@+id/copy"
                 style="@style/PopupmenuText"
-                android:text="@string/remove"
-                app:drawableEndCompat="@mipmap/ic_del" />
+                android:text="@string/copy"
+                app:drawableEndCompat="@mipmap/ic_copy" />
+
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="#7B7B7B" />
-
             <TextView
                 android:id="@+id/changeTopic"
                 style="@style/PopupmenuText"
                 android:text="@string/change_topic"
                 app:drawableEndCompat="@mipmap/ic_switch" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#7B7B7B" />
+            <TextView
+                android:id="@+id/delArticle"
+                style="@style/PopupmenuText"
+                android:text="@string/remove"
+                app:drawableEndCompat="@mipmap/ic_del" />
+
+
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>

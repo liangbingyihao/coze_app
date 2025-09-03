@@ -32,15 +32,15 @@ public class GuideActivity extends AppCompatActivity {
             R.mipmap.ic_intro_2,
             R.mipmap.ic_intro_3
     };
-    private final String[] guideTitles = {
-            "恩典留痕",
-            "查经库藏",
-            "每日恩语"
+    private final int[] guideTitles = {
+            R.string.guide_1,
+            R.string.guide_2,
+            R.string.guide_3,
     };
-    private final String[] guideDescriptions = {
-            "语音/文字记录感动，\n时间轴串联成与神同行的恩典之路",
-            "圣经背景、注释一站式收藏， \n真理不再碎片化",
-            "个性化经文+实践指南\n助你活出信仰力量"
+    private final int[] guideDescriptions = {
+            R.string.guide_desc_1,
+            R.string.guide_desc_2,
+            R.string.guide_desc_3,
     };
 
     @Override
@@ -127,10 +127,10 @@ public class GuideActivity extends AppCompatActivity {
 
     class GuideViewAdapter extends RecyclerView.Adapter<GuideViewAdapter.ViewHolder> {
         private int[] guideImages;
-        private String[] guideTitles;
-        private String[] guideDescriptions;
+        private int[] guideTitles;
+        private int[] guideDescriptions;
 
-        public GuideViewAdapter(int[] images, String[] titles, String[] descriptions) {
+        public GuideViewAdapter(int[] images, int[] titles, int[] descriptions) {
             this.guideImages = images;
             this.guideTitles = titles;
             this.guideDescriptions = descriptions;
@@ -147,8 +147,8 @@ public class GuideActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             holder.imageView.setImageResource(guideImages[position]);
-            holder.titleView.setText(guideTitles[position]);
-            holder.descView.setText(guideDescriptions[position]);
+            holder.titleView.setText(getString(guideTitles[position]));
+            holder.descView.setText(getString(guideDescriptions[position]));
         }
 
         @Override

@@ -49,18 +49,6 @@ class PopupMenuHelper(
 
         adjustMenuWidth(popupView.findViewById<CardView>(R.id.menu_container), textViews)
 
-//        popupView.findViewById<View>(R.id.delArticle)?.setOnClickListener {
-//            popupWindow.dismiss()
-//            onItemSelected(it)
-//        }
-//        popupView.findViewById<View>(R.id.changeTopic)?.setOnClickListener {
-//            popupWindow.dismiss()
-//            onItemSelected(it)
-//        }
-//        popupView.findViewById<View>(R.id.delTopic)?.setOnClickListener {
-//            popupWindow.dismiss()
-//            onItemSelected(it)
-//        }
 
         if (pos == 0) {
             popupView.findViewById<View>(R.id.arrow_bottom)?.visibility = View.GONE
@@ -78,13 +66,13 @@ class PopupMenuHelper(
             setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
             elevation = 20f
             isOutsideTouchable = true
-            animationStyle = 0
+            animationStyle = -1
             setOnDismissListener { this@PopupMenuHelper.isShowing = false }
         }
 
     }
 
-    fun adjustMenuWidth(cardView: CardView?, textViews: List<TextView>) {
+    fun adjustMenuWidth2(cardView: CardView?, textViews: List<TextView>) {
 
         textViews.forEach { tv ->
             tv.apply {
@@ -110,35 +98,37 @@ class PopupMenuHelper(
             cardView.requestLayout()
         }
 
-//        // 计算最大文本宽度
-//        var maxWidth = 0
-//        textViews.forEach { textView ->
-//            textView.post {
-//                val textWidth = textView.paint.measureText(textView.text.toString())
-//                val totalWidth = (textWidth +
-//                        textView.paddingStart +
-//                        textView.paddingEnd +
-//                        (textView.compoundDrawables[2]?.intrinsicWidth ?: 0)).toInt()
-//
-//                // 设置最小宽度
-////                textView.minimumWidth = totalWidth
-////                textView.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
-//                if (totalWidth > maxWidth) maxWidth = totalWidth
-//            }
-////            textView.paint.measureText(textView.text.toString()).toInt().let {
-////                if (it > maxWidth) maxWidth = it
-////            }
-//        }
+    }
 
-//        // 加上padding和drawable的宽度
-//        var totalWidth = maxWidth +
-//                menuView.paddingLeft + menuView.paddingRight +
-//                textViews.first().paddingStart + textViews.first().paddingEnd +
-//                (textViews.first().compoundDrawables[2]?.intrinsicWidth?.toInt() ?: 0)
-//
-//        // 设置布局参数
-//        menuView.layoutParams.width = totalWidth
-//        menuView.requestLayout()
+    fun adjustMenuWidth(cardView: CardView?, textViews: List<TextView>) {
+        if (cardView == null) return
+
+        // 1. 先设置TextView单行显示
+        textViews.forEach { tv ->
+            tv.apply {
+                layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT  // 改为 WRAP_CONTENT
+                isSingleLine = true
+                ellipsize = null
+            }
+        }
+
+        // 2. 强制立即测量TextView的宽度（同步）
+        cardView.measure(
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+
+        // 3. 计算最大宽度（同步）
+        val maxWidth = textViews.maxOf { tv ->
+            val drawableWidth = tv.compoundDrawablesRelative[2]?.intrinsicWidth ?: 0
+            tv.paint.measureText(tv.text.toString()) +
+                    tv.paddingStart + tv.paddingEnd +
+                    drawableWidth +
+                    (if (drawableWidth > 0) tv.compoundDrawablePadding else 0)
+        }.toInt() + cardView.paddingLeft + cardView.paddingRight
+
+        // 4. 直接设置最终宽度
+        cardView.layoutParams.width = maxWidth.coerceAtLeast(160.dpToPx(MainApp.getContext()))
     }
 
     fun show() {

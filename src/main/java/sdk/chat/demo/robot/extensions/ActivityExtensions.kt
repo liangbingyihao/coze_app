@@ -45,18 +45,19 @@ fun callMethodByName(obj: Any, methodName: String, vararg args: Any?): Any? {
 
 fun showMaterialConfirmationDialog(
     context: Context,
-    title: String?,
     message: String,
+    txtPositive: String?,
+    txtNegative: String?,
     positiveAction: () -> Unit
 ) {
     val dialog = MaterialAlertDialogBuilder(context)
 //            .setTitle(title)
         .setMessage(message)
-        .setPositiveButton(context.getString(R.string.confirm)) { dialog, _ ->
+        .setPositiveButton(txtPositive?:context.getString(R.string.confirm)) { dialog, _ ->
             positiveAction()
             dialog.dismiss()
         }
-        .setNegativeButton(context.getString(R.string.cancel)) { dialog, _ ->
+        .setNegativeButton(txtNegative?:context.getString(R.string.cancel)) { dialog, _ ->
             dialog.dismiss()
         }
         .setBackground(ContextCompat.getDrawable(context, R.drawable.dialog_background))

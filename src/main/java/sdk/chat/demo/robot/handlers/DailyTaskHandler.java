@@ -1,7 +1,6 @@
 package sdk.chat.demo.robot.handlers;
 
 import static sdk.chat.demo.robot.api.GWApiManager.buildPostRequest;
-import static sdk.chat.demo.robot.api.model.TaskDetail.UNLOCK_STORY_MASK;
 
 import android.util.Log;
 
@@ -28,12 +27,13 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import sdk.chat.core.events.EventType;
+import sdk.chat.core.events.NetworkEvent;
+import sdk.chat.core.session.ChatSDK;
 import sdk.chat.demo.MainApp;
 import sdk.chat.demo.robot.api.GWApiManager;
 import sdk.chat.demo.robot.api.ImageApi;
 import sdk.chat.demo.robot.api.JsonCacheManager;
-import sdk.chat.demo.robot.api.model.ImageDaily;
-import sdk.chat.demo.robot.api.model.ImageDailyList;
 import sdk.chat.demo.robot.api.model.TaskDetail;
 import sdk.chat.demo.robot.api.model.TaskHistory;
 import sdk.chat.demo.robot.api.model.TaskProgress;
@@ -71,12 +71,12 @@ public class DailyTaskHandler {
 
     public static void setTaskDetail(TaskDetail detail) {
         if (detail == null) {
-            Log.e("TaskManager", "TaskDetail cannot be null");
+            Log.e("TaskHandler", "TaskDetail cannot be null");
             return;
         }
 
         JsonCacheManager.INSTANCE.save(MainApp.getContext(), KEY_CACHE_TASK_DETAIL, gson.toJson(detail));
-        if (!detail.isTaskCompleted(UNLOCK_STORY_MASK)&&detail.isAllUserTaskCompleted()) {
+        if (!detail.isTaskCompleted(TaskDetail.UNLOCK_STORY_MASK)&&detail.isAllUserTaskCompleted()) {
             unlockStory()
                     .subscribeOn(Schedulers.io()) // 在IO线程执行网络请求
                     .observeOn(AndroidSchedulers.mainThread()) // 在主线程处理结果
@@ -84,24 +84,25 @@ public class DailyTaskHandler {
                         @Override
                         public void onSubscribe(Disposable d) {
                             // 可以在这里保存Disposable以便后续管理
-                            Log.d("TaskManager", "Start unlocking story");
+                            Log.d("TaskHandler", "Start unlocking story");
                         }
 
                         @Override
                         public void onSuccess(Boolean isSuccess) {
                             if (isSuccess) {
                                 // 3. 网络请求成功，保存到数据库
-                                detail.setTaskCompleted(UNLOCK_STORY_MASK, true);
+                                detail.setTaskCompleted(TaskDetail.UNLOCK_STORY_MASK, true);
                                 JsonCacheManager.INSTANCE.save(MainApp.getContext(), KEY_CACHE_TASK_DETAIL, gson.toJson(detail));
+                                ChatSDK.events().source().accept(new NetworkEvent(EventType.TaskDone));
                             } else {
-                                Log.e("TaskManager", "Failed to unlock story");
+                                Log.e("TaskHandler", "Failed to unlock story");
                                 // 可以在这里添加失败处理逻辑
                             }
                         }
 
                         @Override
                         public void onError(Throwable e) {
-                            Log.e("TaskManager", "Error unlocking story: " + e.getMessage());
+                            Log.e("TaskHandler", "Error unlocking story: " + e.getMessage());
                         }
                     });
         }
@@ -129,9 +130,20 @@ public class DailyTaskHandler {
         }
     }
 
+    public static boolean shouldNotify(){
+        TaskDetail taskDetail = getTaskToday();
+        boolean ret = taskDetail.isTaskCompleted(TaskDetail.UNLOCK_STORY_MASK) && !taskDetail.isTaskCompleted(TaskDetail.TASK_DONE);
+        if(ret){
+            taskDetail.setTaskCompleted(TaskDetail.TASK_DONE, true);
+            JsonCacheManager.INSTANCE.save(MainApp.getContext(), KEY_CACHE_TASK_DETAIL, gson.toJson(taskDetail));
+        }
+        return ret;
+    }
+
     public static Single<TaskProgress> getTaskProgress() {
         return Single.create(emitter -> {
             TaskDetail taskToday = getTaskToday();
+            Log.e("TaskHandler", "taskToday: "+Integer.toString(taskToday.getStatus(), 2));
             String cachedData = JsonCacheManager.INSTANCE.get(MainApp.getContext(), KEY_CACHE_TASK_PROCESS);
             if (cachedData != null&&!cachedData.isEmpty()) {
                 TaskProgress progress = gson.fromJson(cachedData, TaskProgress.class);

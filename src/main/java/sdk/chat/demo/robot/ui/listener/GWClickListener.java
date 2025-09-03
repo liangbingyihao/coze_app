@@ -256,7 +256,7 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
         } else if (id == R.id.btn_del || id == R.id.btn_del_user_text) {
             if (imessage.getClass() == TextHolder.class && message != null) {
                 Context context = this.weakContext.get();
-                ActivityExtensionsKt.showMaterialConfirmationDialog(context, "", context.getString(R.string.delete_confirm), () -> {
+                ActivityExtensionsKt.showMaterialConfirmationDialog(context,  context.getString(R.string.delete_confirm),null,null, () -> {
                     Single<Boolean> r = id == R.id.btn_del ? threadHandler.clearFeedbackText(message) : threadHandler.clearUserText(message);
                     weakContext.get().onSubscribe(r.observeOn(AndroidSchedulers.mainThread())
                             .subscribe(result -> {

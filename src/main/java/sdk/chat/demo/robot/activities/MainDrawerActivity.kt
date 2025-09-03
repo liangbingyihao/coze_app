@@ -226,23 +226,6 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
 
     }
 
-    private fun safeInstallTtsEngine() {
-        val installIntent = Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        }
-
-        // 再次检查安装 Intent 是否可用
-        if (installIntent.resolveActivity(packageManager) != null) {
-            startActivity(installIntent)
-        } else {
-            // 连安装入口都没有的极端情况（如国产 ROM）
-            Toast.makeText(
-                this,
-                "您的设备不支持语音功能",
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    }
 
     private fun toMenuItems(data: List<Thread>): ArrayList<HistoryItem> {
         sessions = data

@@ -103,7 +103,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/setting_explore"
+                    android:text="@string/setting_export"
                     android:textColor="@color/item_text_normal"
                     android:textSize="16sp" />
             </LinearLayout>

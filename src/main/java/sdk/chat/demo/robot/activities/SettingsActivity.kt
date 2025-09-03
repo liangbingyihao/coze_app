@@ -1,16 +1,20 @@
 package sdk.chat.demo.robot.activities
 
+import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import sdk.chat.demo.MainApp
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.activities.MainDrawerActivity
 import sdk.chat.demo.robot.api.ImageApi
+import sdk.chat.demo.robot.api.model.ExportInfo
 import sdk.chat.ui.activities.BaseActivity
 import sdk.chat.ui.utils.ToastHelper
 import sdk.guru.common.RX
@@ -34,9 +38,11 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
             R.id.home -> {
                 finish()
             }
+
             R.id.export -> {
                 getExportInfo()
             }
+
             R.id.version -> {
                 startActivity(
                     Intent(
@@ -48,7 +54,7 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
         }
     }
 
-    fun getSettings(){
+    fun getSettings() {
         try {
             packageManager
                 .getPackageInfo(packageName, 0)
@@ -68,13 +74,14 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
                 .subscribe(
                     { exportInfo ->
 
-                        val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
-                        val clip = ClipData.newPlainText("恩语", exportInfo.downLoadUrl)
-                        clipboard.setPrimaryClip(clip)
-                        ToastHelper.show(
-                            this@SettingsActivity,
-                            R.string.export_hint
-                        )
+//                        val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+//                        val clip = ClipData.newPlainText("恩语", exportInfo.downLoadUrl)
+//                        clipboard.setPrimaryClip(clip)
+//                        ToastHelper.show(
+//                            this@SettingsActivity,
+//                            R.string.export_hint
+//                        )
+                        showExportMenus(exportInfo)
                     },
                     { error -> // onError
                         ToastHelper.show(
@@ -84,5 +91,45 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
                     })
         )
 
+    }
+
+    fun showExportMenus(exportInfo: ExportInfo) {
+        MaterialAlertDialogBuilder(this@SettingsActivity)
+            .setTitle(getString(R.string.setting_export)) // 可选标题
+            .setItems(
+                arrayOf(
+                    getString(R.string.export_copy),
+                    getString(R.string.export_open),
+                    getString(R.string.cancel)
+                )
+            ) { dialog, which ->
+                when (which) {
+                    0 -> {
+                        val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+                        val clip = ClipData.newPlainText("恩语", exportInfo.downLoadUrl)
+                        clipboard.setPrimaryClip(clip)
+                        ToastHelper.show(
+                            this@SettingsActivity,
+                            R.string.export_hint
+                        )
+                    }    // 点击"拷贝链接"
+                    1 -> {
+                        try {
+                            val intent =
+                                Intent(Intent.ACTION_VIEW, Uri.parse(exportInfo.downLoadUrl))
+                            // 确保只有浏览器能处理此Intent（排除其他可能的应用）
+                            intent.addCategory(Intent.CATEGORY_BROWSABLE)
+                            // 禁止弹出应用选择对话框（直接使用默认浏览器）
+                            intent.setPackage(null)
+                            startActivity(intent)
+                        } catch (e: ActivityNotFoundException) {
+                            ToastHelper.show(this@SettingsActivity, "未找到浏览器应用")
+                        }
+                    } // 点击"浏览器下载"
+                    2 -> dialog.dismiss() // 点击"取消"
+                }
+            }
+            .setCancelable(true) // 点击外部可关闭
+            .show()
     }
 }

@@ -1150,7 +1150,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 int action = message.integerForKey("action");
                 if (action == action_daily_pray) {
                     DailyTaskHandler.completeTaskByIndex(1);
-                } else if (action == 0) {
+                } else if (action == 0&&!"welcome".equals(message.getEntityID())) {
                     String contextId = message.stringForKey("context_id");
                     if (contextId == null || contextId.isEmpty()) {
                         DailyTaskHandler.completeTaskByIndex(2);

@@ -117,15 +117,17 @@ class SessionAdapter(
         fun bind(item: HistoryItem.SessionItem, position: Int) {
             titleText.text = item.title
             if (position == 0) {
-                titleText.background = GradientDrawable().apply {
-                    // 设置四角半径（顺序：左上,右上,右下,左下）
-                    cornerRadii = floatArrayOf(
-                        cornerSize, cornerSize,
-                        cornerSize, cornerSize,
-                        cornerSize, cornerSize,
-                        cornerSize, cornerSize,
-                    )
-                    setColor(Color.WHITE)
+                if(item.title == headTopic){
+                    titleText.background = GradientDrawable().apply {
+                        // 设置四角半径（顺序：左上,右上,右下,左下）
+                        cornerRadii = floatArrayOf(
+                            cornerSize, cornerSize,
+                            cornerSize, cornerSize,
+                            cornerSize, cornerSize,
+                            cornerSize, cornerSize,
+                        )
+                        setColor(Color.WHITE)
+                    }
                 }
             } else if (position == 1 && (items[0] as HistoryItem.SessionItem).title == headTopic) {
                 if (items.size > 2) {

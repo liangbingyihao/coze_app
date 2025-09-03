@@ -4,6 +4,7 @@ import android.util.Log
 import com.bytedance.speech.speechengine.SpeechEngine
 import com.bytedance.speech.speechengine.SpeechEngineDefines
 import com.bytedance.speech.speechengine.SpeechEngineGenerator
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import sdk.chat.core.events.NetworkEvent
@@ -83,30 +84,71 @@ object AsrHelper {
         }
 
     private var lastAsrResult: String = ""
+    private var lastDefinite: Boolean = false
+    private var reportIndex: Int = 1
     fun speechAsrResult(data: String, isFinal: Boolean) {
         try {
-            // 从回调的 json 数据中解析 ASR 结果
-            val reader = JSONObject(data)
-            if (!reader.has("result")) {
-                return
-            }
-            var result = reader.getJSONArray("result").getJSONObject(0)
-            var text = result.getString("text")
-            if (text.isEmpty()) {
-                return
-            }
-            var utterances = result.getJSONArray("utterances")
-            var definite = utterances.getJSONObject(0).getBoolean("definite")
 
-            Log.i(TAG, "got $isFinal,$text,${definite}")
-//            if (definite) {
-//                ChatSDK.events().source()
-//                    .accept(NetworkEvent.messageInputAsr(definite, text, true))
+            // 从回调的 json 数据中解析 ASR 结果
+//            val reader = JSONObject(data)
+//            val rawResult: Any? = reader.opt("result")
+//            var result: JSONObject? = null
+//            when {
+//                rawResult is JSONObject -> {
+//                    // 处理 JSONObject
+//                    result = rawResult
+//                }
+//                rawResult is JSONArray -> {
+//                    // 处理 JSONArray
+//                    result = rawResult.getJSONObject(0)
+//                }
+//                else -> {
+//                    // 其他情况
+//                    null
+//                }
 //            }
+            Log.i(TAG, "got $isFinal")
+            val result = JSONObject(data).opt("result").let { rawResult ->
+                when (rawResult) {
+                    is JSONObject -> rawResult
+                    is JSONArray -> rawResult.optJSONObject(0)
+                    else -> null
+                }
+            }
+            if (result == null) {
+                return
+            }
+
+//            var text = result.getString("text")
+//            var definite = utterances.getJSONObject(0).getBoolean("definite")
+//            if (text.isEmpty()) {
+//                return
+//            }
+
+            var utterances = result.getJSONArray("utterances")
+            if (utterances == null || utterances.length() == 0) {
+                return
+            }
+//            for (i in 0 until utterances.length()) {
+//                val utterance = utterances.getString(i) // 或 getJSONObject(i) 根据实际内容
+//                // 处理每个 utterance
+//                Log.i(TAG, "$i: $utterance\n")
+//            }
+            if (utterances.length() > reportIndex) {
+                reportIndex = utterances.length() - 1
+            }
+            var ret = utterances.getJSONObject(reportIndex - 1)
+            var text = ret.getString("text")
+            var definite = ret.getBoolean("definite")
+            if (text.equals(lastAsrResult) && lastDefinite == definite) {
+                return
+            }
+            lastAsrResult = text
+            lastDefinite = definite
+            reportIndex = utterances.length()
             ChatSDK.events().source()
                 .accept(NetworkEvent.messageInputAsr(definite, text, true))
 
-            lastAsrResult = text
 //            if (isFinal) {
 //                text += "\nreqid: " + reader.getString("reqid")
 //            }
@@ -166,11 +208,11 @@ object AsrHelper {
             SpeechEngineDefines.ASR_ENGINE
         )
 
-//        //【可选配置】Debug & Log
-//        mSpeechEngine!!.setOptionString(
-//            SpeechEngineDefines.PARAMS_KEY_DEBUG_PATH_STRING,
-//            mDebugPath
-//        )
+        //【可选配置】Debug & Log
+        mSpeechEngine!!.setOptionString(
+            SpeechEngineDefines.PARAMS_KEY_DEBUG_PATH_STRING,
+            "/sdcard/Download/"
+        )
         mSpeechEngine!!.setOptionString(
             SpeechEngineDefines.PARAMS_KEY_LOG_LEVEL_STRING,
             SpeechEngineDefines.LOG_LEVEL_DEBUG
@@ -188,47 +230,11 @@ object AsrHelper {
             SpeechEngineDefines.RECORDER_TYPE_RECORDER
         )
 
-        //【必需配置】识别服务域名
-        mSpeechEngine!!.setOptionString(
-            SpeechEngineDefines.PARAMS_KEY_ASR_ADDRESS_STRING,
-            "wss://openspeech.bytedance.com"
-        )
+        //一句话...
+//        configBaseInitParams()
 
-//        var uri: String = mSettings.getString(R.string.config_uri)
-//        if (uri.isEmpty()) {
-//            uri = SensitiveDefines.ASR_DEFAULT_URI
-//        }
-//        Log.i(SpeechDemoDefines.TAG, "Current uri: " + uri)
-        //【必需配置】识别服务Uri
-        mSpeechEngine!!.setOptionString(
-            SpeechEngineDefines.PARAMS_KEY_ASR_URI_STRING,
-            "/api/v2/asr"
-        )
-
-//        var appid: String = mSettings.getString(R.string.config_app_id)
-//        if (appid.isEmpty()) {
-//            appid = SensitiveDefines.APPID
-//        }
-        //【必需配置】鉴权相关：Appid
-        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_APP_ID_STRING, "2617262954")
-
-//        val token: String? = mSettings.getString(R.string.config_token)
-        //【必需配置】鉴权相关：Token
-        mSpeechEngine!!.setOptionString(
-            SpeechEngineDefines.PARAMS_KEY_APP_TOKEN_STRING,
-            "Bearer;Yn2tI0wSDWOgEJhP8PPLcXtGInB11N4M"
-        )
-
-//        var cluster: String = mSettings.getString(R.string.config_cluster)
-//        if (cluster.isEmpty()) {
-//            cluster = SensitiveDefines.ASR_DEFAULT_CLUSTER
-//        }
-//        Log.i(SpeechDemoDefines.TAG, "Current cluster: " + cluster)
-        //【必需配置】识别服务所用集群
-        mSpeechEngine!!.setOptionString(
-            SpeechEngineDefines.PARAMS_KEY_ASR_CLUSTER_STRING,
-            "volcengine_input_common"
-        )
+        //大模型...
+        configLlmInitParams()
 
         //【可选配置】最大录音时长，默认60000ms，如果使用场景超过60s请修改该值，-1为不限制录音时长
         mSpeechEngine!!.setOptionInt(
@@ -243,17 +249,19 @@ object AsrHelper {
 //            setHotWords(mSettings.getString(R.string.config_asr_hotwords));
 //        }
 
-//        // scale为float类型参数，其中叠词的范围为[1.0,2.0]，非叠词的范围为[1.0,50.0]，scale值越大，结果中出现热词的概率越大
-        val hotWords = "{\"hotwords\":[{\"word\":\"属灵\",\"scale\":50.0}]}"
-        mSpeechEngine!!.sendDirective(SpeechEngineDefines.DIRECTIVE_UPDATE_ASR_HOTWORDS, hotWords)
-
 
 //        mSpeechEngine!!.setOptionString(
 //            SpeechEngineDefines.PARAMS_KEY_ASR_REQ_PARAMS_STRING,params
 //        );
 
 //        mSpeechEngine.setOptionString(SpeechEngineDefines.PARAMS_KEY_ASR_REQ_PARAMS_STRING,"{\"force_to_speech_time\":0, \"end_window_size\":800,\"corpus\":{\"boosting_table_id\":\"热词id\"}, \"context\": \"{\"correct_words\": {\"deep seek\": \"DeepSeek\"}}\"}");
-//        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_ASR_REQ_PARAMS_STRING,"{\"force_to_speech_time\":0, \"end_window_size\":800,\"corpus\":{\"boosting_table_id\":\"ec86438f-22e4-41ba-a714-af4a7b874cbf\"}, \"context\": \"{\"correct_words\": {\"deep seek\": \"DeepSeek\"}}\"}");
+
+
+////        // scale为float类型参数，其中叠词的范围为[1.0,2.0]，非叠词的范围为[1.0,50.0]，scale值越大，结果中出现热词的概率越大
+//        val hotWords = "{\"hotwords\":[{\"word\":\"属灵\",\"scale\":50.0},{\"word\":\"分别为圣\",\"scale\":50.0}]}"
+//        mSpeechEngine!!.sendDirective(SpeechEngineDefines.DIRECTIVE_UPDATE_ASR_HOTWORDS, hotWords)
+
+        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_ASR_REQ_PARAMS_STRING,"{\"force_to_speech_time\":0, \"end_window_size\":800,\"corpus\":{\"boosting_table_id\":\"ec86438f-22e4-41ba-a714-af4a7b874cbf\"}, \"context\": \"{\"correct_words\": {\"deep seek\": \"DeepSeek\"}}\"}");
 
 
         //【可选配置】在线请求的建连与接收超时，一般不需配置使用默认值即可
@@ -267,6 +275,81 @@ object AsrHelper {
         )
     }
 
+
+    private fun configBaseInitParams() {
+        //流式语音识别
+        //https://www.volcengine.com/docs/6561/113642
+
+        //【必需配置】识别服务域名
+        mSpeechEngine!!.setOptionString(
+            SpeechEngineDefines.PARAMS_KEY_ASR_ADDRESS_STRING,
+            "wss://openspeech.bytedance.com"
+        )
+
+        //【必需配置】识别服务Uri
+        mSpeechEngine!!.setOptionString(
+            SpeechEngineDefines.PARAMS_KEY_ASR_URI_STRING,
+            "/api/v2/asr"
+        )
+
+        //【必需配置】鉴权相关：Appid
+        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_APP_ID_STRING, "2617262954")
+
+//        val token: String? = mSettings.getString(R.string.config_token)
+        //【必需配置】鉴权相关：Token
+        mSpeechEngine!!.setOptionString(
+            SpeechEngineDefines.PARAMS_KEY_APP_TOKEN_STRING,
+            "Bearer;Yn2tI0wSDWOgEJhP8PPLcXtGInB11N4M"
+        )
+
+        //【必需配置】识别服务所用集群
+        mSpeechEngine!!.setOptionString(
+            SpeechEngineDefines.PARAMS_KEY_ASR_CLUSTER_STRING,
+            "volcengine_input_common"
+        )
+
+    }
+
+
+    private fun configLlmInitParams() {
+        //大模型流式语音识别
+        //https://www.volcengine.com/docs/6561/1395846
+        if (mSpeechEngine == null) {
+            return
+        }
+
+        //【必需配置】识别服务域名，固定值
+        mSpeechEngine!!.setOptionString(
+            SpeechEngineDefines.PARAMS_KEY_ASR_ADDRESS_STRING,
+            "wss://openspeech.bytedance.com"
+        );
+//【必需配置】识别服务Uri，参考大模型流式语音识别API--简介
+        mSpeechEngine!!.setOptionString(
+            SpeechEngineDefines.PARAMS_KEY_ASR_URI_STRING,
+            "/api/v3/sauc/bigmodel"
+        );
+//【必需配置】鉴权相关：Appid，参考控制台使用FAQ--Q1
+        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_APP_ID_STRING, "2617262954");
+//【必需配置】鉴权相关：Token，无需添加Bearer; 前缀，参考控制台使用FAQ--Q1
+        mSpeechEngine!!.setOptionString(
+            SpeechEngineDefines.PARAMS_KEY_APP_TOKEN_STRING,
+            "Yn2tI0wSDWOgEJhP8PPLcXtGInB11N4M"
+        );
+//【必需配置】识别服务资源信息ResourceId，参考大模型流式语音识别API--鉴权
+// https://www.volcengine.com/docs/6561/1354869
+//        小时版：volc.bigasr.sauc.duration,并发版：volc.bigasr.sauc.concurrent
+        mSpeechEngine!!.setOptionString(
+            SpeechEngineDefines.PARAMS_KEY_RESOURCE_ID_STRING,
+            "volc.bigasr.sauc.duration"
+        );
+//【必需配置】协议类型，大模型流式识别协议需设置为Seed，
+        mSpeechEngine!!.setOptionInt(
+            SpeechEngineDefines.PARAMS_KEY_PROTOCOL_TYPE_INT,
+            SpeechEngineDefines.PROTOCOL_TYPE_SEED
+        );
+
+    }
+
     private var recordIsRunning = false
     var executor: ExecutorService? = Executors.newFixedThreadPool(1)
     private var recordRunnable: Runnable? = null
@@ -274,6 +357,10 @@ object AsrHelper {
     fun startAsr() {
         recordIsRunning = false
         recordRunnable = Runnable {
+
+            lastAsrResult = ""
+            lastDefinite = false
+            reportIndex = 1
             recordIsRunning = true
             Log.i(TAG, "配置启动参数.")
             //【可选配置】该按钮为长按模式，预期是按下开始录音，抬手结束录音，需要关闭云端自动判停功能。
@@ -299,12 +386,15 @@ object AsrHelper {
                 false
             )
 
-
             //【可选配置】控制识别结果返回的形式，全量返回或增量返回，默认为全量
             mSpeechEngine!!.setOptionString(
                 SpeechEngineDefines.PARAMS_KEY_ASR_RESULT_TYPE_STRING,
                 SpeechEngineDefines.ASR_RESULT_TYPE_SINGLE
             )
+//            mSpeechEngine!!.setOptionString(
+//                "result_type",
+//                "single"
+//            )
             mSpeechEngine!!.setOptionBoolean(
                 SpeechEngineDefines.PARAMS_KEY_ASR_SHOW_UTTER_BOOL,
                 true

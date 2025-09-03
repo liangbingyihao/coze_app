@@ -3,7 +3,7 @@
     <string name="app_name">恩语</string>
     <string name="register">注册</string>
     <string name="contacts">AI助手</string>
-    <string name="conversations" formatted="false">继续对话</string>
+    <string name="conversations" formatted="false">去记录</string>
     <string name="create_session_hint" formatted="false">我要试试</string>
     <string name="today">今天</string>
     <string name="yesterday">昨天</string>
@@ -13,12 +13,12 @@
     <string name="anonymous_login">游客登录</string>
     <string name="confirm">确认</string>
     <string name="cancel">取消</string>
-    <string name="remove">移除</string>
+    <string name="remove">删除</string>
     <string name="remove_topic">删除整个时间轴</string>
     <string name="change_topic">切换时间轴</string>
     <string name="rename_topic">重命名时间轴</string>
     <string name="new_topic">新建</string>
-    <string name="hint_no_record">这里还没有记录，欢迎从会话中添加</string>
+    <string name="hint_no_record">这个恩语录空了，欢迎记录今天的新发现哦</string>
     <string name="go_to_record">去记录</string>
     <string name="download">下载</string>
     <string name="share">分享</string>
@@ -26,7 +26,7 @@
     <string name="daily_gw">每日恩语</string>
     <string name="search">搜索</string>
     <string name="search_history">历史记录</string>
-    <string name="timeline">恩语时间轴</string>
+    <string name="timeline">恩语录</string>
     <string name="pending_image">处理图片中，请稍候</string>
     <string name="copied">已复制到粘贴板</string>
     <string name="save">收藏</string>
@@ -42,4 +42,40 @@
     <string name="failed_and_retry">操作失败，稍后重试</string>
     <string name="added_to_timeline">已帮你收录进时间轴</string>
     <string name="task_today">今日任务</string>
+    <string name="get_it">我知道了</string>
+    <string name="settings">设置</string>
+    <string name="setting_export">导出我的恩语</string>
+    <string name="export_copy">拷贝链接</string>
+    <string name="export_open">浏览器下载</string>
+    <string name="export_hint">已拷贝下载链接到粘贴板，请于1个小时内到浏览器内下载使用</string>
+    <string name="task_name_0">每日恩语</string>
+    <string name="task_desc_0">每日一句经文，助你在天父的话语中重新得力！</string>
+    <string name="task_name_1">默想祷告应用</string>
+    <string name="task_desc_1">跟天父保持沟通，在实际生活中活出信仰的智慧！</string>
+    <string name="task_name_2">信仰感悟</string>
+    <string name="task_desc_2">记录信仰生活中的点滴，回顾可见天父的一路恩典</string>
+    <string name="task_action_g">去完成</string>
+    <string name="task_action_d">已完成</string>
+    <string name="task_action_p">待开启</string>
+    <string name="loading">耐心是圣灵的果子，我们在努力加载中</string>
+    <string name="uploading">耐心是圣灵的果子，我们在努力上传中</string>
+    <string name="sending">存在发送中的信息，请稍后</string>
+    <string name="ai_failed">回复失败，请重试</string>
+    <string name="msg_failed">发送失败，请重试</string>
+    <string name="task_calendar">打卡日记</string>
+    <string name="guide_drawer">侧边栏</string>
+    <string name="guide_pic">生成经文图</string>
+    <string name="guide_pray">默想祷告</string>
+    <string name="guide_drawer_desc">您的每次记录都会帮您自动整理，归入侧边栏的恩语录中，可随时去回顾和管理哦</string>
+    <string name="guide_pray_desc">试试点击这里，\n帮您生成相应的默想祷告实践参考。</string>
+    <string name="guide_pic_desc">试试点击这里，可以将经文生成图片，更好保存与分享</string>
+    <string name="network_error">网络不可用，请检查网络状况</string>
+    <string name="error_msg_type">不支持的消息类型</string>
+    <string name="error_no_data">没有更多数据</string>
+    <string name="guide_1">恩典留痕</string>
+    <string name="guide_desc_1">语音/文字记录感动，\n时间轴串联成与神同行的恩典之路</string>
+    <string name="guide_2">查经库藏</string>
+    <string name="guide_desc_2">圣经历史背景，基础知识，经典解读快速查询，信仰问答一站式收藏。</string>
+    <string name="guide_3">每日恩语</string>
+    <string name="guide_desc_3">个性化经文+实践指南\n助你活出信仰力量</string>
 </resources>

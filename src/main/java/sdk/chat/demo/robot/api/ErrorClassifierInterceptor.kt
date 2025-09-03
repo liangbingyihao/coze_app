@@ -39,10 +39,10 @@ class ErrorClassifierInterceptor : Interceptor {
             val response = chain.proceed(request)
 
             if (!response.isSuccessful) {
-                val errorBody = response.body?.string()
+                val errorBody = response.peekBody(1024).string()
                 var errorMessage:String = errorBody.toString()
                 try {
-                    val json = JSONObject(errorBody ?: "")
+                    val json = JSONObject(errorBody)
                     errorMessage = json.optString("msg", "Unknown error")
                 } catch (e: Exception) {
                     println("Raw error response: $errorBody")

@@ -1,5 +1,7 @@
 package sdk.chat.demo.robot.fragments;
 
+import static sdk.chat.demo.robot.extensions.ActivityExtensionsKt.showMaterialConfirmationDialog;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -37,6 +39,7 @@ import java.util.Map;
 
 import io.reactivex.Completable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import kotlin.Unit;
 import sdk.chat.core.dao.Keys;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.dao.MessageMetaValue;
@@ -58,7 +61,9 @@ import sdk.chat.core.utils.PermissionRequestHandler;
 import sdk.chat.core.utils.StringChecker;
 import sdk.chat.demo.examples.helper.CustomPrivateThreadsFragment;
 import sdk.chat.demo.pre.R;
+import sdk.chat.demo.robot.activities.TaskActivity;
 import sdk.chat.demo.robot.audio.AsrHelper;
+import sdk.chat.demo.robot.handlers.DailyTaskHandler;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
 import sdk.chat.demo.robot.ui.GWChatContainer;
 import sdk.chat.demo.robot.ui.GWMsgInput;
@@ -90,7 +95,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
     protected static boolean enableTrace = false;
     protected GWChatContainer chatView;
     //    protected View divider;
-    protected View replyView;
+//    protected View replyView;
     protected TextView replyText;
     protected GWMsgInput input;
     protected CoordinatorLayout listContainer;
@@ -235,15 +240,15 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
         updateChatViewMargins(true);
     }
 
-    public void hideReplyView() {
-        replyView.setVisibility(View.GONE);
-        updateChatViewMargins(true);
-    }
-
-    public void showReplyView() {
-        replyView.setVisibility(View.VISIBLE);
-        updateChatViewMargins(true);
-    }
+//    public void hideReplyView() {
+//        replyView.setVisibility(View.GONE);
+//        updateChatViewMargins(true);
+//    }
+//
+//    public void showReplyView() {
+//        replyView.setVisibility(View.VISIBLE);
+//        updateChatViewMargins(true);
+//    }
 
 
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -303,9 +308,9 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
     public int bottomMargin() {
         int bottomMargin = 0;
-        if (replyView.getVisibility() == View.VISIBLE) {
-            bottomMargin += replyView.getHeight();
-        }
+//        if (replyView.getVisibility() == View.VISIBLE) {
+//            bottomMargin += replyView.getHeight();
+//        }
         if (input.getVisibility() != View.GONE) {
             bottomMargin += input.getHeight();
         }
@@ -326,7 +331,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
     protected void initViews() {
         chatView = rootView.findViewById(sdk.chat.ui.R.id.chatView);
         replyText = rootView.findViewById(R.id.tvReply);
-        replyView = rootView.findViewById(sdk.chat.ui.R.id.replyView);
+//        replyView = rootView.findViewById(sdk.chat.ui.R.id.replyView);
         input = rootView.findViewById(sdk.chat.ui.R.id.input);
         listContainer = rootView.findViewById(sdk.chat.ui.R.id.listContainer);
         root = rootView.findViewById(sdk.chat.ui.R.id.root);
@@ -385,12 +390,12 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
         setChatState(TypingIndicatorHandler.State.active);
 
-        rootView.findViewById(R.id.closeReply).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                hideReplyView();
-            }
-        });
+//        rootView.findViewById(R.id.closeReply).setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                hideReplyView();
+//            }
+//        });
         ;
 
         if (enableTrace) {
@@ -420,16 +425,16 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 //                    reloadData();
 //                }));
 
-        dm.add(ChatSDK.events().sourceOnMain()
-                .filter(NetworkEvent.filterType(EventType.TypingStateUpdated))
-                .filter(NetworkEvent.filterThreadEntityID(thread.getEntityID()))
-                .subscribe(networkEvent -> {
-                    String typingText = networkEvent.getText();
-                    if (typingText != null) {
-                        typingText += getString(sdk.chat.ui.R.string.typing);
-                    }
-                    Logger.debug(typingText);
-                }));
+//        dm.add(ChatSDK.events().sourceOnMain()
+//                .filter(NetworkEvent.filterType(EventType.TypingStateUpdated))
+//                .filter(NetworkEvent.filterThreadEntityID(thread.getEntityID()))
+//                .subscribe(networkEvent -> {
+//                    String typingText = networkEvent.getText();
+//                    if (typingText != null) {
+//                        typingText += getString(sdk.chat.ui.R.string.typing);
+//                    }
+//                    Logger.debug(typingText);
+//                }));
 
 
         dm.add(ChatSDK.events().sourceOnSingle()
@@ -459,11 +464,13 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 //                    showTextInput();
                     EditText editText = input.getInputEditText();
                     editText.requestFocus();
-                    replyText.setText(networkEvent.getText());
-                    showReplyView();
+                    String prompt = networkEvent.getText();
+                    if (prompt != null && !prompt.isEmpty()) {
+                        input.setMessagePrompt(prompt);
+                    }
                     Map<String, Object> params = networkEvent.getData();
                     Object placeHolder = params.get("default");
-                    if(placeHolder!=null){
+                    if (placeHolder != null) {
                         editText.setText((CharSequence) placeHolder);
                     }
 
@@ -479,7 +486,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                 .subscribe(networkEvent -> {
                     if (networkEvent.getIsOnline()) {
                         showTextInput();
-                        EditText editText = input.getInputEditText();
+//                        EditText editText = input.getInputEditText();
                         Map<String, Object> params = networkEvent.getData();
                         input.smartInsertAtCursor((Boolean) params.get("definite"), (String) params.get("newMsg"));
                         input.startSimulation(50);
@@ -505,6 +512,13 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                         }
                     }
                 }));
+
+        dm.add(ChatSDK.events().sourceOnMain()
+                .filter(NetworkEvent.filterType(EventType.TaskDone))
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(networkEvent -> {
+                    Log.e("TaskHandler", "TaskDone");
+                }));
         if (chatView != null) {
             chatView.addListeners();
 //            chatView.onLoadMore(0, 0);
@@ -523,11 +537,12 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
     }
 
     public void showOrHideTextInputView() {
-        if (hasVoice(ChatSDK.currentUser())) {
-            showTextInput();
-        } else {
-            hideTextInput();
-        }
+        showTextInput();
+//        if (hasVoice(ChatSDK.currentUser())) {
+//            showTextInput();
+//        } else {
+//            hideTextInput();
+//        }
     }
 
     /**
@@ -544,15 +559,15 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
             return;
         }
 
-        String prompt = replyText.getText().toString().trim();
+        String prompt = input.getMessagePrompt();
 
-        if (replyView.getVisibility() == View.VISIBLE && !prompt.isEmpty()) {
+        if (prompt!=null) {
             GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
             handleMessageSend(handler.sendExploreMessage(text, null, GWThreadHandler.action_input_prompt, prompt));
         } else {
             handleMessageSend(ChatSDK.thread().sendMessageWithText(text.trim(), thread));
         }
-        hideReplyView();
+        input.setMessagePrompt(null);
 
     }
 
@@ -584,14 +599,25 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 //        }
 
         if (!StringChecker.isNullOrEmpty(thread.getDraft())) {
-            input.getInputEditText().setText(thread.getDraft());
+            input.getInputEditText().setText(thread.getDraft(), TextView.BufferType.EDITABLE);
         }
 
         // Put it here in the case that they closed the app with this screen open
 //        thread.markReadAsync().subscribe();
 
-        showOrHideTextInputView();
+        showTextInput();
 
+        if (DailyTaskHandler.shouldNotify()&&getActivity()!=null) {
+            showMaterialConfirmationDialog(
+                    getActivity(),
+                    getString(R.string.task_done), getString(R.string.task_unlock), getString(R.string.later),
+                    () -> {
+                        // 这里是positiveAction的逻辑
+                        Intent intent = new Intent(getActivity(), TaskActivity.class);
+                        startActivity(intent);
+                        return Unit.INSTANCE;
+                    });
+        }
 
     }
 

@@ -1,5 +1,4 @@
-<com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -27,40 +26,79 @@
 
             <FrameLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_gravity="bottom"
                 android:layout_marginStart="26dp">
 
-                <sdk.chat.demo.robot.ui.CircleOverlayView
-                    android:id="@+id/circleOverlay"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    app:ringColor="#59CF4B40"
-                    app:ringWidth="4dp"
-                    app:circleColor="#ffCF4B40"
-                    android:visibility="gone"
-                    android:layout_gravity="center"/>
-
                 <ImageView
-                    android:id="@id/attachmentButton"
+                    android:id="@+id/expand"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:padding="8dp"
-                    android:layout_gravity="center"
-                    android:src="@mipmap/ic_audio" />
+                    android:layout_gravity="top|left"
+                    android:paddingRight="8dp"
+                    android:paddingBottom="8dp"
+                    android:src="@mipmap/ic_expand" />
+
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom">
+
+                    <sdk.chat.demo.robot.ui.CircleOverlayView
+                        android:id="@+id/circleOverlay"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center"
+                        android:visibility="gone"
+                        app:circleColor="#ffCF4B40"
+                        app:ringColor="#59CF4B40"
+                        app:ringWidth="4dp" />
+
+                    <ImageView
+                        android:id="@id/attachmentButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:padding="8dp"
+                        android:src="@mipmap/ic_audio" />
+                </FrameLayout>
             </FrameLayout>
 
-            <EditText
-                android:id="@id/messageInput"
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:background="@drawable/edittext_rounded_bg"
-                android:inputType="textAutoCorrect|textAutoComplete|textMultiLine|textCapSentences"
-                android:minHeight="42dp"
-                android:padding="8dp" />
+                android:orientation="vertical">
+
+                <EditText
+                    android:id="@+id/messagePrompt"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@color/transparent"
+                    android:inputType="textAutoCorrect|textAutoComplete|textMultiLine|textCapSentences"
+                    android:paddingLeft="8dp"
+                    android:paddingTop="8dp"
+                    android:paddingRight="8dp"
+                    android:textColor="@color/text_prompt"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+
+                <EditText
+                    android:id="@id/messageInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@color/transparent"
+                    android:inputType="textAutoCorrect|textAutoComplete|textMultiLine|textCapSentences"
+                    android:maxLines="6"
+                    android:minHeight="42dp"
+                    android:padding="8dp"
+                    android:textSize="14sp" />
+            </LinearLayout>
 
 
             <FrameLayout
