@@ -57,6 +57,7 @@
     <string name="task_action_g">去完成</string>
     <string name="task_action_d">已完成</string>
     <string name="task_action_p">待开启</string>
+    <string name="grace_journey">恩旅·%s</string>
     <string name="loading">耐心是圣灵的果子，我们在努力加载中</string>
     <string name="uploading">耐心是圣灵的果子，我们在努力上传中</string>
     <string name="sending">存在发送中的信息，请稍后</string>

@@ -1,0 +1,157 @@
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardBackgroundColor="@color/white"
+    app:cardElevation="4dp"
+    app:shapeAppearanceOverlay="@style/TopRoundedCard"
+    app:strokeColor="#E0E0E0"
+    app:strokeWidth="1dp">
+
+    <!--    <LinearLayout-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_gravity="bottom|center_horizontal"-->
+    <!--        android:orientation="vertical"-->
+    <!--        android:weightSum="1">-->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.7"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingTop="10dp"
+        android:paddingBottom="35dp">
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="bottom"
+            android:layout_marginStart="26dp">
+
+            <ImageView
+                android:id="@+id/expand"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|left"
+                android:paddingRight="8dp"
+                android:paddingBottom="8dp"
+                android:src="@mipmap/ic_expand" />
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom">
+
+                <sdk.chat.demo.robot.ui.CircleOverlayView
+                    android:id="@+id/circleOverlay"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center"
+                    android:visibility="gone"
+                    app:circleColor="#ffCF4B40"
+                    app:ringColor="#59CF4B40"
+                    app:ringWidth="4dp" />
+
+                <ImageView
+                    android:id="@id/attachmentButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:padding="8dp"
+                    android:src="@mipmap/ic_audio" />
+            </FrameLayout>
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/edittext_rounded_bg"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/messagePrompt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:background="@color/transparent"
+                android:inputType="textAutoCorrect|textAutoComplete|textMultiLine|textCapSentences"
+                android:paddingLeft="8dp"
+                android:paddingTop="8dp"
+                android:paddingRight="8dp"
+                android:textColor="@color/text_prompt"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+            <EditText
+                android:id="@id/messageInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:background="@color/transparent"
+                android:inputType="textAutoCorrect|textAutoComplete|textMultiLine|textCapSentences"
+                android:maxLines="6"
+                android:minHeight="42dp"
+                android:padding="8dp"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_marginRight="26dp">
+
+            <ImageView
+                android:id="@+id/messageStopButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:src="@mipmap/ic_stop_ai"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@id/messageSendButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:text="@string/send"
+                android:textColor="@color/item_text_selected"
+                android:textSize="14sp" />
+        </FrameLayout>
+
+    </LinearLayout>
+
+
+    <!--        <FrameLayout-->
+    <!--            android:id="@+id/asrContainer"-->
+    <!--            android:layout_width="wrap_content"-->
+    <!--            android:layout_height="wrap_content"-->
+    <!--            android:layout_gravity="bottom"-->
+    <!--            android:layout_weight="0.3"-->
+    <!--            android:minHeight="110dp"-->
+    <!--            android:visibility="gone">-->
+
+
+    <!--            <sdk.chat.demo.robot.ui.SoundWaveView-->
+    <!--                android:id="@+id/soundWave"-->
+    <!--                android:layout_width="match_parent"-->
+    <!--                android:layout_height="100dp"-->
+    <!--                android:layout_gravity="center"-->
+    <!--                android:background="@android:color/white" />-->
+
+    <!--            <ImageView-->
+    <!--                android:id="@+id/stopAsr"-->
+    <!--                android:layout_width="wrap_content"-->
+    <!--                android:layout_height="wrap_content"-->
+    <!--                android:layout_gravity="center"-->
+    <!--                android:padding="8dp"-->
+    <!--                android:src="@mipmap/ic_stop_asr" />-->
+    <!--        </FrameLayout>-->
+    <!--    </LinearLayout>-->
+</com.google.android.material.card.MaterialCardView>

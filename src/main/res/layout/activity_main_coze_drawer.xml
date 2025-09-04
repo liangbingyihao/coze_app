@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <LinearLayout
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
@@ -19,7 +19,8 @@
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:background="@android:color/transparent">
+                android:background="@android:color/transparent"
+                android:layout_gravity="top">
 
                 <ImageView
                     android:id="@+id/menu_home"
@@ -62,7 +63,7 @@
                 android:id="@+id/fragment_container"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
-        </LinearLayout>
+        </FrameLayout>
 
         <LinearLayout
             android:layout_width="288dp"

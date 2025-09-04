@@ -1,8 +1,11 @@
 package sdk.chat.demo.robot.ui;
 
 
+import sdk.chat.demo.robot.extensions.ActivityExtensionsKt;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Handler;
@@ -18,6 +21,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -35,13 +39,15 @@ public class GWMsgInput extends RelativeLayout
         implements View.OnClickListener, TextWatcher, View.OnFocusChangeListener {
 
     public EditText messageInput;
-    public EditText messagePrompt;
+    private EditText messagePrompt;
+    private View inputContainer;
     //    public View asrContainer;
     public View messageSendButton;
-    public View stopSendButton;
-    public ImageView attachmentButton;
-    public SoundWaveView soundWaveView;
-    public CircleOverlayView circleOverlayView;
+    private View stopSendButton;
+    private ImageView attachmentButton;
+    private ImageView editModeButton;
+    //    public SoundWaveView soundWaveView;
+    private CircleOverlayView circleOverlayView;
 //    public Space sendButtonSpace, attachmentButtonSpace;
 
     private CharSequence input;
@@ -114,37 +120,36 @@ public class GWMsgInput extends RelativeLayout
 //        return messageSendButton;
 //    }
 
-    private static final int MSG_UPDATE_WAVE = 1;
-    private int soundWaveTimes;
-    private final Handler handler = new Handler(Looper.getMainLooper()) {
-        @Override
-        public void handleMessage(Message msg) {
-            if (msg.what == MSG_UPDATE_WAVE && soundWaveTimes > 0) {
-                --soundWaveTimes;
-                float amplitude = (float) (Math.random() * 0.8 + 0.2);
-                soundWaveView.updateAmplitude(amplitude);
+//    private static final int MSG_UPDATE_WAVE = 1;
+//    private int soundWaveTimes;
+//    private final Handler handler = new Handler(Looper.getMainLooper()) {
+//        @Override
+//        public void handleMessage(Message msg) {
+//            if (msg.what == MSG_UPDATE_WAVE && soundWaveTimes > 0) {
+//                --soundWaveTimes;
+//                float amplitude = (float) (Math.random() * 0.8 + 0.2);
+//                soundWaveView.updateAmplitude(amplitude);
+//
+//                if (soundWaveTimes > 0) {
+//                    sendEmptyMessageDelayed(MSG_UPDATE_WAVE, 50);
+//                } else {
+//                    soundWaveView.reset();
+//                }
+//            }
+//        }
+//    };
 
-                if (soundWaveTimes > 0) {
-                    sendEmptyMessageDelayed(MSG_UPDATE_WAVE, 50);
-                } else {
-                    soundWaveView.reset();
-                }
-            }
-        }
-    };
-
-    public void startSimulation(int times) {
-        soundWaveTimes = times;
-        handler.removeMessages(MSG_UPDATE_WAVE);
-        handler.sendEmptyMessage(MSG_UPDATE_WAVE);
-    }
-
-    public void stopSimulation() {
-        soundWaveTimes = 0;
-        soundWaveView.reset();
-        handler.removeMessages(MSG_UPDATE_WAVE);
-    }
-
+//    public void startSimulation(int times) {
+//        soundWaveTimes = times;
+//        handler.removeMessages(MSG_UPDATE_WAVE);
+//        handler.sendEmptyMessage(MSG_UPDATE_WAVE);
+//    }
+//
+//    public void stopSimulation() {
+//        soundWaveTimes = 0;
+//        soundWaveView.reset();
+//        handler.removeMessages(MSG_UPDATE_WAVE);
+//    }
     public void onAsrStop(boolean error) {
         if (!error && System.currentTimeMillis() - whenStartAsrMillis < 700) {
             return;
@@ -155,7 +160,7 @@ public class GWMsgInput extends RelativeLayout
         circleOverlayView.setVisibility(View.GONE);
         messageInput.setShowSoftInputOnFocus(true);
         if (attachmentsListener != null) attachmentsListener.onChangeKeyboard(true);
-        stopSimulation();
+//        stopSimulation();
     }
 
     public void onMsgStatusChanged(int status) {
@@ -198,19 +203,21 @@ public class GWMsgInput extends RelativeLayout
                 messageInput.setShowSoftInputOnFocus(false);
             }
 //            onAddAttachments();
-        } else if (id == R.id.stopAsr) {
-            whenStartAsrMillis = 0;
-            AsrHelper.INSTANCE.stopAsr();
-            messageInput.setShowSoftInputOnFocus(true);
-//            attachmentButton.setImageResource(R.mipmap.ic_audio);
-//            asrContainer.setVisibility(View.GONE);
-//            if (attachmentsListener != null) attachmentsListener.onChangeKeyboard(true);
-//            stopSimulation();
+//        } else if (id == R.id.stopAsr) {
+//            whenStartAsrMillis = 0;
+//            AsrHelper.INSTANCE.stopAsr();
+//            messageInput.setShowSoftInputOnFocus(true);
+////            attachmentButton.setImageResource(R.mipmap.ic_audio);
+////            asrContainer.setVisibility(View.GONE);
+////            if (attachmentsListener != null) attachmentsListener.onChangeKeyboard(true);
+////            stopSimulation();
         } else if (id == R.id.messageStopButton) {
             ((GWThreadHandler) ChatSDK.thread()).stopPolling();
             onMsgStatusChanged(1);
 //            view.setVisibility(INVISIBLE);
 //            messageSendButton.setVisibility(VISIBLE);
+        } else if (id == R.id.editMode) {
+            setEditMode(editMode == 0 ? 1 : 0, true);
         }
     }
 
@@ -254,6 +261,13 @@ public class GWMsgInput extends RelativeLayout
         Log.d("AsrHelper1", "afterTextChanged and stop");
         startPos = -1;
         AsrHelper.INSTANCE.stopAsr();
+        if (editMode == 0) {
+            if (lastLineCount < 3 && messagePrompt.getVisibility() != VISIBLE) {
+                editModeButton.setVisibility(GONE);
+            } else if (editModeButton.getVisibility() != VISIBLE) {
+                editModeButton.setVisibility(VISIBLE);
+            }
+        }
     }
 
     @Override
@@ -282,10 +296,11 @@ public class GWMsgInput extends RelativeLayout
 
 
     public void setMessagePrompt(String prompt) {
-        if(prompt!=null&&!prompt.isEmpty()){
+        if (prompt != null && !prompt.isEmpty()) {
             messagePrompt.setVisibility(VISIBLE);
             messagePrompt.setText(prompt);
-        }else{
+            setEditMode(1, true);
+        } else {
             messagePrompt.setVisibility(GONE);
         }
         if (typingListener != null) typingListener.onHeightChange();
@@ -306,11 +321,13 @@ public class GWMsgInput extends RelativeLayout
 
         messageInput = findViewById(R.id.messageInput);
         messagePrompt = findViewById(R.id.messagePrompt);
+        editModeButton = findViewById(R.id.editMode);
+        inputContainer = findViewById(R.id.inputContainer);
         messageSendButton = findViewById(R.id.messageSendButton);
         stopSendButton = findViewById(R.id.messageStopButton);
         attachmentButton = findViewById(R.id.attachmentButton);
 //        asrContainer = findViewById(R.id.asrContainer);
-        soundWaveView = findViewById(R.id.soundWave);
+//        soundWaveView = findViewById(R.id.soundWave);
         circleOverlayView = findViewById(R.id.circleOverlay);
 //                circleOverlay.startAnimation()
 //        attachmentButtonSpace = findViewById(R.id.attachmentButtonSpace);
@@ -318,8 +335,32 @@ public class GWMsgInput extends RelativeLayout
         messageSendButton.setOnClickListener(this);
         stopSendButton.setOnClickListener(this);
         attachmentButton.setOnClickListener(this);
-        findViewById(R.id.stopAsr).setOnClickListener(this);
+        editModeButton.setOnClickListener(this);
+//        findViewById(R.id.stopAsr).setOnClickListener(this);
         messageInput.addTextChangedListener(this);
+        messagePrompt.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (s.toString().trim().isEmpty()) {
+                    messagePrompt.setVisibility(View.GONE);
+                    if (lastLineCount < 3 && editMode == 0) {
+                        editModeButton.setVisibility(GONE);
+                    }
+                }
+
+                if (typingListener != null && editMode == 0) typingListener.onHeightChange();
+            }
+        });
         messageInput.setText("");
         messageInput.setOnFocusChangeListener(this);
 
@@ -353,6 +394,97 @@ public class GWMsgInput extends RelativeLayout
             }
         });
 
+
+        postDelayed(setEditModeRunnable, 10);
+//        setEditMode(0);
+
+    }
+
+    private int editMode = 0;//0:关闭，1：全屏
+
+    private final Runnable setEditModeRunnable = new Runnable() {
+        @Override
+        public void run() {
+            setEditMode();
+        }
+    };
+
+    public void updateInputHeight() {
+        //键盘变更时
+        if (editMode == 1) {
+            setEditMode(1, false);
+        }
+    }
+
+    private void setEditMode(int editMode, boolean showKeyBoard) {
+        removeCallbacks(setEditModeRunnable);
+        this.editMode = editMode;
+        postDelayed(setEditModeRunnable, 10);
+        if (showKeyBoard && attachmentsListener != null) attachmentsListener.onChangeKeyboard(true);
+    }
+
+    private FrameLayout.LayoutParams paramsContract;
+    private FrameLayout.LayoutParams paramsExpand;
+
+    private void setEditMode() {
+        // 获取并转换布局参数
+        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) inputContainer.getLayoutParams();
+
+        // 设置边距
+        if (editMode == 0) {
+            if (paramsContract == null) {
+                paramsContract = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+                paramsContract.leftMargin = ActivityExtensionsKt.dpToPx(46, this.getContext());
+                paramsContract.rightMargin = (int) messageSendButton.getWidth() + ActivityExtensionsKt.dpToPx(20, this.getContext());
+                int m = ActivityExtensionsKt.dpToPx(4, this.getContext());
+                paramsContract.topMargin = m;
+                paramsContract.bottomMargin = m;
+                paramsContract.height = FrameLayout.LayoutParams.WRAP_CONTENT;
+            }
+            params.leftMargin = paramsContract.leftMargin;
+            params.rightMargin = paramsContract.rightMargin;
+            params.topMargin = paramsContract.topMargin;
+            params.bottomMargin = paramsContract.bottomMargin;
+            params.height = FrameLayout.LayoutParams.WRAP_CONTENT;
+            messageInput.setMaxLines(6);
+            editModeButton.setImageResource(R.mipmap.ic_expand);
+            if (lastLineCount < 3 && messagePrompt.getVisibility() != VISIBLE) {
+                editModeButton.setVisibility(GONE);
+            }
+        } else {
+            editModeButton.setVisibility(VISIBLE);
+            if (paramsExpand == null) {
+                int m = ActivityExtensionsKt.dpToPx(24, this.getContext());
+                paramsExpand = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+                paramsExpand.leftMargin = m;
+                paramsExpand.rightMargin = m;
+                paramsExpand.topMargin = m;
+                paramsExpand.bottomMargin = m + messageInput.getHeight();
+                paramsExpand.height = getResources().getDisplayMetrics().heightPixels - m - paramsExpand.bottomMargin;
+            }
+            int h = paramsExpand.height - typingListener.getKeyboardHeight();
+            if (h == params.height) {
+                Log.e("setEditMode", "no change..heightPixels:" + getResources().getDisplayMetrics().heightPixels + ",getKeyboardHeight:" + typingListener.getKeyboardHeight());
+                return;
+            }
+            Log.e("setEditMode", "change..heightPixels:" + getResources().getDisplayMetrics().heightPixels + ",getKeyboardHeight:" + typingListener.getKeyboardHeight());
+            params.height = h;
+            params.leftMargin = paramsExpand.leftMargin;
+            params.rightMargin = paramsExpand.rightMargin;
+            params.topMargin = paramsExpand.topMargin;
+            params.bottomMargin = messageSendButton.getHeight();
+            messageInput.setMaxLines(Integer.MAX_VALUE);
+            editModeButton.setImageResource(R.mipmap.ic_contract);
+        }
+// 应用新的布局参数
+        inputContainer.setLayoutParams(params);
+
+// 请求重新布局
+        inputContainer.requestLayout();
+
+        if (typingListener != null) {
+            typingListener.onHeightChange();
+        }
     }
 
     private int startPos = -1;
@@ -462,6 +594,8 @@ public class GWMsgInput extends RelativeLayout
         void onStopTyping();
 
         void onHeightChange();
+
+        int getKeyboardHeight();
 
     }
 }

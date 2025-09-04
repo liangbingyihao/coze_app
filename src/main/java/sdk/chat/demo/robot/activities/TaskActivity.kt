@@ -160,7 +160,7 @@ class TaskActivity : BaseActivity(), View.OnClickListener {
 
 
     private fun initTaskPie() {
-        tvStoryName.text = taskProcess.storyName
+        tvStoryName.text = getString(R.string.grace_journey,taskProcess.storyName)
         taskPieAdapter.setData(taskDetail)
         taskContainer.setTaskData(0, taskDetail)
         setStoryData(taskDetail.index)

@@ -81,4 +81,5 @@
     <string name="task_done">Awesome! You\'ve completed today\'s grace journey task. Please claim today\'s Bible story inspiration.</string>
     <string name="task_unlock">Claim</string>
     <string name="later">View Later</string>
+    <string name="grace_journey">GraceJourney·%s</string>
   </resources>

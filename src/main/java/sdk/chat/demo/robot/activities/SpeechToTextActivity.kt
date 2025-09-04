@@ -281,6 +281,7 @@ class SpeechToTextActivity : AppCompatActivity(), View.OnClickListener,
 //                    ChatSDK.db().delete(threadHandler.welcome)
 //                }
                 JsonCacheManager.save(this@SpeechToTextActivity, "gwTaskProcess", "")
+                JsonCacheManager.save(this@SpeechToTextActivity, "gwDaily", "")
             }
 
             R.id.setTask -> {

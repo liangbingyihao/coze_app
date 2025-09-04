@@ -210,6 +210,14 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
         });
 
 
+        getKeyboardAwareView().keyboardShownListeners.add(() -> {
+            input.updateInputHeight();
+        });
+
+        getKeyboardAwareView().keyboardHiddenListeners.add(() -> {
+            input.updateInputHeight();
+        });
+
         return rootView;
     }
 
@@ -228,11 +236,6 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 //        input.findViewById(sdk.chat.ui.R.id.attachmentButtonSpace).setVisibility(chatView.getSelectedMessages().isEmpty() ? View.VISIBLE : View.GONE);
 //    }
 
-    public void hideTextInput() {
-        input.setVisibility(View.GONE);
-//        divider.setVisibility(View.GONE);
-        updateChatViewMargins(true);
-    }
 
     public void showTextInput() {
         input.setVisibility(View.VISIBLE);
@@ -240,15 +243,6 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
         updateChatViewMargins(true);
     }
 
-//    public void hideReplyView() {
-//        replyView.setVisibility(View.GONE);
-//        updateChatViewMargins(true);
-//    }
-//
-//    public void showReplyView() {
-//        replyView.setVisibility(View.VISIBLE);
-//        updateChatViewMargins(true);
-//    }
 
 
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -489,7 +483,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 //                        EditText editText = input.getInputEditText();
                         Map<String, Object> params = networkEvent.getData();
                         input.smartInsertAtCursor((Boolean) params.get("definite"), (String) params.get("newMsg"));
-                        input.startSimulation(50);
+//                        input.startSimulation(50);
                     } else {
                         Log.e("AsrHelper", "onAsrStop");
                         input.onAsrStop(false);
@@ -848,6 +842,14 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
             public void onHeightChange() {
 
                 updateChatViewMargins(true);
+            }
+
+            @Override
+            public int getKeyboardHeight() {
+                if(getKeyboardAwareView().isKeyboardOpen()){
+                    return getKeyboardAwareView().getKeyboardHeight();
+                }
+                return 0;
             }
         });
     }

@@ -12,6 +12,7 @@ public class TaskProgress {
     @SerializedName("is_today_unlocked")
     private Boolean isTodayUnLocked;
     private ArrayList<Chapter> chapters;
+    private ArrayList<Story> collections;
     @SerializedName("progress_image")
     private String progressImage;
 
@@ -71,5 +72,13 @@ public class TaskProgress {
 
     public void setProgressImage(String progressImage) {
         this.progressImage = progressImage;
+    }
+
+    public ArrayList<Story> getCollections() {
+        return collections;
+    }
+
+    public void setCollections(ArrayList<Story> collections) {
+        this.collections = collections;
     }
 }
