@@ -85,8 +85,8 @@ dependencies {
     implementation "com.google.code.gson:gson:$gsonVersion"
     api project(':chat-sdk-core-ui')
     api project(':chat-sdk-firebase-push')
-    api project(':chat-sdk-pro-message-audio')
-    api project(':chat-sdk-pro-contact-book')
+//    api project(':chat-sdk-pro-message-audio')
+//    api project(':chat-sdk-pro-contact-book')
 //    implementation project(':android-networking')
     api "com.github.bumptech.glide:glide:$glideVersion"
     implementation 'com.google.android.flexbox:flexbox:3.0.0'
@@ -97,7 +97,7 @@ dependencies {
     implementation 'com.geyifeng.immersionbar:immersionbar:3.2.1'
     implementation 'com.github.prolificinteractive:material-calendarview:2.0.1'
     implementation "net.yslibrary.keyboardvisibilityevent:keyboardvisibilityevent:$keyboardVisibilityEventVersion"
-
+    implementation "androidx.appcompat:appcompat:1.6.0"
 
     implementation 'com.bytedance.boringssl.so:boringssl-so:1.3.7-16kb'
     implementation('org.chromium.net:cronet:4.2.210.4-tob') {

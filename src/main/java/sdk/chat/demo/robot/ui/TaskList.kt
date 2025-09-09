@@ -61,7 +61,7 @@ class TaskList @JvmOverloads constructor(
     }
 
     fun setTaskData(mode: Int, taskPending: TaskDetail? = null) {
-        //mode:>0:已完成，=0：进行种，<0：未开始
+        //mode:>0:已完成，=0：进行中，<0：未开始
         this.mode = mode
         if (mode < 0) {
             visibility = VISIBLE

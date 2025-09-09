@@ -6,10 +6,11 @@ import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 
-import sdk.chat.contact.ContactBookModule;
+//import sdk.chat.contact.ContactBookModule;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.utils.Device;
 import sdk.chat.demo.robot.ChatSDKCoze;
+import sdk.chat.demo.robot.extensions.LanguageUtils;
 import sdk.chat.demo.robot.handlers.GWAuthenticationHandler;
 import sdk.chat.demo.robot.push.UpdateTokenWorker;
 import sdk.guru.common.DisposableMap;
@@ -78,10 +79,8 @@ public class MainApp extends Application implements Configuration.Provider, Appl
         try {
             // Setup Chat SDK
             boolean drawerEnabled = !Device.honor();
-            ChatSDKCoze.quickStartWithEmail(this, drawerEnabled,
-                    "",
-                    ContactBookModule.shared()
-            );
+            ChatSDKCoze.quickStartWithEmail(this, drawerEnabled,"");
+//            ContactBookModule.shared()
 
             dm.add(ChatSDK.auth().authenticate()
                     .observeOn(RX.main())
@@ -101,6 +100,7 @@ public class MainApp extends Application implements Configuration.Provider, Appl
             assert (false);
         }
         setupEnhancedCrashReporting();
+        LanguageUtils.INSTANCE.initAppLanguage(this);
     }
 
     private void setupEnhancedCrashReporting() {

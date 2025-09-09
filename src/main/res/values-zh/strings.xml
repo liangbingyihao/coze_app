@@ -14,9 +14,9 @@
     <string name="confirm">确认</string>
     <string name="cancel">取消</string>
     <string name="remove">删除</string>
-    <string name="remove_topic">删除整个时间轴</string>
-    <string name="change_topic">切换时间轴</string>
-    <string name="rename_topic">重命名时间轴</string>
+    <string name="remove_topic">删除整个恩语录</string>
+    <string name="change_topic">切换恩语录</string>
+    <string name="rename_topic">重命名恩语录</string>
     <string name="new_topic">新建</string>
     <string name="hint_no_record">这个恩语录空了，欢迎记录今天的新发现哦</string>
     <string name="go_to_record">去记录</string>
@@ -40,7 +40,7 @@
     <string name="send">发送</string>
     <string name="enter">进入主页</string>
     <string name="failed_and_retry">操作失败，稍后重试</string>
-    <string name="added_to_timeline">已帮你收录进时间轴</string>
+    <string name="added_to_timeline">已帮你收录进恩语录</string>
     <string name="task_today">今日任务</string>
     <string name="get_it">我知道了</string>
     <string name="settings">设置</string>
@@ -74,9 +74,13 @@
     <string name="error_msg_type">不支持的消息类型</string>
     <string name="error_no_data">没有更多数据</string>
     <string name="guide_1">恩典留痕</string>
-    <string name="guide_desc_1">语音/文字记录感动，\n时间轴串联成与神同行的恩典之路</string>
+    <string name="guide_desc_1">语音/文字记录感动，\n恩语录串联成与神同行的恩典之路</string>
     <string name="guide_2">查经库藏</string>
     <string name="guide_desc_2">圣经历史背景，基础知识，经典解读快速查询，信仰问答一站式收藏。</string>
     <string name="guide_3">每日恩语</string>
     <string name="guide_desc_3">个性化经文+实践指南\n助你活出信仰力量</string>
+    <string name="record">会话</string>
+    <string name="questions">信仰问答</string>
+    <string name="copy">拷贝</string>
+    <string name="settings_lang">语言</string>
 </resources>

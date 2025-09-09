@@ -150,7 +150,23 @@
         <item name="android:windowNoTitle">true</item>
     </style>
 
-<!--    <style name="PopupWindowAnimation.NoAnimation">-->
+    <style name="FullRoundButton" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item> <!-- 关键：使用百分比 -->
+    </style>
+
+
+    <style name="LangSettingButton">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">64dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/item_text_normal</item>
+        <item name="android:paddingLeft">8dp</item>
+        <item name="android:layout_marginLeft">10dp</item>
+        <item name="android:button">@drawable/radio_button_selector</item>
+    </style>
+
+    <!--    <style name="PopupWindowAnimation.NoAnimation">-->
 <!--        <item name="android:windowEnterAnimation">@null</item>-->
 <!--        <item name="android:windowExitAnimation">@null</item>-->
 <!--    </style>-->

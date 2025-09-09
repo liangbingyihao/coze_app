@@ -8,35 +8,72 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.RadioButton
-import android.widget.TextView
+import android.widget.RadioGroup
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import sdk.chat.demo.MainApp
 import sdk.chat.demo.pre.R
-import sdk.chat.demo.robot.activities.MainDrawerActivity
-import sdk.chat.demo.robot.activities.SettingLangsActivity
+import sdk.chat.demo.robot.activities.SettingsActivity
 import sdk.chat.demo.robot.api.ImageApi
+import sdk.chat.demo.robot.api.JsonCacheManager
 import sdk.chat.demo.robot.api.model.ExportInfo
 import sdk.chat.demo.robot.extensions.LanguageUtils
 import sdk.chat.ui.activities.BaseActivity
 import sdk.chat.ui.utils.ToastHelper
-import sdk.guru.common.RX
 
-class SettingsActivity : BaseActivity(), View.OnClickListener {
-    private lateinit var tvLang: TextView
+
+class SettingLangsActivity : BaseActivity(), View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_setting)
+        setContentView(R.layout.activity_setting_langs)
         findViewById<View>(R.id.home).setOnClickListener(this)
-        findViewById<View>(R.id.export).setOnClickListener(this)
-        findViewById<View>(R.id.debug).setOnClickListener(this)
-        findViewById<View>(R.id.config_lang).setOnClickListener(this)
-        tvLang = findViewById<TextView>(R.id.lang_value)
-        getSettings()
+        var lang = LanguageUtils.getSavedLanguage(this@SettingLangsActivity)
+        var rid = 0
+        when (lang) {
+            "zh-Hans" -> {
+                rid = R.id.radioZH
+            }
+
+            "zh-Hant" -> {
+                rid = R.id.radioHant
+            }
+
+            "en-US" -> {
+                rid = R.id.radioEN
+            }
+        }
+        if (rid > 0) {
+            val radioButton = findViewById<RadioButton?>(rid)
+            radioButton.setChecked(true)
+        }
+
+        val radioGroup = findViewById<RadioGroup>(R.id.radioGroup)
+        radioGroup.postDelayed({
+            radioGroup.setOnCheckedChangeListener { group, checkedId ->
+                val radioButton = findViewById<RadioButton>(checkedId)
+                ToastHelper.show(this@SettingLangsActivity, radioButton.text.toString())
+                when (checkedId) {
+                    R.id.radioZH -> {
+                        LanguageUtils.switchLanguage(this, "zh-Hans")
+                    }
+
+                    R.id.radioHant -> {
+                        LanguageUtils.switchLanguage(this, "zh-Hant")
+                    }
+
+                    R.id.radioEN -> {
+                        LanguageUtils.switchLanguage(this, "en-US")
+                    }
+
+                }
+                JsonCacheManager.save(this, "gwTaskProcess", "")
+                JsonCacheManager.save(this, "gwDaily", "")
+                finish()
+            }
+        }, 10)
     }
 
     override fun getLayout(): Int {
@@ -49,61 +86,22 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
                 finish()
             }
 
-            R.id.export -> {
-                getExportInfo()
-            }
-
-            R.id.config_lang -> {
-                startActivity(
-                    Intent(
-                        this@SettingsActivity,
-                        SettingLangsActivity::class.java
-                    )
-                )
-            }
-
-            R.id.debug -> {
-                startActivity(
-                    Intent(
-                        this@SettingsActivity,
-                        SpeechToTextActivity::class.java
-                    )
-                )
-            }
         }
     }
 
     fun getSettings() {
         try {
-            var versionName = packageManager
+            packageManager
                 .getPackageInfo(packageName, 0)
                 .versionName
                 ?: "Unknown"
-            var sysLang = LanguageUtils.getSystemLanguage()
-            findViewById< TextView>(R.id.version).text = "$versionName,$sysLang"
         } catch (e: Exception) {
             "Unknown"
         }
 
-        var lang = LanguageUtils.getSavedLanguage(this)
-        var rid = 0
-        when (lang) {
-            "zh-Hans" -> {
-                rid = R.string.lan_zh
-            }
-
-            "zh-Hant" -> {
-                rid = R.string.lan_zh_hant
-            }
-
-            "en-US" -> {
-                rid = R.string.lan_en
-            }
-        }
-        if (rid > 0) {
-            tvLang.setText(rid)
-        }
-
+        AppCompatDelegate.setApplicationLocales(
+            LocaleListCompat.forLanguageTags("zh-CN")
+        )
     }
 
 
@@ -126,7 +124,7 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
                     },
                     { error -> // onError
                         ToastHelper.show(
-                            this@SettingsActivity,
+                            this@SettingLangsActivity,
                             "加载失败: $error"
                         )
                     })
@@ -135,7 +133,7 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
     }
 
     fun showExportMenus(exportInfo: ExportInfo) {
-        MaterialAlertDialogBuilder(this@SettingsActivity)
+        MaterialAlertDialogBuilder(this@SettingLangsActivity)
             .setTitle(getString(R.string.setting_export)) // 可选标题
             .setItems(
                 arrayOf(
@@ -150,7 +148,7 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
                         val clip = ClipData.newPlainText("恩语", exportInfo.downLoadUrl)
                         clipboard.setPrimaryClip(clip)
                         ToastHelper.show(
-                            this@SettingsActivity,
+                            this@SettingLangsActivity,
                             R.string.export_hint
                         )
                     }    // 点击"拷贝链接"
@@ -164,7 +162,7 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
                             intent.setPackage(null)
                             startActivity(intent)
                         } catch (e: ActivityNotFoundException) {
-                            ToastHelper.show(this@SettingsActivity, "未找到浏览器应用")
+                            ToastHelper.show(this@SettingLangsActivity, "未找到浏览器应用")
                         }
                     } // 点击"浏览器下载"
                     2 -> dialog.dismiss() // 点击"取消"

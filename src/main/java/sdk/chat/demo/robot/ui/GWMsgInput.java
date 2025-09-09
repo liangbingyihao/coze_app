@@ -28,11 +28,18 @@ import android.widget.RelativeLayout;
 import android.widget.Space;
 import android.widget.TextView;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.lang.reflect.Field;
 
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.audio.AsrHelper;
+import sdk.chat.demo.robot.extensions.LogHelper;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
 
 public class GWMsgInput extends RelativeLayout
@@ -183,6 +190,9 @@ public class GWMsgInput extends RelativeLayout
             boolean isSubmitted = onSubmit();
             if (isSubmitted) {
                 messageInput.setText("");
+                lastLength = 0;
+                messagePrompt.setVisibility(GONE);
+                setEditMode(0, false);
             }
             removeCallbacks(typingTimerRunnable);
             post(typingTimerRunnable);
@@ -416,6 +426,41 @@ public class GWMsgInput extends RelativeLayout
         }
     }
 
+    public String getDraft() {
+        String prompt = messagePrompt.getVisibility() == View.VISIBLE ? messagePrompt.getText().toString() : "";
+        String draft = messageInput.getText().toString();
+        if (prompt.isEmpty() && draft.isEmpty()) {
+            return null;
+        }
+        JsonObject o = new JsonObject();
+        if (!prompt.isEmpty()) {
+            o.addProperty("prompt", prompt);
+        }
+        if (!draft.isEmpty()) {
+            o.addProperty("draft", draft);
+        }
+        return o.toString();
+    }
+
+    public void setDraft(String jsonString) {
+        JsonObject jsonObject = JsonParser.parseString(jsonString).getAsJsonObject();
+        if (jsonObject != null) {
+            String prompt = jsonObject.has("prompt") ? jsonObject.get("prompt").getAsString() : "";
+            String draft = jsonObject.has("draft") ? jsonObject.get("draft").getAsString() : "";
+            if (draft != null && !draft.isEmpty()) {
+                messageInput.setText(draft);
+                lastLength = messageInput.getLineCount();
+            }
+
+            if (prompt != null && !prompt.isEmpty()) {
+                messagePrompt.setVisibility(VISIBLE);
+                messagePrompt.setText(prompt);
+            }
+
+            setEditMode(0, false);
+        }
+    }
+
     private void setEditMode(int editMode, boolean showKeyBoard) {
         removeCallbacks(setEditModeRunnable);
         this.editMode = editMode;
@@ -448,8 +493,16 @@ public class GWMsgInput extends RelativeLayout
             params.height = FrameLayout.LayoutParams.WRAP_CONTENT;
             messageInput.setMaxLines(6);
             editModeButton.setImageResource(R.mipmap.ic_expand);
-            if (lastLineCount < 3 && messagePrompt.getVisibility() != VISIBLE) {
-                editModeButton.setVisibility(GONE);
+            if (messagePrompt.getVisibility() == VISIBLE) {
+                editModeButton.setVisibility(VISIBLE);
+            } else {
+                lastLineCount = messageInput.getLineCount();
+                Log.e("setEditMode","lastLineCount:"+lastLineCount);
+                if (lastLineCount < 3) {
+                    editModeButton.setVisibility(GONE);
+                }else{
+                    editModeButton.setVisibility(VISIBLE);
+                }
             }
         } else {
             editModeButton.setVisibility(VISIBLE);
@@ -467,7 +520,7 @@ public class GWMsgInput extends RelativeLayout
                 Log.e("setEditMode", "no change..heightPixels:" + getResources().getDisplayMetrics().heightPixels + ",getKeyboardHeight:" + typingListener.getKeyboardHeight());
                 return;
             }
-            Log.e("setEditMode", "change..heightPixels:" + getResources().getDisplayMetrics().heightPixels + ",getKeyboardHeight:" + typingListener.getKeyboardHeight());
+            Log.e("setEditMode", "change..heightPixels:" + getResources().getDisplayMetrics().heightPixels + ",getKeyboardHeight:" + typingListener.getKeyboardHeight()+",h:"+h);
             params.height = h;
             params.leftMargin = paramsExpand.leftMargin;
             params.rightMargin = paramsExpand.rightMargin;
@@ -511,7 +564,10 @@ public class GWMsgInput extends RelativeLayout
             Log.e("AsrHelper1", "definite: " + definite + ",newText:" + newText + ",startPos:" + startPos);
 //            editable.insert(startPos, newText);
             messageInput.removeTextChangedListener(this);
+
+//            AsrHelper.INSTANCE.appendLog("1:startPos:" + startPos + "," + lastLength + "," + editable.toString().substring(startPos, startPos + lastLength) + " TO " + newText);
             editable.replace(startPos, startPos + lastLength, newText);
+//            AsrHelper.INSTANCE.appendLog("2:" + editable.toString());
             lastLength = newText.length();
 //            messageInput.setSelection(startPos + lastLength);
             if (definite) {
@@ -520,7 +576,7 @@ public class GWMsgInput extends RelativeLayout
             }
             messageInput.addTextChangedListener(this);
         } catch (Exception e) {
-            Log.e("AsrHelper1", "Error inserting text", e);
+            LogHelper.INSTANCE.appendLog("smartInsertAtCursor:" + e.toString());
         }
     }
 

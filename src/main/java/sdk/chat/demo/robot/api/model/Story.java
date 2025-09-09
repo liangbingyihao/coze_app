@@ -9,6 +9,14 @@ public class Story {
     @SerializedName("progress_image")
     private String progressImage;
 
+    private TaskProgress taskProcess;
+
+    public Story(String id, String name, String progressImage) {
+        this.id = id;
+        this.name = name;
+        this.progressImage = progressImage;
+    }
+
     public String getId() {
         return id;
     }
@@ -31,5 +39,13 @@ public class Story {
 
     public void setProgressImage(String progressImage) {
         this.progressImage = progressImage;
+    }
+
+    public TaskProgress getTaskProcess() {
+        return taskProcess;
+    }
+
+    public void setTaskProcess(TaskProgress taskProcess) {
+        this.taskProcess = taskProcess;
     }
 }

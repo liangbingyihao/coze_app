@@ -1123,7 +1123,9 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 }
             }
 
+            boolean finish = false;
             if (aiFeedback.getStatus() > MessageDetail.STATUS_SUCCESS) {
+                finish = true;
                 AIFeedback fb = aiFeedback.getFeedback();
                 if (aiFeedback.getStatus() == MessageDetail.STATUS_CANCEL || (fb != null && fb.getView() != null && !fb.getView().isEmpty())) {
                     message.setMessageStatus(MessageSendStatus.Sent, false);
@@ -1133,6 +1135,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
             }
 
             if (aiFeedback.getStatus() == MessageDetail.STATUS_SUCCESS) {
+                finish = true;
                 message.setMessageStatus(MessageSendStatus.Sent, false);
                 if (sid != null && sid > 0 && !sid.equals(message.getThreadId())) {
                     message.setThreadId(sid);
@@ -1147,6 +1150,9 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         aiExplore = newAIExplore;
                     }
                 }
+            }
+
+            if(finish){
                 int action = message.integerForKey("action");
                 if (action == action_daily_pray) {
                     DailyTaskHandler.completeTaskByIndex(1);

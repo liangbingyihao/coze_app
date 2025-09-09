@@ -16,7 +16,6 @@ import sdk.chat.demo.robot.module.GWExtrasModule;
 import sdk.chat.demo.robot.holder.ImageRegistration;
 import sdk.chat.demo.robot.holder.TextRegistration;
 import sdk.chat.firebase.push.FirebasePushModule;
-import sdk.chat.message.audio.AudioMessageModule;
 import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.module.UIModule;
 

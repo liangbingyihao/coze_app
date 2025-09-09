@@ -1,15 +1,9 @@
 package sdk.chat.demo.robot.activities
 
-import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.Environment
-import android.os.Handler
-import android.util.Log
-import android.view.MotionEvent
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -18,24 +12,20 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.edit
 import androidx.lifecycle.LifecycleObserver
-import com.bytedance.speech.speechengine.SpeechEngine
-import com.bytedance.speech.speechengine.SpeechEngineDefines
-import com.bytedance.speech.speechengine.SpeechEngineGenerator
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.functions.Consumer
-import org.json.JSONException
-import org.json.JSONObject
 import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.api.ImageApi
 import sdk.chat.demo.robot.api.JsonCacheManager
+import sdk.chat.demo.robot.audio.AsrHelper
 import sdk.chat.demo.robot.audio.TTSHelper
-import sdk.chat.demo.robot.extensions.SpeechStreamRecorder
+import sdk.chat.demo.robot.extensions.LanguageUtils
+import sdk.chat.demo.robot.extensions.LogHelper
 import sdk.chat.demo.robot.handlers.DailyTaskHandler
 import sdk.chat.demo.robot.handlers.SpeechToTextHelper
 import sdk.chat.demo.robot.push.UpdateTokenWorker
@@ -81,6 +71,7 @@ class SpeechToTextActivity : AppCompatActivity(), View.OnClickListener,
         findViewById<View>(R.id.clearCache).setOnClickListener(this)
         findViewById<View>(R.id.setTask).setOnClickListener(this)
         findViewById<View>(R.id.setPrompt).setOnClickListener(this)
+        findViewById<View>(R.id.getLog).setOnClickListener(this)
 //        findViewById<View>(R.id.startdbasr).setOnClickListener(this)
 //        findViewById<View>(R.id.initdbasr).setOnClickListener(this)
 //        findViewById<View>(R.id.cleardbasr).setOnClickListener(this)
@@ -251,11 +242,15 @@ class SpeechToTextActivity : AppCompatActivity(), View.OnClickListener,
             }
 
             R.id.startButton -> {
-                speechToTextHelper.startListening()
+//                speechToTextHelper.startListening()
+                LanguageUtils.switchLanguage(this, "zh-Hans")
+                recreate()
             }
 
             R.id.stopButton -> {
-                speechToTextHelper.stopListening()
+//                speechToTextHelper.stopListening()
+                LanguageUtils.switchLanguage(this, "en-US")
+                recreate()
             }
 
             R.id.setPrompt -> {
@@ -287,6 +282,12 @@ class SpeechToTextActivity : AppCompatActivity(), View.OnClickListener,
             R.id.setTask -> {
                 var taskIndex: Int = tvTaskIndex.text.toString().toInt()
                 DailyTaskHandler.testTaskDetail(taskIndex)
+            }
+
+            R.id.getLog ->{
+                val clipboard =getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+                val clip = ClipData.newPlainText("恩语", LogHelper.logStr)
+                clipboard.setPrimaryClip(clip)
             }
 
 //            R.id.initdbasr -> {

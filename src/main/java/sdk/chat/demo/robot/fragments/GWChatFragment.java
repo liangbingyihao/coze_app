@@ -63,6 +63,7 @@ import sdk.chat.demo.examples.helper.CustomPrivateThreadsFragment;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.activities.TaskActivity;
 import sdk.chat.demo.robot.audio.AsrHelper;
+import sdk.chat.demo.robot.extensions.LogHelper;
 import sdk.chat.demo.robot.handlers.DailyTaskHandler;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
 import sdk.chat.demo.robot.ui.GWChatContainer;
@@ -550,8 +551,10 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
         thread.setDraft(null);
 
         if (text == null || text.isEmpty()) {
+            LogHelper.INSTANCE.appendLog("sendMessage with empty text ");
             return;
         }
+        LogHelper.INSTANCE.appendLog("sendMessage:" + text.substring(0, Math.min(10,text.length())));
 
         String prompt = input.getMessagePrompt();
 
@@ -569,6 +572,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
         completable.observeOn(RX.main()).doOnError(throwable -> {
             Log.e("sending", throwable.getLocalizedMessage());
             showToast(throwable.getLocalizedMessage());
+            LogHelper.INSTANCE.appendLog("handleMessageSend error:"+throwable.getMessage());
         }).subscribe(this);
     }
 
@@ -593,7 +597,8 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 //        }
 
         if (!StringChecker.isNullOrEmpty(thread.getDraft())) {
-            input.getInputEditText().setText(thread.getDraft(), TextView.BufferType.EDITABLE);
+            input.setDraft(thread.getDraft());
+//            input.getInputEditText().setText(thread.getDraft(), TextView.BufferType.EDITABLE);
         }
 
         // Put it here in the case that they closed the app with this screen open
@@ -621,8 +626,9 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
         hideKeyboard();
 
-        if (!StringChecker.isNullOrEmpty(input.getInputEditText().getText())) {
-            thread.setDraft(input.getInputEditText().getText().toString());
+        String draft = input.getDraft();
+        if (!StringChecker.isNullOrEmpty(draft)) {
+            thread.setDraft(draft);
         } else {
             thread.setDraft(null);
         }

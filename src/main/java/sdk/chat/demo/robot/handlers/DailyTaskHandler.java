@@ -47,6 +47,7 @@ public class DailyTaskHandler {
     private final static int MAX_TASK_INDEX = 6;
     private final static String URL_UNLOCK_STORY = ImageApi.URL2 + "story/unlock";
     private final static String URL_STORY_PROGRESS = ImageApi.URL2 + "story/progress";
+    private final static String URL_STORY_DETAIL = ImageApi.URL2 + "story/collections/";
     private final static String URL_STORY_HISTORY = ImageApi.URL2 + "story/history";
 
     public static void testTaskDetail(Integer completeIndex) {
@@ -177,12 +178,54 @@ public class DailyTaskHandler {
                     progress.setTaskDetail(taskToday);
                 }
                 emitter.onSuccess(progress);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
+    public static Single<TaskProgress> getStoryDetail(String storyId) {
+        return Single.create(emitter -> {
+            String cachedKey = KEY_CACHE_TASK_PROCESS+"_"+storyId;
+            String cachedData = JsonCacheManager.INSTANCE.get(MainApp.getContext(), cachedKey);
+            if (cachedData != null&&!cachedData.isEmpty()) {
+                TaskProgress progress = gson.fromJson(cachedData, TaskProgress.class);
+                int total = progress.getChapters().size();
+                progress.setTotal(total);
+                progress.setUnlocked(total);
+                progress.setTaskDetail(new TaskDetail(progress.getTotal()-1));
+                emitter.onSuccess(progress);
+            }
+            HttpUrl url = Objects.requireNonNull(HttpUrl.parse(URL_STORY_DETAIL+storyId))
+                    .newBuilder()
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .build();
+            try (Response response = GWApiManager.shared().getClient().newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    emitter.onError(new IOException("HTTP error: " + response.code()));
+                    return;
+                }
+                String responseBody = response.body() != null ? response.body().string() : "";
+                JsonObject data = gson.fromJson(responseBody, JsonObject.class).getAsJsonObject("data");
+                TaskProgress progress = gson.fromJson(data, TaskProgress.class);
+                if (progress != null) {
+                    int total = progress.getChapters().size();
+                    progress.setTotal(total);
+                    progress.setUnlocked(total);
+                    progress.setTaskDetail(new TaskDetail(total-1));
+                    JsonCacheManager.INSTANCE.save(MainApp.getContext(), cachedKey, data.toString());
+//                    taskToday.setIndexByCntComplete(progress.getUnlocked());
+//                    progress.setTaskDetail(taskToday);
+                }
+                emitter.onSuccess(progress);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
     public static Single<Boolean> unlockStory() {
         return Single.create(emitter -> {
             Map<String, String> params = new HashMap<>();
@@ -251,7 +294,7 @@ public class DailyTaskHandler {
                     JsonCacheManager.INSTANCE.save(MainApp.getContext(), KEY_CACHE_TASK_HISTORY, data.toString());
                     emitter.onSuccess(progress);
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });

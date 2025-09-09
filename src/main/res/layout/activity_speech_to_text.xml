@@ -80,12 +80,14 @@
         android:id="@+id/startButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:visibility="gone"
         android:text="开始录音" />
 
     <Button
         android:id="@+id/stopButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:visibility="gone"
         android:text="停止录音" />
 
 
@@ -109,8 +111,14 @@
             android:layout_marginLeft="16dp"
             android:text="已完成打卡次数(0-7)" />
     </LinearLayout>
+    <Button
+        android:id="@+id/getLog"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="拷贝日志" />
 
-<!--    <Button-->
+
+    <!--    <Button-->
 <!--        android:id="@+id/initdbasr"-->
 <!--        android:layout_width="match_parent"-->
 <!--        android:layout_height="wrap_content"-->

@@ -132,10 +132,10 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
             ChatSDK.events().sourceOnMain()
                 .filter(NetworkEvent.filterType(EventType.NetworkStateChanged))
                 .subscribe(Consumer { networkEvent: NetworkEvent? ->
-                    ToastHelper.show(
-                        this@MainDrawerActivity,
-                        "networkEvent:${networkEvent?.isOnline}"
-                    )
+//                    ToastHelper.show(
+//                        this@MainDrawerActivity,
+//                        "networkEvent:${networkEvent?.isOnline}"
+//                    )
                     if (networkEvent != null) {
                         if (!networkEvent.isOnline) {
                             vErrorHint.visibility = View.VISIBLE

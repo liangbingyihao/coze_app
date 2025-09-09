@@ -18,6 +18,11 @@ public class TaskDetail {
         this.status = 0;
     }
 
+    public TaskDetail(int index) {
+        this.index = index;
+        this.status = 0b11111;
+    }
+
     public String getTaskDate() {
         return taskDate;
     }

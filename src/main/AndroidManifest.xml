@@ -71,6 +71,7 @@
 
         <activity android:name="sdk.chat.demo.robot.activities.SettingPromptActivity" />
 
+        <activity android:name="sdk.chat.demo.robot.activities.SettingLangsActivity" />
         <activity android:name="sdk.chat.demo.robot.activities.ArticleListActivity" />
 
         <activity android:name="sdk.chat.demo.robot.activities.FavoriteListActivity" />
@@ -89,6 +90,15 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />  <!-- 确保此文件存在 -->
         </provider>
+
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
     </application>
 
 </manifest>

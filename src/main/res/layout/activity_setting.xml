@@ -48,33 +48,31 @@
             android:orientation="vertical">
 
             <LinearLayout
+                android:id="@+id/config_lang"
                 android:layout_width="match_parent"
                 android:layout_height="58dp"
                 android:orientation="horizontal"
-                android:visibility="gone"
                 android:padding="16dp">
 
                 <!-- 配置名称 -->
                 <TextView
-                    android:id="@+id/config_name"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:text="配置项名称"
+                    android:text="@string/settings_lang"
                     android:textColor="@color/item_text_normal"
                     android:textSize="16sp" />
 
                 <!-- 当前配置值 -->
                 <TextView
-                    android:id="@+id/config_value"
+                    android:id="@+id/lang_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:text="当前值"
                     android:textColor="@color/text_gray"
                     android:textSize="14sp" />
 
@@ -108,6 +106,25 @@
                     android:textSize="16sp" />
             </LinearLayout>
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/gray_divider" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="58dp"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/version"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="version"
+                    android:textColor="@color/item_text_normal"
+                    android:textSize="16sp" />
+            </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
@@ -115,7 +132,7 @@
                 android:background="@color/gray_divider" />
 
             <LinearLayout
-                android:id="@+id/version"
+                android:id="@+id/debug"
                 android:layout_width="wrap_content"
                 android:layout_height="58dp"
                 android:orientation="horizontal"

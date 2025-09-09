@@ -59,7 +59,8 @@ class SearchActivity : BaseActivity(), View.OnClickListener,OnDataListener {
     private lateinit var searchHistoryAdapter: SearchTextAdapter
     private lateinit var searchResultAdapter: SearchResultPagerAdapter
     val threadHandler = ChatSDK.thread() as GWThreadHandler
-    private val hints = listOf("会话", "时间轴", "信仰问答", "收藏")
+    //FIXME
+    private val hints = listOf(R.string.record, R.string.timeline, R.string.questions, R.string.save)
     private var sharedPref: SharedPreferences? = null
 
     @SuppressLint("CheckResult")
@@ -92,7 +93,7 @@ class SearchActivity : BaseActivity(), View.OnClickListener,OnDataListener {
         viewPager.adapter = searchResultAdapter
         // 将 TabLayout 与 ViewPager2 关联
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            tab.text = hints[position]
+            tab.text = getString(hints[position])
         }.attach()
 //        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
 //            override fun onPageSelected(position: Int) {

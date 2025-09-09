@@ -120,7 +120,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
         var action = (t as? TextHolder)?.action
         if (action != GWThreadHandler.action_daily_pray && t.message.text != null && !t.message.text.isEmpty()) {
             var reply = t.message.stringForKey("reply");
-            if(reply!=null&&!reply.isEmpty()){
+            if (reply != null && !reply.isEmpty()) {
                 replyText?.visibility = View.VISIBLE
                 replyText?.text = reply
             }
@@ -141,11 +141,12 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
 
         } else {
             sessionContainer?.visibility = View.GONE
-            if (action != GWThreadHandler.action_daily_pray && !t.message.entityID.equals("welcome")) {
-                setText("原消息已删除", t.enableLinkify())
-            } else {
-                setText("", false);
-            }
+//            if (action != GWThreadHandler.action_daily_pray && !t.message.entityID.equals("welcome")) {
+//                setText("deleted", t.enableLinkify())
+//            } else {
+//                setText("", false);
+//            }
+            setText("", false);
         }
 
         time?.let {
@@ -198,20 +199,6 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
             if (feedbackText.isEmpty()) {
                 feedbackMenu?.visibility = View.GONE
             }
-//            if (aiFeedback?.status == MessageDetail.STATUS_SUCCESS) {
-//                processContainer?.visibility = View.GONE
-//            } else {
-//                processContainer?.visibility = View.VISIBLE
-//                if (t.message.id == threadHandler.pendingMsgId()) {
-//                    feedbackHint?.setText(R.string.loading);
-//                    feedbackHint?.setTextColor("#919191".toColorInt())
-//                    imageFeedbackHint?.setImageResource(R.drawable.loading_animation)
-//                } else {
-//                    feedbackHint?.setText(R.string.ai_failed);
-//                    feedbackHint?.setTextColor("#FFCF4B40".toColorInt())
-//                    imageFeedbackHint?.setImageResource(R.mipmap.ic_redo_red)
-//                }
-//            }
             if (t.message.text.isEmpty() || action == GWThreadHandler.action_daily_pray) {
                 contentMenu?.visibility = View.GONE
             } else {
@@ -259,6 +246,18 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
 
     }
 
+    fun showFeedbackMenus(v: View, visible: Int) {
+        val ids: IntArray = intArrayOf(R.id.btn_like_ai, R.id.btn_play, R.id.btn_del, R.id.btn_redo)
+        for (i in ids) {
+            var sv = v.findViewById<View>(i)
+            if (sv == null || sv.visibility == visible) {
+                return
+            } else {
+                sv.visibility = visible
+            }
+        }
+    }
+
     open fun setText(value: String, linkify: Boolean) {
         if (!value.isEmpty()) {
             bubble?.visibility = View.VISIBLE
@@ -283,7 +282,6 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
     }
 
     open fun bindSendStatus(holder: T): Boolean {
-
         var aiFeedback: MessageDetail? = (holder as? TextHolder)?.getAiFeedback();
         var status = holder.message.messageStatus
 //        Log.d("sending", "bindSendStatus:" + status.name)

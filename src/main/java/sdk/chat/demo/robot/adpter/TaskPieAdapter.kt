@@ -4,11 +4,13 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
+import android.util.Log
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.api.model.TaskDetail
+import sdk.chat.demo.robot.api.model.TaskProgress
 import java.lang.ref.SoftReference
 
 //data class TaskPieHolder(val completed: Boolean, val index: Int)
@@ -27,6 +29,7 @@ class TaskPieAdapter(
 
     @SuppressLint("SetTextI18n")
     fun setData(data: TaskDetail) {
+        Log.e("taskPie","setData and removeAllViews")
         taskToday = data
         pieContainer.removeAllViews()
         for (index in 0..6) {
@@ -71,49 +74,11 @@ class TaskPieAdapter(
                 onItemClick?.invoke(index)
             }
 
+            Log.e("taskPie","setData and addView $index")
             pieContainer.addView(itemView)
+            pieContainer.requestLayout()
 
         }
-
-
-//        this.indexToday = indexToday
-//        listData.clear()
-//        listData.addAll(itemDataList)
-//        listData.forEach { itemData ->
-//            val itemView: View = when (itemData.type) {
-//                ItemType.CIRCLE_CHECK -> LayoutInflater.from(context)
-//                    .inflate(R.layout.item_pie_check, pieContainer, false)
-//
-//                ItemType.PIE_TEXT -> LayoutInflater.from(context)
-//                    .inflate(R.layout.item_pie_text, pieContainer, false).apply {
-//                        findViewById<TextView>(R.id.pieText).text = (itemData.index + 1).toString()
-//                        findViewById<View>(R.id.bg).setBackgroundResource(R.drawable.pie_bg)
-//                    }
-//
-//                ItemType.PIE_TODAY -> LayoutInflater.from(context)
-//                    .inflate(R.layout.item_pie_text, pieContainer, false).apply {
-//                        findViewById<TextView>(R.id.pieText).text = (itemData.index + 1).toString()
-//                        findViewById<View>(R.id.bg).setBackgroundResource(R.drawable.pie_bg_pink)
-//                    }
-//
-//                ItemType.DASHED_PIE_TEXT -> LayoutInflater.from(context)
-//                    .inflate(R.layout.item_pie_text, pieContainer, false).apply {
-//                        findViewById<TextView>(R.id.pieText).text = (itemData.index + 1).toString()
-//                        findViewById<View>(R.id.bg).setBackgroundResource(R.drawable.pie_bg_dashed)
-//                    }
-//            }
-//
-//            // 设置布局参数（平均分配宽度）
-//            itemView.layoutParams = LinearLayout.LayoutParams(
-//                0, // width设为0，weight生效
-//                ViewGroup.LayoutParams.WRAP_CONTENT,
-//                1f // weight=1，5个子View各占1/5
-//            )
-//            itemView.tag = "pie_" + itemData.index
-//
-//            itemView.setOnClickListener { onItemClick(itemData) }
-//
-//            pieContainer.addView(itemView)
     }
 
     fun setSelectView(newView: View?) {
@@ -134,5 +99,11 @@ class TaskPieAdapter(
             ?.setTextColor(context.getColor(R.color.item_text_selected))
 
         pieSelected = SoftReference(newView)
+    }
+
+    fun setSelectIndex(i:Int){
+        Log.e("taskPie","setSelectIndex:$i")
+        var v = pieContainer.findViewWithTag<View>(i)
+        v?.performClick()
     }
 }

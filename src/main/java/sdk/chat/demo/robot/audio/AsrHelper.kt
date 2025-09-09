@@ -4,12 +4,14 @@ import android.util.Log
 import com.bytedance.speech.speechengine.SpeechEngine
 import com.bytedance.speech.speechengine.SpeechEngineDefines
 import com.bytedance.speech.speechengine.SpeechEngineGenerator
+import com.lassi.common.utils.Logger
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.MainApp
+import sdk.chat.demo.robot.extensions.LogHelper
 import sdk.chat.demo.robot.extensions.SpeechStreamRecorder
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -85,7 +87,7 @@ object AsrHelper {
 
     private var lastAsrResult: String = ""
     private var lastDefinite: Boolean = false
-    private var reportIndex: Int = 1
+    private var reportIndex: Int = 0
     fun speechAsrResult(data: String, isFinal: Boolean) {
         try {
 
@@ -107,7 +109,7 @@ object AsrHelper {
 //                    null
 //                }
 //            }
-            Log.i(TAG, "got $isFinal")
+//            Log.i(TAG, "got $isFinal")
             val result = JSONObject(data).opt("result").let { rawResult ->
                 when (rawResult) {
                     is JSONObject -> rawResult
@@ -129,31 +131,55 @@ object AsrHelper {
             if (utterances == null || utterances.length() == 0) {
                 return
             }
-//            for (i in 0 until utterances.length()) {
-//                val utterance = utterances.getString(i) // 或 getJSONObject(i) 根据实际内容
-//                // 处理每个 utterance
-//                Log.i(TAG, "$i: $utterance\n")
-//            }
-            if (utterances.length() > reportIndex) {
-                reportIndex = utterances.length() - 1
+            if (utterances.length() > reportIndex + 1) {
+                Log.i(TAG, "${utterances.length()}: $reportIndex")
             }
-            var ret = utterances.getJSONObject(reportIndex - 1)
-            var text = ret.getString("text")
-            var definite = ret.getBoolean("definite")
-            if (text.equals(lastAsrResult) && lastDefinite == definite) {
-                return
-            }
-            lastAsrResult = text
-            lastDefinite = definite
-            reportIndex = utterances.length()
-            ChatSDK.events().source()
-                .accept(NetworkEvent.messageInputAsr(definite, text, true))
+            val logId = result
+                .optJSONObject("additions")
+                ?.optString("log_id")
+                ?: ""
+            for (i in reportIndex..utterances.length() - 1) {
+                var ret = utterances.getJSONObject(i)
+                var text = ret.getString("text")
+                var definite = ret.getBoolean("definite")
+                if (i == reportIndex && text.equals(lastAsrResult) && lastDefinite == definite) {
+                    continue
+                }
+                lastAsrResult = text
+                lastDefinite = definite
+                LogHelper.appendLog("logId:$logId,index:$i,definite:$definite,text:,$text")
+                ChatSDK.events().source()
+                    .accept(NetworkEvent.messageInputAsr(definite, text, true))
 
-//            if (isFinal) {
-//                text += "\nreqid: " + reader.getString("reqid")
+            }
+            reportIndex = utterances.length() - 1
+//FIXME
+//            if (utterances.length() > reportIndex) {
+//                reportIndex = utterances.length() - 1
 //            }
+//            var ret = utterances.getJSONObject(reportIndex - 1)
+//            var text = ret.getString("text")
+//            var definite = ret.getBoolean("definite")
+//            if (text.equals(lastAsrResult) && lastDefinite == definite) {
+//                return
+//            }
+////            for (i in 0 until utterances.length()) {
+////                val utterance = utterances.getString(i) // 或 getJSONObject(i) 根据实际内容
+////                // 处理每个 utterance
+////                Log.i(TAG, "$i: $utterance\n")
+////            }
+//            lastAsrResult = text
+//            lastDefinite = definite
+//            reportIndex = utterances.length()
+//            appendLog("0:$definite,$text")
+//            ChatSDK.events().source()
+//                .accept(NetworkEvent.messageInputAsr(definite, text, true))
+//
+////            if (isFinal) {
+////                text += "\nreqid: " + reader.getString("reqid")
+////            }
         } catch (e: JSONException) {
-            e.printStackTrace()
+//            e.printStackTrace()
         }
     }
 
@@ -261,7 +287,10 @@ object AsrHelper {
 //        val hotWords = "{\"hotwords\":[{\"word\":\"属灵\",\"scale\":50.0},{\"word\":\"分别为圣\",\"scale\":50.0}]}"
 //        mSpeechEngine!!.sendDirective(SpeechEngineDefines.DIRECTIVE_UPDATE_ASR_HOTWORDS, hotWords)
 
-        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_ASR_REQ_PARAMS_STRING,"{\"force_to_speech_time\":0, \"end_window_size\":800,\"corpus\":{\"boosting_table_id\":\"ec86438f-22e4-41ba-a714-af4a7b874cbf\"}, \"context\": \"{\"correct_words\": {\"deep seek\": \"DeepSeek\"}}\"}");
+        mSpeechEngine!!.setOptionString(
+            SpeechEngineDefines.PARAMS_KEY_ASR_REQ_PARAMS_STRING,
+            "{\"result_type\":\"single\",\"force_to_speech_time\":0, \"end_window_size\":800,\"corpus\":{\"boosting_table_id\":\"ec86438f-22e4-41ba-a714-af4a7b874cbf\"}, \"context\": \"{\"correct_words\": {\"deep seek\": \"DeepSeek\"}}\"}"
+        );
 
 
         //【可选配置】在线请求的建连与接收超时，一般不需配置使用默认值即可
@@ -360,7 +389,7 @@ object AsrHelper {
 
             lastAsrResult = ""
             lastDefinite = false
-            reportIndex = 1
+            reportIndex = 0
             recordIsRunning = true
             Log.i(TAG, "配置启动参数.")
             //【可选配置】该按钮为长按模式，预期是按下开始录音，抬手结束录音，需要关闭云端自动判停功能。
@@ -399,6 +428,11 @@ object AsrHelper {
                 SpeechEngineDefines.PARAMS_KEY_ASR_SHOW_UTTER_BOOL,
                 true
             )
+
+            mSpeechEngine!!.setOptionString(
+                SpeechEngineDefines.PARAMS_KEY_ASR_REQ_PARAMS_STRING,
+                "{\"result_type\":\"single\",\"force_to_speech_time\":0, \"end_window_size\":800,\"corpus\":{\"boosting_table_id\":\"ec86438f-22e4-41ba-a714-af4a7b874cbf\"}, \"context\": \"{\"correct_words\": {\"deep seek\": \"DeepSeek\"}}\"}"
+            );
 
             // Directive：启动引擎前调用SYNC_STOP指令，保证前一次请求结束。
             Log.i(TAG, "关闭引擎（同步）")
