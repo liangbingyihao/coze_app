@@ -102,10 +102,10 @@ public class SplashScreenActivity extends AppCompatActivity {
         // 确保主界面启动前所有服务就绪
         if (ChatSDK.currentUser()!=null) {
             startActivity(new Intent(this, MainDrawerActivity.class));
+            finish();
         } else {
             ToastHelper.show(this,R.string.network_error);
         }
-        finish();
     }
 
     private void showErrorAndRetry() {

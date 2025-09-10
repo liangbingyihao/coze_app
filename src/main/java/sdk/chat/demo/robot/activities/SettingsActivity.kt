@@ -79,8 +79,7 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
                 .getPackageInfo(packageName, 0)
                 .versionName
                 ?: "Unknown"
-            var sysLang = LanguageUtils.getSystemLanguage()
-            findViewById< TextView>(R.id.version).text = "$versionName,$sysLang"
+            findViewById< TextView>(R.id.version).text = versionName
         } catch (e: Exception) {
             "Unknown"
         }
@@ -102,6 +101,8 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
         }
         if (rid > 0) {
             tvLang.setText(rid)
+        }else{
+            tvLang.text = LanguageUtils.getSystemLanguage()
         }
 
     }

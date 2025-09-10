@@ -195,9 +195,12 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
             sessionContainer?.visibility = View.GONE
             processContainer?.visibility = View.GONE
             sendErrorHint?.visibility = View.GONE
+            showFeedbackMenus(feedbackMenu, View.GONE)
         } else {
             if (feedbackText.isEmpty()) {
                 feedbackMenu?.visibility = View.GONE
+            }else{
+                showFeedbackMenus(feedbackMenu, View.VISIBLE)
             }
             if (t.message.text.isEmpty() || action == GWThreadHandler.action_daily_pray) {
                 contentMenu?.visibility = View.GONE
@@ -246,7 +249,10 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
 
     }
 
-    fun showFeedbackMenus(v: View, visible: Int) {
+    fun showFeedbackMenus(v: View?, visible: Int) {
+        if(v==null){
+            return
+        }
         val ids: IntArray = intArrayOf(R.id.btn_like_ai, R.id.btn_play, R.id.btn_del, R.id.btn_redo)
         for (i in ids) {
             var sv = v.findViewById<View>(i)

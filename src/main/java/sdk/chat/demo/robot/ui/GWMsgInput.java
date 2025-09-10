@@ -559,7 +559,7 @@ public class GWMsgInput extends RelativeLayout
                     startPos = editable.length();
                 }
                 lastLength = 0;
-                Log.e("AsrHelper1", "set startPos: " + startPos);
+                LogHelper.INSTANCE.appendLog("set startPos: " + startPos+", for "+newText);
             }
             Log.e("AsrHelper1", "definite: " + definite + ",newText:" + newText + ",startPos:" + startPos);
 //            editable.insert(startPos, newText);

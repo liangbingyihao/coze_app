@@ -15,6 +15,8 @@ public class AIFeedback {
     private String tag;
     private String bible;
     private String view;
+    private List<String> explore;
+    private String prompt;
 
     public String getColorTag() {
         return colorTag;
@@ -62,5 +64,21 @@ public class AIFeedback {
 
     public void setView(String view) {
         this.view = view;
+    }
+
+    public String getPrompt() {
+        return prompt;
+    }
+
+    public void setPrompt(String prompt) {
+        this.prompt = prompt;
+    }
+
+    public List<String> getExplore() {
+        return explore;
+    }
+
+    public void setExplore(List<String> explore) {
+        this.explore = explore;
     }
 }

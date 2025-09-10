@@ -4,7 +4,7 @@
     <string name="main_title">恩语Grace Word</string>
     <string name="firestream_link"><a href="https://www.google.com/">More Details</a></string>
     <string name="contacts">AI Assistant</string>
-    <string name="conversations" formatted="false">Conversations</string>
+    <string name="conversations" formatted="false">To Record</string>
     <string name="create_session_hint" formatted="false">Have a try</string>
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
@@ -26,7 +26,7 @@
     <string name="daily_gw">Daily Grace Word</string>
     <string name="search">Search</string>
     <string name="search_history">History</string>
-    <string name="timeline">GraceJournal</string>
+    <string name="timeline">Grace Journal</string>
     <string name="pending_image">Processing image...</string>
     <string name="copied">Copied to clipboard.</string>
     <string name="save">Save</string>

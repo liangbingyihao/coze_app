@@ -30,25 +30,7 @@ class SettingLangsActivity : BaseActivity(), View.OnClickListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_setting_langs)
         findViewById<View>(R.id.home).setOnClickListener(this)
-        var lang = LanguageUtils.getSavedLanguage(this@SettingLangsActivity)
-        var rid = 0
-        when (lang) {
-            "zh-Hans" -> {
-                rid = R.id.radioZH
-            }
-
-            "zh-Hant" -> {
-                rid = R.id.radioHant
-            }
-
-            "en-US" -> {
-                rid = R.id.radioEN
-            }
-        }
-        if (rid > 0) {
-            val radioButton = findViewById<RadioButton?>(rid)
-            radioButton.setChecked(true)
-        }
+        initSetting()
 
         val radioGroup = findViewById<RadioGroup>(R.id.radioGroup)
         radioGroup.postDelayed({
@@ -74,6 +56,38 @@ class SettingLangsActivity : BaseActivity(), View.OnClickListener {
                 finish()
             }
         }, 10)
+    }
+
+    fun initSetting() {
+        var lang = LanguageUtils.getSavedLanguage(this@SettingLangsActivity)
+        var rid = 0
+        when (lang) {
+            "zh-Hans" -> {
+                rid = R.id.radioZH
+            }
+
+            "zh-Hant" -> {
+                rid = R.id.radioHant
+            }
+
+            "en-US" -> {
+                rid = R.id.radioEN
+            }
+        }
+        if (rid == 0) {
+            lang = LanguageUtils.getSystemLanguage()
+            if (lang.contains("en", ignoreCase = true)) {
+                rid = R.id.radioEN
+            } else if (lang.contains("Hant", ignoreCase = true)) {
+                rid = R.id.radioHant
+            } else if (lang.contains("zh", ignoreCase = true)) {
+                rid = R.id.radioZH
+            }
+        }
+        if (rid > 0) {
+            val radioButton = findViewById<RadioButton?>(rid)
+            radioButton.setChecked(true)
+        }
     }
 
     override fun getLayout(): Int {

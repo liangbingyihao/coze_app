@@ -77,15 +77,18 @@ public class ImageDaily {
 //            function.add(List.of(f, Integer.toString(GWThreadHandler.action_input_prompt), f));
 //        }
         for (String f : explore) {
-            if (f.indexOf("祷告默想和实际应用") > 0) {
-                function.add(
-                        List.of(f, Integer.toString(GWThreadHandler.action_daily_pray), scripture)
-                );
-            } else {
-                function.add(
-                        List.of(f)
-                );
-            }
+            function.add(
+                    List.of(f)
+            );
+//            if (f.indexOf("祷告默想和实际应用") > 0) {
+//                function.add(
+//                        List.of(f, Integer.toString(GWThreadHandler.action_daily_pray), scripture)
+//                );
+//            } else {
+//                function.add(
+//                        List.of(f)
+//                );
+//            }
         }
 
         return function;
