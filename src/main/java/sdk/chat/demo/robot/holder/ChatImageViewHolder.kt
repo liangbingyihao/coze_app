@@ -27,6 +27,7 @@ import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.manager.DownloadablePayload
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.robot.IconUtils
+import sdk.chat.demo.robot.adpter.data.AIExplore
 import sdk.chat.demo.robot.api.model.ImageDaily
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.ui.R
@@ -407,9 +408,9 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
             Log.d("imageDaily", "imageDaily==null")
             return
         }
-        if (action == GWThreadHandler.action_bible_pic) {
+        if (action == AIExplore.ExploreItem.action_bible_pic) {
             bible?.text = imageDaily?.scripture
-        } else if (action == GWThreadHandler.action_daily_gw || action == GWThreadHandler.action_daily_gw_pray) {
+        } else if (action == AIExplore.ExploreItem.action_daily_gw || action == AIExplore.ExploreItem.action_daily_gw_pray) {
             day?.text = if (imageDaily.date != null) imageDaily.date.substring(8) else ""
             month?.text = if (imageDaily.date != null) imageDaily.date.substring(0, 7) else ""
             bible?.text = imageDaily.scripture

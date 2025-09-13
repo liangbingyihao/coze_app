@@ -60,7 +60,7 @@ class SearchActivity : BaseActivity(), View.OnClickListener,OnDataListener {
     private lateinit var searchResultAdapter: SearchResultPagerAdapter
     val threadHandler = ChatSDK.thread() as GWThreadHandler
     //FIXME
-    private val hints = listOf(R.string.record, R.string.timeline, R.string.questions, R.string.save)
+    private val hints = listOf(R.string.search_record, R.string.timeline, R.string.questions, R.string.save)
     private var sharedPref: SharedPreferences? = null
 
     @SuppressLint("CheckResult")

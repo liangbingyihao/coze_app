@@ -24,6 +24,7 @@ import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.StoryCoverAdapter
 import sdk.chat.demo.robot.adpter.TaskPieAdapter
+import sdk.chat.demo.robot.adpter.data.AIExplore
 import sdk.chat.demo.robot.api.model.Story
 import sdk.chat.demo.robot.api.model.TaskProgress
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil.formatDayAgo
@@ -107,7 +108,7 @@ class TaskActivity : BaseActivity(), View.OnClickListener {
                     threadHandler.sendExploreMessage(
                         "【每日恩语】-${date}",
                         threadHandler.aiExplore.message,
-                        GWThreadHandler.action_daily_gw_pray,
+                        AIExplore.ExploreItem.action_daily_gw_pray,
                         date
                     ).subscribe();
                     finish()

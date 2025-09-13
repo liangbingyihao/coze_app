@@ -79,8 +79,15 @@
     <string name="guide_desc_2">圣经历史背景，基础知识，经典解读快速查询，信仰问答一站式收藏。</string>
     <string name="guide_3">每日恩语</string>
     <string name="guide_desc_3">个性化经文+实践指南\n助你活出信仰力量</string>
-    <string name="record">会话</string>
+    <string name="task_done">太棒了！你已完成今日的恩旅任务，请领取今日的圣经故事启发哦</string>
+    <string name="task_unlock">领取</string>
+    <string name="later">稍后再看</string>
+    <string name="search_record">会话</string>
     <string name="questions">信仰问答</string>
     <string name="copy">拷贝</string>
     <string name="settings_lang">语言</string>
+    <string name="search_keyword_hint">搜索关键字</string>
+    <string name="message_deleted">原消息已删除</string>
+    <string name="setting_export_pending">正在导出中，请稍后…</string>
+    <string name="setting_export_done">已成功导出，请点击浏览器下载</string>
 </resources>

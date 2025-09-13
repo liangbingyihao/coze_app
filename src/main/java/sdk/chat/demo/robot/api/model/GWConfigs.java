@@ -7,6 +7,9 @@ import java.util.List;
 public class GWConfigs {
     private GWConfigItem configs;
 
+//    @SerializedName("welcome_msg")
+//    private MessageDetail welcomeMsg;
+
     @SerializedName("text_to_speech_voices")
     private List<DBVoiceType> dbVoiceTypes;
     public GWConfigItem getConfigs() {
@@ -24,6 +27,14 @@ public class GWConfigs {
     public void setDbVoiceTypes(List<DBVoiceType> dbVoiceTypes) {
         this.dbVoiceTypes = dbVoiceTypes;
     }
+
+//    public MessageDetail getWelcomeMsg() {
+//        return welcomeMsg;
+//    }
+//
+//    public void setWelcomeMsg(MessageDetail welcomeMsg) {
+//        this.welcomeMsg = welcomeMsg;
+//    }
 
     public static class GWConfigItem {
         @SerializedName("generating_hint")

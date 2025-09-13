@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.ImagePagerAdapter
+import sdk.chat.demo.robot.adpter.data.AIExplore
 import sdk.chat.demo.robot.api.ImageApi
 import sdk.chat.demo.robot.api.model.TaskDetail
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil.getDateBefore
@@ -208,7 +209,7 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
             R.id.btn_download, R.id.btn_share_image -> {
                 val currentPosition = viewPager.currentItem
                 var data = DailyGWHolder(
-                    GWThreadHandler.action_daily_gw,
+                    AIExplore.ExploreItem.action_daily_gw,
                     adapter.getUrlAt(currentPosition)
                 )
                 imageHandler.onMessageViewClick(v, data)
@@ -219,9 +220,9 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
                     val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
                     var date = adapter.getUrlAt(viewPager.currentItem)?.date
 
-                    var action = GWThreadHandler.action_daily_gw
+                    var action = AIExplore.ExploreItem.action_daily_gw
                     if (!taskDetail!!.isTaskCompleted(TaskDetail.TASK_PRAY_MASK)) {
-                        action = GWThreadHandler.action_daily_gw_pray
+                        action = AIExplore.ExploreItem.action_daily_gw_pray
                     }
 //                threadHandler.aiExplore.contextId
                     threadHandler.sendExploreMessage(

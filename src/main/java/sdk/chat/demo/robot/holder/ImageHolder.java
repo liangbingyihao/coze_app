@@ -13,6 +13,7 @@ import kotlin.jvm.JvmField;
 import sdk.chat.core.dao.Keys;
 import sdk.chat.core.dao.Message;
 import sdk.chat.core.session.ChatSDK;
+import sdk.chat.demo.robot.adpter.data.AIExplore;
 import sdk.chat.demo.robot.api.ImageApi;
 import sdk.chat.demo.robot.api.model.ImageDaily;
 import sdk.chat.demo.robot.api.model.MessageDetail;
@@ -34,7 +35,7 @@ public class ImageHolder extends ImageMessageHolder {
         action = message.integerForKey("action");
         if (!message.stringForKey(Keys.ImageUrl).isEmpty()) {
             imageDaily = new ImageDaily(message.stringForKey("image-text"), message.stringForKey(Keys.ImageUrl));
-        } else if (action == GWThreadHandler.action_daily_gw || action == GWThreadHandler.action_daily_gw_pray) {
+        } else if (action == AIExplore.ExploreItem.action_daily_gw || action == AIExplore.ExploreItem.action_daily_gw_pray) {
             bibleDate = message.stringForKey("image-date");
         }
     }
@@ -44,7 +45,7 @@ public class ImageHolder extends ImageMessageHolder {
     }
 
     public ImageDaily getImageDaily() {
-        if (imageDaily == null && (action == GWThreadHandler.action_daily_gw || action == GWThreadHandler.action_daily_gw_pray)) {
+        if (imageDaily == null && (action == AIExplore.ExploreItem.action_daily_gw || action == AIExplore.ExploreItem.action_daily_gw_pray)) {
             imageDaily = ImageApi.getImageDailyListCache(bibleDate);
         }
         return imageDaily;

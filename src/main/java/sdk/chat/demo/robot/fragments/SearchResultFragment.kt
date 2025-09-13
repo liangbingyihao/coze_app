@@ -148,7 +148,7 @@ class SearchResultFragment : BaseFragment() {
                             swipeRefreshLayout.setCanLoadMore(false)
                             Toast.makeText(
                                 context,
-                                "没有记录",
+                                getString(R.string.error_no_data),
                                 Toast.LENGTH_SHORT
                             ).show()
                         } else {

@@ -3,6 +3,7 @@ package sdk.chat.demo;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -11,6 +12,7 @@ import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.utils.Device;
 import sdk.chat.demo.robot.ChatSDKCoze;
 import sdk.chat.demo.robot.extensions.LanguageUtils;
+import sdk.chat.demo.robot.extensions.LogHelper;
 import sdk.chat.demo.robot.handlers.GWAuthenticationHandler;
 import sdk.chat.demo.robot.push.UpdateTokenWorker;
 import sdk.guru.common.DisposableMap;
@@ -35,6 +37,7 @@ public class MainApp extends Application implements Configuration.Provider, Appl
     private final DisposableMap dm = new DisposableMap();
     private boolean isInitialized = false;
     private Activity currentActivity;
+    private ChatSDK chatSDK;
 
     public static Context getContext() {
         return context;
@@ -68,18 +71,16 @@ public class MainApp extends Application implements Configuration.Provider, Appl
     public void onCreate() {
         super.onCreate();
         registerActivityLifecycleCallbacks(this);
-        Log.i("MainApp", "MainApp.onCreate");
+        LogHelper.INSTANCE.appendLog("MainApp.onCreate");
         context = getApplicationContext();
         scheduleTokenUpdate();
 
-        Log.i("MainApp", "MainApp.PrepareEnvironment");
         SpeechEngineGenerator.PrepareEnvironment(getApplicationContext(), this);
 
-        Log.i("MainApp", "MainApp.ChatSDKCoze");
         try {
             // Setup Chat SDK
             boolean drawerEnabled = !Device.honor();
-            ChatSDKCoze.quickStartWithEmail(this, drawerEnabled,"");
+            ChatSDKCoze.quickStartWithEmail(this, drawerEnabled, "");
 //            ContactBookModule.shared()
 
             dm.add(ChatSDK.auth().authenticate()
@@ -87,16 +88,19 @@ public class MainApp extends Application implements Configuration.Provider, Appl
                     .doFinally(GWAuthenticationHandler::ensureDatabase)
                     .subscribe(
                             () -> {
-                                Log.w("MainApp", "authenticate done");
+                                LogHelper.INSTANCE.appendLog("authenticate done");
                                 isInitialized = true;
+                                chatSDK = ChatSDK.shared();
                             },
                             error -> { /* 错误处理 */
-                                Log.w("MainApp", error.getMessage());
+                                LogHelper.INSTANCE.appendLog("authenticate error:"+error.getMessage());
+                                LogHelper.INSTANCE.reportExportEvent("app.init", "authenticate error", error);
                                 isInitialized = true;
                             }
                     ));
         } catch (Exception e) {
-            Log.i("MainApp", "MainApp.onCreate:e:"+e.getMessage());
+            LogHelper.INSTANCE.appendLog("MainApp.onCreate:e:"+e.getMessage());
+            LogHelper.INSTANCE.reportExportEvent("app.init", "init error", e);
             assert (false);
         }
         setupEnhancedCrashReporting();
@@ -112,7 +116,7 @@ public class MainApp extends Application implements Configuration.Provider, Appl
                 FirebaseCrashlytics crashlytics = FirebaseCrashlytics.getInstance();
 
                 // 添加上下文信息
-                crashlytics.setCustomKey("process",getApplicationInfo().processName);
+                crashlytics.setCustomKey("process", getApplicationInfo().processName);
                 crashlytics.setCustomKey("last_activity",
                         currentActivity != null ? currentActivity.getClass().getSimpleName() : "none");
                 crashlytics.setCustomKey("app_version",

@@ -8,8 +8,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
-    >
+    android:background="@color/white">
     <!--    @drawable/gradient_primary-->
     <FrameLayout
         android:id="@+id/home"
@@ -51,14 +50,14 @@
 
     </TextView>
 
-<!--    <View-->
-<!--        android:id="@+id/dash_line"-->
-<!--        android:layout_width="1dp"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:layout_marginStart="64dp"-->
-<!--        android:layout_marginTop="?attr/actionBarSize"-->
-<!--        android:background="@drawable/dashed_line_vertical"-->
-<!--        android:layerType="software" />-->
+    <!--    <View-->
+    <!--        android:id="@+id/dash_line"-->
+    <!--        android:layout_width="1dp"-->
+    <!--        android:layout_height="match_parent"-->
+    <!--        android:layout_marginStart="64dp"-->
+    <!--        android:layout_marginTop="?attr/actionBarSize"-->
+    <!--        android:background="@drawable/dashed_line_vertical"-->
+    <!--        android:layerType="software" />-->
 
     <sdk.chat.demo.robot.ui.LoadMoreSwipeRefreshLayout
         android:id="@+id/swiperefreshlayout"
@@ -133,6 +132,15 @@
             app:strokeColor="@color/item_text_selected"
             app:strokeWidth="1dp" />
     </FrameLayout>
+
+    <ImageView
+        android:id="@+id/scrollTop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right|bottom"
+        android:layout_marginRight="28dp"
+        android:layout_marginBottom="76dp"
+        android:src="@mipmap/ic_load_top" />
 
     <LinearLayout
         android:id="@+id/edSummaryContainer"

@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import sdk.chat.demo.MainApp
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.extensions.dpToPx
+import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.demo.robot.handlers.GWThreadHandler.headTopic
 
 sealed class HistoryItem {
@@ -67,7 +68,7 @@ class SessionAdapter(
             return TYPE_DATE
         }
         if (item is HistoryItem.SessionItem) {
-            if (position == 0 && (item.title == headTopic)) {
+            if (position == 0 && (item.sessionId == GWThreadHandler.qaThreadId)) {
                 return TYPE_HEADER
             }
         }
@@ -117,7 +118,7 @@ class SessionAdapter(
         fun bind(item: HistoryItem.SessionItem, position: Int) {
             titleText.text = item.title
             if (position == 0) {
-                if(item.title == headTopic){
+                if(item.sessionId == GWThreadHandler.qaThreadId){
                     titleText.background = GradientDrawable().apply {
                         // 设置四角半径（顺序：左上,右上,右下,左下）
                         cornerRadii = floatArrayOf(
@@ -129,7 +130,7 @@ class SessionAdapter(
                         setColor(Color.WHITE)
                     }
                 }
-            } else if (position == 1 && (items[0] as HistoryItem.SessionItem).title == headTopic) {
+            } else if (position == 1 && (items[0] as HistoryItem.SessionItem).sessionId == GWThreadHandler.qaThreadId) {
                 if (items.size > 2) {
                     itemView.background = GradientDrawable().apply {
                         // 设置四角半径（顺序：左上,右上,右下,左下）

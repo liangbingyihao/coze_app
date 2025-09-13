@@ -62,7 +62,6 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
     private var editingMode = 0
     private val EDIT_SUMMARY = 1
     private val EDIT_TOPIC_NAME = 2
-    private var currentPage = 1
 
     companion object {
         private const val EXTRA_INITIAL_DATA = "initial_data"
@@ -95,6 +94,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         tvTitle.setOnClickListener(this)
         findViewById<View>(R.id.edSummaryExit).setOnClickListener(this)
         findViewById<View>(R.id.edSummaryConfirm).setOnClickListener(this)
+        findViewById<View>(R.id.scrollTop).setOnClickListener(this)
         vMoreMenus = findViewById<View>(R.id.more_menus)
         vMoreMenus.setOnClickListener(this)
         bConversations = findViewById<View>(R.id.conversations)
@@ -226,7 +226,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         var menuPopupAdapter = SessionPopupAdapter(this, items, selectedPosition)
         var title = items[selectedPosition].title
         tvTitle.text = title
-        if (title == "信仰问答") {
+        if (sessionId == GWThreadHandler.qaThreadId) {
             vMoreMenus.visibility = View.INVISIBLE
         } else {
             vMoreMenus.visibility = View.VISIBLE
@@ -245,7 +245,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                         menuPopup.setTitle(item.title)
                         loadArticles()
 
-                        if (item.title == "信仰问答") {
+                        if (item.id == GWThreadHandler.qaThreadId) {
                             vMoreMenus.visibility = View.INVISIBLE
                         } else {
                             vMoreMenus.visibility = View.VISIBLE
@@ -399,9 +399,9 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                 }
             }
 
-//            R.id.conversations -> {
-//                finish()
-//            }
+            R.id.scrollTop -> {
+                recyclerView.scrollToPosition(0)
+            }
 
             R.id.more_menus -> {
                 PopupMenuHelper(

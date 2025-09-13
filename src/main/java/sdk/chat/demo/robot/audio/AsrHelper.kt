@@ -110,6 +110,10 @@ object AsrHelper {
 //                }
 //            }
 //            Log.i(TAG, "got $isFinal")
+            if(!recordIsRunning){
+                LogHelper.appendLog("speechAsrResult but asr stopped")
+                return
+            }
             val result = JSONObject(data).opt("result").let { rawResult ->
                 when (rawResult) {
                     is JSONObject -> rawResult

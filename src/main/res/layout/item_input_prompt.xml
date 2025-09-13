@@ -36,8 +36,7 @@
             android:id="@+id/closeReply"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:src="@mipmap/ic_close_tiny" />
+            android:padding="8dp"/>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
 

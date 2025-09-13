@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">GraceWord</string>
+    <string name="app_name">Grace Word</string>
     <string name="main_title">恩语Grace Word</string>
     <string name="firestream_link"><a href="https://www.google.com/">More Details</a></string>
     <string name="contacts">AI Assistant</string>
@@ -29,7 +29,7 @@
     <string name="timeline">Grace Journal</string>
     <string name="pending_image">Processing image...</string>
     <string name="copied">Copied to clipboard.</string>
-    <string name="save">Save</string>
+    <string name="save">Favorite</string>
     <string name="unsave">Unsave</string>
     <string name="saved">Added to saved items</string>
     <string name="unsaved">Removed from saved items</string>
@@ -82,10 +82,14 @@
     <string name="task_unlock">Claim</string>
     <string name="later">View Later</string>
     <string name="grace_journey">Grace Journey·%s</string>
-    <string name="record">Conversation</string>
+    <string name="search_record">All</string>
     <string name="questions">Faith Q&amp;A</string>
     <string name="settings_lang">Language</string>
     <string name="lan_en">English</string>
     <string name="lan_zh">简体中文</string>
     <string name="lan_zh_hant">繁體中文</string>
+    <string name="search_keyword_hint">Keywords</string>
+    <string name="message_deleted">Original message has been deleted</string>
+    <string name="setting_export_pending">Exporting in progress, please wait…</string>
+    <string name="setting_export_done">Export completed successfully. Please click to download in your browser.</string>
   </resources>

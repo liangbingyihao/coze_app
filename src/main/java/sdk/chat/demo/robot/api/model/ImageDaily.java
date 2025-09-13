@@ -5,6 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
 import java.util.List;
 
+import sdk.chat.demo.robot.adpter.data.AIExplore;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
 
 public class ImageDaily {
@@ -70,25 +71,11 @@ public class ImageDaily {
         this.explore = explore;
     }
 
-    public List<List<String>> getExploreWithParams() {
+    public List<AIExplore.ExploreItem> getExploreWithParams() {
 
-        List<List<String>> function = new ArrayList<>();
-//        for(String f:prompt){
-//            function.add(List.of(f, Integer.toString(GWThreadHandler.action_input_prompt), f));
-//        }
-        for (String f : explore) {
-            function.add(
-                    List.of(f)
-            );
-//            if (f.indexOf("祷告默想和实际应用") > 0) {
-//                function.add(
-//                        List.of(f, Integer.toString(GWThreadHandler.action_daily_pray), scripture)
-//                );
-//            } else {
-//                function.add(
-//                        List.of(f)
-//                );
-//            }
+        List<AIExplore.ExploreItem> function = new ArrayList<>();
+        for (String e : explore) {
+            function.add(new AIExplore.ExploreItem(0,null,e));
         }
 
         return function;

@@ -79,6 +79,13 @@
     <string name="guide_desc_2">聖經歷史背景，基礎知識，經典解讀快速查詢，信仰問答一站式收藏。</string>
     <string name="guide_3">每日恩語</string>
     <string name="guide_desc_3">個性化經文+實踐指南\n助你活出信仰力量</string>
-    <string name="record">會話</string>
+    <string name="task_done">太棒了！你已完成今日的恩旅任務，請領取今日的聖經故事啟發哦</string>
+    <string name="task_unlock">領取</string>
+    <string name="later">稍後再看</string>
+    <string name="search_record">會話</string>
     <string name="questions">信仰問答</string>
+    <string name="search_keyword_hint">搜尋關鍵字</string>
+    <string name="message_deleted">訊息已刪除</string>
+    <string name="setting_export_pending">正在匯出中，請稍後…</string>
+    <string name="setting_export_done">已成功匯出，請點擊瀏覽器下載</string>
 </resources>

@@ -248,8 +248,8 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
             String messageId = delegate.getMessageId();
             if (messageId != null && !messageId.isEmpty()) {
                 Message msg = ChatSDK.db().fetchMessageWithEntityID(messageId);
-                if(msg!=null){
-                    startId = msg.getId()+1;
+                if (msg != null) {
+                    startId = msg.getId() + 1;
 //                    Toast.makeText(
 //                            getContext(),
 //                            "准加载id: " + msg.getId(),
@@ -431,7 +431,7 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
     protected void addMessageHoldersToEnd(List<MessageHolder> holders, boolean notify) {
         // Add to current holders at zero index
         // Newest first
-        if(holders==null|| holders.isEmpty()){
+        if (holders == null || holders.isEmpty()) {
             return;
         }
         List<MessageHolder> toAdd = new ArrayList<>();
@@ -449,9 +449,9 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
         assert layoutManager != null;
         int position = layoutManager.findLastVisibleItemPosition();
 
-        messagesListAdapter.addHistoryMessages(toAdd,  () -> {
+        messagesListAdapter.addHistoryMessages(toAdd, () -> {
             messagesList.setItemAnimator(null);
-            layoutManager.scrollToPositionWithOffset(position+1, 700);
+            layoutManager.scrollToPositionWithOffset(position + 1, 700);
 
             return Unit.INSTANCE;
         });
@@ -545,6 +545,11 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
         }
     }
 
+    public void scrollToLatest() {
+        messagesList.post(() -> {
+            messagesList.getLayoutManager().scrollToPosition(0);
+        });
+    }
 //    public void copySelectedMessagesText(Context context, MessagesListAdapter.Formatter<MessageHolder> formatter, boolean reverse) {
 //        messagesListAdapter.copySelectedMessagesText(context, formatter, reverse);
 //    }

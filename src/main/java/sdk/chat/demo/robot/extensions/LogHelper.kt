@@ -1,9 +1,10 @@
 package sdk.chat.demo.robot.extensions
 
-import sdk.chat.demo.robot.audio.AsrHelper
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
 
 object LogHelper {
     private const val LOG_CLEAR_INTERVAL = 120_000L // 2分钟（毫秒）
@@ -44,5 +45,24 @@ object LogHelper {
     fun clearLogs() {
         logStr = ""
         lastLogTime = 0L
+    }
+
+    fun reportExportEvent(event: String, log: String,  throwable:Throwable?) {
+        val crashlytics = FirebaseCrashlytics.getInstance()
+
+
+        // 记录基本信息
+        crashlytics.log(log)
+
+
+        // 设置自定义键
+        crashlytics.setCustomKey("event", event)
+
+
+        // 如果有错误
+        if (throwable!=null) {
+            crashlytics.recordException(throwable)
+        }
+
     }
 }

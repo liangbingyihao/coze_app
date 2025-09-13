@@ -166,6 +166,29 @@
         <item name="android:button">@drawable/radio_button_selector</item>
     </style>
 
+    <style name="RoundedDialogTheme" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <!-- 圆角配置 -->
+        <item name="shapeAppearanceOverlay">@style/RoundedDialogShape</item>
+
+        <!-- 按钮颜色配置 -->
+        <item name="colorPrimary">@color/item_text_selected</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/colorAccent</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+<!--        &lt;!&ndash; 取消按钮颜色 &ndash;&gt;-->
+<!--        <item name="colorError">@color/your_cancel_color</item>-->
+<!--        <item name="colorOnError">@color/on_error_color</item>-->
+
+        <!-- 确保背景透明 -->
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+
+    <!-- 圆角形状定义 -->
+    <style name="RoundedDialogShape" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
     <!--    <style name="PopupWindowAnimation.NoAnimation">-->
 <!--        <item name="android:windowEnterAnimation">@null</item>-->
 <!--        <item name="android:windowExitAnimation">@null</item>-->

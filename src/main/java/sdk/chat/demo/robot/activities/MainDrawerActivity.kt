@@ -2,8 +2,6 @@ package sdk.chat.demo.robot.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.speech.tts.TextToSpeech
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -18,6 +16,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import materialsearchview.MaterialSearchView
+import org.greenrobot.greendao.query.QueryBuilder
+import sdk.chat.core.dao.DaoCore
 import sdk.chat.core.dao.Thread
 import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
@@ -29,6 +29,7 @@ import sdk.chat.demo.robot.audio.AsrHelper
 import sdk.chat.demo.robot.audio.TTSHelper
 import sdk.chat.demo.robot.dialog.DialogEditSingle
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil
+import sdk.chat.demo.robot.extensions.LogHelper
 import sdk.chat.demo.robot.extensions.dpToPx
 import sdk.chat.demo.robot.fragments.GWChatFragment
 import sdk.chat.demo.robot.handlers.GWThreadHandler
@@ -37,7 +38,6 @@ import sdk.chat.demo.robot.ui.HighlightOverlayView
 import sdk.chat.demo.robot.ui.hasShownGuideOverlay
 import sdk.chat.demo.robot.ui.listener.GWClickListener
 import sdk.chat.ui.activities.MainActivity
-import sdk.chat.ui.utils.ToastHelper
 import sdk.guru.common.RX
 import java.util.concurrent.TimeUnit
 import kotlin.math.min
@@ -73,6 +73,11 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(layout)
+
+        val daoCore: DaoCore = ChatSDK.db().getDaoCore()
+        if (daoCore==null||daoCore.getDaoSession() == null) {
+            LogHelper.reportExportEvent("app.init", "getDaoSession == null: "+LogHelper.logStr, null)
+        }
 
         drawerLayout = findViewById(R.id.root_container)
         highlightOverlay = findViewById(R.id.overlay)
@@ -232,7 +237,7 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
         val sessionMenus: ArrayList<HistoryItem> = ArrayList<HistoryItem>()
         var lastTime: String? = null
         toReloadSessions = false
-        for (i in 0 until min(sessions.size, 50)) {
+        for (i in 0 until min(sessions.size, 100)) {
             var session = sessions[i]
 //            var thisTime =
 //                DateLocalizationUtil.getFriendlyDate(this@MainDrawerActivity, session.creationDate)
@@ -256,7 +261,7 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
 
     private fun createSessionMenu() {
         dm.add(
-            threadHandler.listOrNewSessions()
+            threadHandler.listSessions()
                 .subscribeOn(Schedulers.io()) // Specify database operations on IO thread
                 .observeOn(AndroidSchedulers.mainThread()) // Results return to main thread
                 .subscribe(

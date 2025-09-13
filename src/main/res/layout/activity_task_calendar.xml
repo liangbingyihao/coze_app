@@ -39,14 +39,15 @@
         app:mcv_selectionMode="multiple"
         app:mcv_showOtherDates="none"
         app:mcv_showWeekDays="true"
-        app:mcv_tileHeight="40dp" />
+        app:mcv_tileHeight="30dp" />
 
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="-30dp">
+        android:layout_marginTop="-30dp"
+        android:visibility="gone">
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"

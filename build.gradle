@@ -9,7 +9,6 @@ android {
 
     defaultConfig {
         applicationId "sdk.chat.android.robot"
-//        manifestPlaceholders += [applicationId: "sdk.chat.android.live"]
 
         multiDexEnabled = true
         minSdkVersion Integer.parseInt(project.DEMO_MIN_SDK)
@@ -18,6 +17,20 @@ android {
         versionName CHAT_SDK_VERSION
         versionCode CHAT_SDK_BUILD_NUMBER as int
     }
+
+//    flavorDimensions "version"
+//    productFlavors {
+//        free {
+//            dimension "version"
+////            applicationIdSuffix ".free"
+//            versionNameSuffix ""
+//        }
+//        official {
+//            dimension "version"
+////            applicationIdSuffix ".pro"
+//            versionNameSuffix "-official"
+//        }
+//    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
@@ -37,12 +50,18 @@ android {
             storeFile file('debug.keystore')
             storePassword 'D3bug123'
         }
+        release {
+            keyAlias project.property("signing.keyId")
+            keyPassword project.property("signing.password")
+            storeFile file('d:\\graceword.jks')
+            storePassword project.property("signing.password")
+        }
     }
 
     buildTypes {
         release {
-//            minifyEnabled project.hasProperty('minifyRelease') && minifyRelease
-            minifyEnabled false
+            minifyEnabled true
+            signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android.txt'), '../chat-sdk-proguard-rules.pro', 'proguard-rules.pro'
         }
         debug {
@@ -52,6 +71,17 @@ android {
             ext.alwaysUpdateBuildId = false
         }
     }
+//    applicationVariants.all { variant ->
+//        variant.outputs.all { output ->
+//            def versionName = variant.versionName
+//            def versionCode = variant.versionCode
+//            def flavor = variant.flavorName
+//            def formattedDate = new Date().format('yyyyMMddHHmm')
+//
+//            outputFileName = "graceword_v${versionName}_${versionCode}.apk"
+//        }
+//    }
+
     lint {
         abortOnError false
         checkReleaseBuilds false

@@ -25,6 +25,7 @@ import sdk.chat.demo.robot.api.GWApiManager;
 import sdk.chat.demo.robot.api.ImageApi;
 import sdk.chat.demo.robot.api.model.ImageDaily;
 import sdk.chat.demo.robot.extensions.DeviceIdHelper;
+import sdk.chat.demo.robot.extensions.LogHelper;
 import sdk.guru.common.RX;
 
 
@@ -75,7 +76,7 @@ public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
     }
 
     public static void ensureDatabase() throws Exception {
-        Log.w("MainApp", "ensureDatabase");
+        LogHelper.INSTANCE.appendLog("ensureDatabase isAuthenticated:"+GWApiManager.shared().isAuthenticated());
         if (!GWApiManager.shared().isAuthenticated()) {
             initDatabaseByUser(ChatSDK.currentUserID());
         }
@@ -83,6 +84,7 @@ public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
 
     public static void initDatabaseByUser(String userId) throws Exception {
         if(userId==null||userId.isEmpty()){
+            LogHelper.INSTANCE.appendLog("ensureDatabase no userId");
             throw new Exception("no userId");
         }
         ChatSDK.db().openDatabase(userId);
@@ -106,10 +108,10 @@ public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
                 ChatSDK.shared().getKeyStorage().save(details.username, details.password);
             }
             GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
+            ImageApi.getServerConfigs().subscribe();
             handler.getWelcomeMsg().subscribe();
             handler.createChatSessions();
             ImageApi.listImageTags().subscribe();
-            ImageApi.getServerConfigs().subscribe();
 
 //            if (ChatSDK.hook() != null) {
 //                HashMap<String, Object> data = new HashMap<>();

@@ -32,7 +32,7 @@ import java.time.temporal.TemporalAdjusters
 
 class TaskCalendarActivity : BaseActivity(), View.OnClickListener {
     private lateinit var taskProcess: TaskHistory
-    private lateinit var taskPieAdapter: TaskPieAdapter
+//    private lateinit var taskPieAdapter: TaskPieAdapter
     private lateinit var vPre: ImageView
     private lateinit var vNext: ImageView
     private lateinit var tvStory: TextView

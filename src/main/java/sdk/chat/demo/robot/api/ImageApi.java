@@ -5,10 +5,13 @@ import static sdk.chat.demo.robot.api.GWApiManager.buildPostRequest;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import org.greenrobot.greendao.query.QueryBuilder;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -16,6 +19,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Single;
 import okhttp3.Call;
@@ -24,6 +28,13 @@ import okhttp3.HttpUrl;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.OkHttpClient;
+import sdk.chat.core.dao.DaoCore;
+import sdk.chat.core.dao.Message;
+import sdk.chat.core.dao.MessageDao;
+import sdk.chat.core.events.NetworkEvent;
+import sdk.chat.core.session.ChatSDK;
+import sdk.chat.core.types.MessageSendStatus;
+import sdk.chat.core.types.MessageType;
 import sdk.chat.demo.MainApp;
 import sdk.chat.demo.robot.api.model.ExportInfo;
 import sdk.chat.demo.robot.api.model.GWConfigs;
@@ -32,7 +43,10 @@ import sdk.chat.demo.robot.api.model.ImageDailyList;
 import sdk.chat.demo.robot.api.model.ImageItem;
 import sdk.chat.demo.robot.api.model.ImageTag;
 import sdk.chat.demo.robot.api.model.ImageTagList;
+import sdk.chat.demo.robot.api.model.MessageDetail;
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil;
+import sdk.chat.demo.robot.handlers.GWThreadHandler;
+import sdk.guru.common.RX;
 
 public class ImageApi {
     public final static String URL2 = "https://api-test.kolacdn.xyz/api/v1/app/";
@@ -163,7 +177,7 @@ public class ImageApi {
             List<ImageDaily> imageList = null;
             if (cachedImage != null) {
                 imageList = cachedImage.getImgs();
-                List<ImageDaily> result = filterBeforeDate(imageList, endDateStr,true);
+                List<ImageDaily> result = filterBeforeDate(imageList, endDateStr, true);
                 if (!result.isEmpty()) {
                     emitter.onSuccess(result);
                     return;
@@ -204,7 +218,7 @@ public class ImageApi {
                 } else {
                     newImageDailyList.setImgs(mergeImageLists(imageList, newList));
                     JsonCacheManager.INSTANCE.save(MainApp.getContext(), KEY_CACHE_IMG_DAILY, gson.toJson(newImageDailyList));
-                    newList = filterBeforeDate(newImageDailyList.getImgs(), endDateStr,false);
+                    newList = filterBeforeDate(newImageDailyList.getImgs(), endDateStr, false);
                 }
                 emitter.onSuccess(newList);
             } catch (IOException e) {
@@ -222,7 +236,7 @@ public class ImageApi {
      */
     public static List<ImageDaily> filterBeforeDate(
             List<ImageDaily> imageList,
-            String endDate,boolean includeEndDate) {
+            String endDate, boolean includeEndDate) {
 
         List<ImageDaily> result = new ArrayList<>();
         boolean hitEnd = !includeEndDate;
@@ -231,7 +245,7 @@ public class ImageApi {
             if (cmp > 0) {
                 continue;
             }
-            if (includeEndDate&&cmp == 0) {
+            if (includeEndDate && cmp == 0) {
                 hitEnd = true;
             } else if (!hitEnd) {
                 return result;
@@ -301,6 +315,31 @@ public class ImageApi {
                 if (newConfigs != null) {
                     gwConfigs = newConfigs;
                     JsonCacheManager.INSTANCE.save(MainApp.getContext(), KEY_CACHE_CONFIGS, data.toString());
+
+
+                    DaoCore daoCore = ChatSDK.db().getDaoCore();
+                    QueryBuilder<Message> qb = daoCore.getDaoSession().queryBuilder(Message.class);
+                    qb.where(MessageDao.Properties.EntityID.eq("welcome")).limit(1);
+                    List<Message> localWelcomeMsg = qb.list();
+
+                    if (localWelcomeMsg.isEmpty()) {
+                        JsonObject welcomeMsg = data.getAsJsonObject("welcome_msg");
+                        if (welcomeMsg != null) {
+                            welcomeMsg.addProperty("status", MessageDetail.STATUS_SUCCESS);
+                            Message message = new Message();
+                            message.setEntityID("welcome");
+                            message.setSender(ChatSDK.currentUser());
+                            message.setDate(new Date(1640995200000L));
+                            message.setType(MessageType.Text);
+                            message.setMessageStatus(MessageSendStatus.Sent, false);
+                            ChatSDK.db().insertOrReplaceEntity(message);
+                            ChatSDK.events().source().accept(NetworkEvent.messageAdded(message));
+                            GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
+                            handler.updateMessage(message, welcomeMsg);
+                        }
+
+                    }
+
                     emitter.onSuccess(gwConfigs);
                 }
                 emitter.onSuccess(gwConfigs);
@@ -321,7 +360,9 @@ public class ImageApi {
 
             Request request = buildPostRequest(params, URL_EXPORT);
 
-            OkHttpClient client = GWApiManager.shared().getClient();
+            OkHttpClient client = GWApiManager.shared().getClient().newBuilder()
+                    .readTimeout(180, TimeUnit.SECONDS)
+                    .build();
 
             client.newCall(request).enqueue(new Callback() {
                 @Override

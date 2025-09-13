@@ -29,6 +29,7 @@ import sdk.chat.core.manager.DownloadablePayload
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.core.types.MessageSendStatus
 import sdk.chat.demo.pre.R
+import sdk.chat.demo.robot.adpter.data.AIExplore
 import sdk.chat.demo.robot.api.model.MessageDetail
 import sdk.chat.demo.robot.audio.TTSHelper
 import sdk.chat.demo.robot.extensions.StateStorage
@@ -118,7 +119,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
         val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
         replyText?.visibility = View.GONE
         var action = (t as? TextHolder)?.action
-        if (action != GWThreadHandler.action_daily_pray && t.message.text != null && !t.message.text.isEmpty()) {
+        if (action != AIExplore.ExploreItem.action_daily_pray && t.message.text != null && !t.message.text.isEmpty()) {
             var reply = t.message.stringForKey("reply");
             if (reply != null && !reply.isEmpty()) {
                 replyText?.visibility = View.VISIBLE
@@ -146,7 +147,11 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
 //            } else {
 //                setText("", false);
 //            }
-            setText("", false);
+            if (action != AIExplore.ExploreItem.action_daily_pray && !t.message.entityID.equals("welcome")) {
+                setText(bubble?.context?.getString(R.string.message_deleted) ?: "", false)
+            } else {
+                setText("", false);
+            }
         }
 
         time?.let {
@@ -202,7 +207,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
             }else{
                 showFeedbackMenus(feedbackMenu, View.VISIBLE)
             }
-            if (t.message.text.isEmpty() || action == GWThreadHandler.action_daily_pray) {
+            if (t.message.text.isEmpty() || action == AIExplore.ExploreItem.action_daily_pray) {
                 contentMenu?.visibility = View.GONE
             } else {
                 contentMenu?.visibility = View.VISIBLE

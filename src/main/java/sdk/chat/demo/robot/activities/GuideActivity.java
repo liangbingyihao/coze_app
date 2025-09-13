@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -18,8 +19,11 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.button.MaterialButton;
 import com.gyf.immersionbar.ImmersionBar;
 
+import java.util.Locale;
+
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.demo.pre.R;
+import sdk.chat.demo.robot.extensions.LanguageUtils;
 import sdk.chat.ui.utils.ToastHelper;
 
 public class GuideActivity extends AppCompatActivity {
@@ -28,9 +32,9 @@ public class GuideActivity extends AppCompatActivity {
     private LinearLayout dotsLayout;
     private MaterialButton btnNext;
     private final int[] guideImages = {
-            R.mipmap.ic_intro_1,
-            R.mipmap.ic_intro_2,
-            R.mipmap.ic_intro_3
+            R.mipmap.ic_intro_m1,
+            R.mipmap.ic_intro_m2,
+            R.mipmap.ic_intro_m3
     };
     private final int[] guideTitles = {
             R.string.guide_1,
@@ -55,8 +59,18 @@ public class GuideActivity extends AppCompatActivity {
         btnNext = findViewById(R.id.btnNext);
 
         // 设置适配器
-        GuideViewAdapter adapter = new GuideViewAdapter(guideImages,guideTitles,guideDescriptions);
-        viewPager.setAdapter(adapter);
+
+        var lang = Locale.getDefault().toLanguageTag();
+        int h = dpToPx(300);
+        if (lang.contains("en")) {
+            int[] hs = {h, h * 2, h * 2};
+            GuideViewAdapter adapter = new GuideViewAdapter(guideImages, guideTitles, guideDescriptions, hs);
+            viewPager.setAdapter(adapter);
+        } else {
+            int[] hs = {h, h, h};
+            GuideViewAdapter adapter = new GuideViewAdapter(guideImages, guideTitles, guideDescriptions, hs);
+            viewPager.setAdapter(adapter);
+        }
 
         // 添加指示点
 //        addDots(0);
@@ -117,23 +131,25 @@ public class GuideActivity extends AppCompatActivity {
     }
 
     private void launchMainActivity() {
-        if (ChatSDK.currentUser()!=null) {
+        if (ChatSDK.currentUser() != null) {
             startActivity(new Intent(this, MainDrawerActivity.class));
-        }else{
-            ToastHelper.show(this,R.string.network_error);
+            finish();
+        } else {
+            ToastHelper.show(this, R.string.network_error);
         }
-        finish();
     }
 
     class GuideViewAdapter extends RecyclerView.Adapter<GuideViewAdapter.ViewHolder> {
         private int[] guideImages;
         private int[] guideTitles;
         private int[] guideDescriptions;
+        private int[] maskHeights;
 
-        public GuideViewAdapter(int[] images, int[] titles, int[] descriptions) {
+        public GuideViewAdapter(int[] images, int[] titles, int[] descriptions, int[] maskHeights) {
             this.guideImages = images;
             this.guideTitles = titles;
             this.guideDescriptions = descriptions;
+            this.maskHeights = maskHeights;
         }
 
         @NonNull
@@ -149,6 +165,10 @@ public class GuideActivity extends AppCompatActivity {
             holder.imageView.setImageResource(guideImages[position]);
             holder.titleView.setText(getString(guideTitles[position]));
             holder.descView.setText(getString(guideDescriptions[position]));
+
+            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) holder.maskView.getLayoutParams();
+            params.height = maskHeights[position]; // 设置新高度（单位：像素）
+            holder.maskView.setLayoutParams(params);
         }
 
         @Override
@@ -160,12 +180,14 @@ public class GuideActivity extends AppCompatActivity {
             ImageView imageView;
             TextView titleView;
             TextView descView;
+            View maskView;
 
             public ViewHolder(View view) {
                 super(view);
                 imageView = view.findViewById(R.id.image);
                 titleView = view.findViewById(R.id.title);
                 descView = view.findViewById(R.id.description);
+                maskView = view.findViewById(R.id.image_mask);
             }
         }
     }

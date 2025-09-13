@@ -104,6 +104,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/added_to_timeline"
+            android:layout_marginRight="2dp"
             android:textColor="#B1B1B1"
             android:textSize="14sp"
             tools:text="session_name" />
@@ -139,8 +140,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="4dp"
-            android:lineSpacingExtra="8dp"
-            android:lineSpacingMultiplier="1"
             android:text="@string/loading"
             android:textColor="@color/text_gray2"
             android:textIsSelectable="true"

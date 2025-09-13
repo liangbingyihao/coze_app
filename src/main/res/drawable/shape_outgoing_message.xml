@@ -2,7 +2,7 @@
     <!-- 主气泡矩形 -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="@color/bubble_color" />
+            <solid android:color="@color/bg_special" />
             <corners
                 android:topLeftRadius="8dp"
                 android:topRightRadius="8dp"
@@ -16,7 +16,7 @@
         android:bottom="-6dp">
         <rotate android:fromDegrees="45">
             <shape android:shape="rectangle">
-                <solid android:color="@color/bubble_color" />
+                <solid android:color="@color/bg_special" />
                 <size android:width="12dp" android:height="12dp" />
             </shape>
         </rotate>

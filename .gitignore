@@ -15,6 +15,7 @@ org.eclipse.buildship.core.prefs
 #Gradle files
 .gradle/
 build/
+tmp/
 
 # Files for the Dalvik VM
 *.dex

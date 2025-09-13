@@ -2,15 +2,14 @@ package sdk.chat.demo.robot.api.model;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import sdk.chat.demo.robot.handlers.GWThreadHandler;
+import sdk.chat.demo.robot.adpter.data.AIExplore;
 
 public class AIFeedback {
     @SerializedName("color_tag")
     private String colorTag;
-    private List<List<String>> function;
+    private List<AIExplore.ExploreItem> functions;
     private String topic;
     private String tag;
     private String bible;
@@ -26,12 +25,12 @@ public class AIFeedback {
         this.colorTag = colorTag;
     }
 
-    public List<List<String>> getFunction() {
-        return function;
+    public List<AIExplore.ExploreItem> getFunctions() {
+        return functions;
     }
 
-    public void setFunction(List<List<String>> function) {
-        this.function = function;
+    public void setFunctions(List<AIExplore.ExploreItem> functions) {
+        this.functions = functions;
     }
 
     public String getTopic() {

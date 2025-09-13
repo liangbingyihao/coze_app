@@ -9,7 +9,9 @@ import android.os.Bundle
 import android.view.View
 import android.widget.RadioButton
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -27,6 +29,8 @@ import sdk.guru.common.RX
 
 class SettingsActivity : BaseActivity(), View.OnClickListener {
     private lateinit var tvLang: TextView
+    private lateinit var loadingDialog: AlertDialog
+    private var exportInfo: ExportInfo? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,6 +40,7 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
         findViewById<View>(R.id.debug).setOnClickListener(this)
         findViewById<View>(R.id.config_lang).setOnClickListener(this)
         tvLang = findViewById<TextView>(R.id.lang_value)
+        initView()
         getSettings()
     }
 
@@ -79,7 +84,7 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
                 .getPackageInfo(packageName, 0)
                 .versionName
                 ?: "Unknown"
-            findViewById< TextView>(R.id.version).text = versionName
+            findViewById<TextView>(R.id.version).text = versionName
         } catch (e: Exception) {
             "Unknown"
         }
@@ -101,14 +106,65 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
         }
         if (rid > 0) {
             tvLang.setText(rid)
-        }else{
+        } else {
             tvLang.text = LanguageUtils.getSystemLanguage()
+        }
+
+    }
+
+    private fun initView() {
+
+        loadingDialog = MaterialAlertDialogBuilder(this)
+            .setMessage(R.string.setting_export)
+            .setPositiveButton(R.string.export_open, null)
+            .setNegativeButton(R.string.cancel) { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setBackground(ContextCompat.getDrawable(this, R.drawable.dialog_background))
+            .create()
+
+        loadingDialog.setOnShowListener {
+            // 获取按钮并自定义
+            loadingDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE)?.apply {
+//                setBackgroundColor(ContextCompat.getColor(context, R.color.colorPrimary))
+                setTextColor(ContextCompat.getColor(context, R.color.item_text_selected))
+                setOnClickListener {
+                    if (exportInfo == null) {
+                        loadingDialog.setMessage("null!")
+                    } else {
+                        exportInfo?.let {
+                            try {
+                                val intent =
+                                    Intent(
+                                        Intent.ACTION_VIEW,
+                                        Uri.parse(exportInfo!!.downLoadUrl)
+                                    )
+                                // 确保只有浏览器能处理此Intent（排除其他可能的应用）
+                                intent.addCategory(Intent.CATEGORY_BROWSABLE)
+                                // 禁止弹出应用选择对话框（直接使用默认浏览器）
+                                intent.setPackage(null)
+                                startActivity(intent)
+                            } catch (e: ActivityNotFoundException) {
+                                ToastHelper.show(this@SettingsActivity, "No browser available")
+                            }
+                        }
+                        loadingDialog.dismiss()
+                    }
+                }
+            }
+
+            loadingDialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE)?.apply {
+                setTextColor(ContextCompat.getColor(context, R.color.item_text_normal))
+            }
         }
 
     }
 
 
     fun getExportInfo() {
+        exportInfo = null;
+        loadingDialog.setMessage(getString(R.string.setting_export_pending))
+        loadingDialog.show()
         dm.add(
             ImageApi.getExploreInfo()
                 .subscribeOn(Schedulers.io()) // Specify database operations on IO thread
@@ -128,50 +184,16 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
                     { error -> // onError
                         ToastHelper.show(
                             this@SettingsActivity,
-                            "加载失败: $error"
+                            error.message
                         )
+                        loadingDialog.setMessage(getString(R.string.failed_and_retry))
                     })
         )
 
     }
 
     fun showExportMenus(exportInfo: ExportInfo) {
-        MaterialAlertDialogBuilder(this@SettingsActivity)
-            .setTitle(getString(R.string.setting_export)) // 可选标题
-            .setItems(
-                arrayOf(
-                    getString(R.string.export_copy),
-                    getString(R.string.export_open),
-                    getString(R.string.cancel)
-                )
-            ) { dialog, which ->
-                when (which) {
-                    0 -> {
-                        val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
-                        val clip = ClipData.newPlainText("恩语", exportInfo.downLoadUrl)
-                        clipboard.setPrimaryClip(clip)
-                        ToastHelper.show(
-                            this@SettingsActivity,
-                            R.string.export_hint
-                        )
-                    }    // 点击"拷贝链接"
-                    1 -> {
-                        try {
-                            val intent =
-                                Intent(Intent.ACTION_VIEW, Uri.parse(exportInfo.downLoadUrl))
-                            // 确保只有浏览器能处理此Intent（排除其他可能的应用）
-                            intent.addCategory(Intent.CATEGORY_BROWSABLE)
-                            // 禁止弹出应用选择对话框（直接使用默认浏览器）
-                            intent.setPackage(null)
-                            startActivity(intent)
-                        } catch (e: ActivityNotFoundException) {
-                            ToastHelper.show(this@SettingsActivity, "未找到浏览器应用")
-                        }
-                    } // 点击"浏览器下载"
-                    2 -> dialog.dismiss() // 点击"取消"
-                }
-            }
-            .setCancelable(true) // 点击外部可关闭
-            .show()
+        this.exportInfo = exportInfo
+        loadingDialog.setMessage(getString(R.string.setting_export_done))
     }
 }

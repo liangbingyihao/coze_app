@@ -49,7 +49,7 @@ open class ExploreViewHolder(view: View) : RecyclerView.ViewHolder(view) {
                 var data = aiExplore.itemList[i]
                 v.visibility = View.VISIBLE
                 v.text = data.text
-                if (data.action == GWThreadHandler.action_bible_pic) {
+                if (data.action == AIExplore.ExploreItem.action_bible_pic) {
                     var bible = aiFeedback?.feedback?.bible ?: ""
                     if (bible.isEmpty()) {
                         v.visibility = View.GONE
@@ -71,8 +71,8 @@ open class ExploreViewHolder(view: View) : RecyclerView.ViewHolder(view) {
                                 .show()
                         }
                     }
-                } else if (data.action == GWThreadHandler.action_input_prompt) {
-                    var event = NetworkEvent.messageInputPrompt(data.text,data.params)
+                } else if (data.action == AIExplore.ExploreItem.action_input_prompt) {
+                    var event = NetworkEvent.messageInputPrompt(data.text,data.getParamsStr())
                     v.setOnClickListener { view ->
                         ChatSDK.events().source().accept(event)
                     }
@@ -83,7 +83,7 @@ open class ExploreViewHolder(view: View) : RecyclerView.ViewHolder(view) {
                             view.text.toString().trim(),
                             aiExplore.message,
                             data.action,
-                            data.params
+                            data.getParamsStr()
                         ).subscribe();
                     }
                 }

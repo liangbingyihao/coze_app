@@ -32,6 +32,7 @@ import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.activities.ArticleListActivity;
 import sdk.chat.demo.robot.activities.ImageViewerActivity;
 import sdk.chat.demo.robot.adpter.ChatAdapter;
+import sdk.chat.demo.robot.adpter.data.AIExplore;
 import sdk.chat.demo.robot.api.model.AIFeedback;
 import sdk.chat.demo.robot.api.model.ImageDaily;
 import sdk.chat.demo.robot.api.model.MessageDetail;
@@ -126,7 +127,7 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
             ImageHolder holder = (ImageHolder) imessage;
             message = holder.message;
             imageDaily = holder.getImageDaily();
-            if (holder.getAction() == GWThreadHandler.action_bible_pic) {
+            if (holder.getAction() == AIExplore.ExploreItem.action_bible_pic) {
                 resId = R.layout.view_popup_image_bible;
             } else {
                 resId = R.layout.item_image_gw;
@@ -249,7 +250,7 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
                 threadHandler.sendExploreMessage(
                         "",
                         t.message,
-                        GWThreadHandler.action_bible_pic,
+                        AIExplore.ExploreItem.action_bible_pic,
                         feedback.getTag() + "|" + feedback.getBible()
                 ).subscribe();
             }
@@ -324,7 +325,7 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
             threadHandler.sendExploreMessage(
                     "关于以上内容的祷告和默想建议",
                     message,
-                    GWThreadHandler.action_daily_pray,
+                    AIExplore.ExploreItem.action_daily_pray,
                     params
             ).subscribe();
         } else if (id == R.id.reply_error_hint || id == R.id.send_error_hint) {

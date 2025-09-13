@@ -62,6 +62,7 @@ import sdk.chat.core.utils.StringChecker;
 import sdk.chat.demo.examples.helper.CustomPrivateThreadsFragment;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.activities.TaskActivity;
+import sdk.chat.demo.robot.adpter.data.AIExplore;
 import sdk.chat.demo.robot.audio.AsrHelper;
 import sdk.chat.demo.robot.extensions.LogHelper;
 import sdk.chat.demo.robot.handlers.DailyTaskHandler;
@@ -73,13 +74,11 @@ import sdk.chat.demo.robot.ui.listener.GWClickListener;
 import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.activities.BaseActivity;
 import sdk.chat.ui.activities.preview.ChatPreviewActivity;
-import sdk.chat.demo.robot.ui.AudioBinder;
 import sdk.chat.ui.fragments.AbstractChatFragment;
 import sdk.chat.ui.interfaces.TextInputDelegate;
 import sdk.chat.ui.keyboard.KeyboardAwareFrameLayout;
 import sdk.chat.ui.module.UIModule;
 import sdk.chat.ui.utils.ToastHelper;
-import sdk.chat.ui.views.ReplyView;
 import sdk.guru.common.DisposableMap;
 import sdk.guru.common.RX;
 
@@ -110,6 +109,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
     protected DisposableMap dm = new DisposableMap();
 
     protected KeyboardOverlayHelper koh;
+    protected View scrollBottom;
 
     private String messageId;
 
@@ -210,15 +210,6 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
             }
         });
 
-
-        getKeyboardAwareView().keyboardShownListeners.add(() -> {
-            input.updateInputHeight();
-        });
-
-        getKeyboardAwareView().keyboardHiddenListeners.add(() -> {
-            input.updateInputHeight();
-        });
-
         return rootView;
     }
 
@@ -243,7 +234,6 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 //        divider.setVisibility(View.VISIBLE);
         updateChatViewMargins(true);
     }
-
 
 
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -384,14 +374,36 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 //        replyView.setOnCancelListener(v -> hideReplyView());
 
         setChatState(TypingIndicatorHandler.State.active);
+        scrollBottom = rootView.findViewById(R.id.scrollBottom);
 
-//        rootView.findViewById(R.id.closeReply).setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                hideReplyView();
-//            }
-//        });
-        ;
+        scrollBottom.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (messageId != null && !messageId.isEmpty()) {
+                    messageId = null;
+                    chatView.clear();
+                    chatView.postDelayed(() -> {
+                        chatView.onLoadMore(0, 0);
+                    }, 500);
+//
+                } else {
+                    chatView.scrollToLatest();
+                }
+            }
+        });
+
+
+        getKeyboardAwareView().keyboardShownListeners.add(() -> {
+            input.updateInputHeight();
+            scrollBottom.setVisibility(View.GONE);
+        });
+
+        getKeyboardAwareView().keyboardHiddenListeners.add(() -> {
+            input.updateInputHeight();
+            if(!input.isFullScreen()){
+                scrollBottom.setVisibility(View.VISIBLE);
+            }
+        });
 
         if (enableTrace) {
             Debug.startMethodTracing("chat");
@@ -513,6 +525,17 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(networkEvent -> {
                     Log.e("TaskHandler", "TaskDone");
+                    if (DailyTaskHandler.shouldNotify() && getActivity() != null) {
+                        showMaterialConfirmationDialog(
+                                getActivity(),
+                                getString(R.string.task_done), getString(R.string.task_unlock), getString(R.string.later),
+                                () -> {
+                                    // 这里是positiveAction的逻辑
+                                    Intent intent = new Intent(getActivity(), TaskActivity.class);
+                                    startActivity(intent);
+                                    return Unit.INSTANCE;
+                                });
+                    }
                 }));
         if (chatView != null) {
             chatView.addListeners();
@@ -554,13 +577,13 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
             LogHelper.INSTANCE.appendLog("sendMessage with empty text ");
             return;
         }
-        LogHelper.INSTANCE.appendLog("sendMessage:" + text.substring(0, Math.min(10,text.length())));
+        LogHelper.INSTANCE.appendLog("sendMessage:" + text.substring(0, Math.min(10, text.length())));
 
         String prompt = input.getMessagePrompt();
 
-        if (prompt!=null) {
+        if (prompt != null) {
             GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
-            handleMessageSend(handler.sendExploreMessage(text, null, GWThreadHandler.action_input_prompt, prompt));
+            handleMessageSend(handler.sendExploreMessage(text, null, AIExplore.ExploreItem.action_input_prompt, prompt));
         } else {
             handleMessageSend(ChatSDK.thread().sendMessageWithText(text.trim(), thread));
         }
@@ -572,7 +595,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
         completable.observeOn(RX.main()).doOnError(throwable -> {
             Log.e("sending", throwable.getLocalizedMessage());
             showToast(throwable.getLocalizedMessage());
-            LogHelper.INSTANCE.appendLog("handleMessageSend error:"+throwable.getMessage());
+            LogHelper.INSTANCE.appendLog("handleMessageSend error:" + throwable.getMessage());
         }).subscribe(this);
     }
 
@@ -606,7 +629,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
         showTextInput();
 
-        if (DailyTaskHandler.shouldNotify()&&getActivity()!=null) {
+        if (DailyTaskHandler.shouldNotify() && getActivity() != null) {
             showMaterialConfirmationDialog(
                     getActivity(),
                     getString(R.string.task_done), getString(R.string.task_unlock), getString(R.string.later),
@@ -852,7 +875,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
             @Override
             public int getKeyboardHeight() {
-                if(getKeyboardAwareView().isKeyboardOpen()){
+                if (getKeyboardAwareView().isKeyboardOpen()) {
                     return getKeyboardAwareView().getKeyboardHeight();
                 }
                 return 0;

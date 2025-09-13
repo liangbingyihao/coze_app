@@ -1,4 +1,6 @@
 package sdk.chat.demo.robot.api
+
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
@@ -17,20 +19,20 @@ class ClientNetworkException(
 class ServerUnavailableException(
     val code: Int,
     val response: Response? = null
-) : IOException("服务端错误: $code")
+) : IOException("ServerUnavailableException: $code")
 
 // 业务逻辑异常
 class BusinessException(
     val code: Int,
     val response: Response? = null,
-    val msg:String = "业务错误"
+    val msg: String = "BusinessException"
 ) : IOException("$code:$msg")
 
 // 服务端不可用异常
 class HttpException(
     val code: Int,
     val response: Response? = null
-) : IOException("http未知错误: $code")
+) : IOException("HttpException: $code")
 
 class ErrorClassifierInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -40,7 +42,7 @@ class ErrorClassifierInterceptor : Interceptor {
 
             if (!response.isSuccessful) {
                 val errorBody = response.peekBody(1024).string()
-                var errorMessage:String = errorBody.toString()
+                var errorMessage: String = errorBody.toString()
                 try {
                     val json = JSONObject(errorBody)
                     errorMessage = json.optString("msg", "Unknown error")
@@ -48,14 +50,32 @@ class ErrorClassifierInterceptor : Interceptor {
                     println("Raw error response: $errorBody")
                 }
 
+                val crashlytics = FirebaseCrashlytics.getInstance()
+                crashlytics.setCustomKey(
+                    "event",
+                    "http_error"
+                )
+                crashlytics.setCustomKey(
+                    "url",
+                    request.url.toString()
+                )
+                crashlytics.setCustomKey(
+                    "message",
+                    errorMessage
+                )
+                crashlytics.setCustomKey(
+                    "code",
+                    response.code
+                )
                 when (response.code) {
                     401 -> {
                         // 不直接抛出异常，而是返回401响应
                         return response
                     }
-                    in 400..499 -> throw BusinessException(response.code,response,errorMessage)
-                    in 500..599 -> throw ServerUnavailableException(response.code,response)
-                    else -> throw HttpException(response.code,response)
+
+                    in 400..499 -> throw BusinessException(response.code, response, errorMessage)
+                    in 500..599 -> throw ServerUnavailableException(response.code, response)
+                    else -> throw HttpException(response.code, response)
                 }
             }
             return response

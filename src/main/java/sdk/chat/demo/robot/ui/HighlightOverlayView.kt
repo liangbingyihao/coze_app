@@ -83,13 +83,17 @@ class HighlightOverlayView @JvmOverloads constructor(
         }
 
         var m: ImageView? = null
+        var resId = 0
         if (mode == guideDrawer) {
+//            m = context.findViewById<ImageView>(R.id.menu_home)
+//            highlightTarget.setText(R.string.guide_drawer)
+//            highlightDesc.setText(R.string.guide_drawer_desc)
             val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
             var topic = threadHandler.getSessionName(weakMessage?.get()?.threadId)
             if (topic != null) {
                 m = context.findViewById<ImageView>(R.id.menu_home)
                 highlightTarget.setText(R.string.guide_drawer)
-                var desc = context.getString(R.string.guide_drawer_desc, topic)
+                var desc = context.getString(R.string.guide_drawer_desc)
                 highlightDesc.text = desc
             }
         } else if (mode == guidePic) {
@@ -99,6 +103,7 @@ class HighlightOverlayView @JvmOverloads constructor(
             m = findTopmostVisibleViewByResId(r, R.id.btn_pic) as ImageView?
             highlightTarget.setText(R.string.guide_pic)
             highlightDesc.setText(R.string.guide_pic_desc)
+            resId = R.mipmap.ic_pic_guide
         } else if (mode == guidePray) {
             var r: RecyclerView =
                 context.findViewById<View>(R.id.chatView)
@@ -106,12 +111,13 @@ class HighlightOverlayView @JvmOverloads constructor(
             m = findTopmostVisibleViewByResId(r, R.id.btn_pray) as ImageView?
             highlightTarget.setText(R.string.guide_pray)
             highlightDesc.setText(R.string.guide_pray_desc)
+            resId = R.mipmap.ic_pray_guide
         } else {
             return false
         }
         if (m != null) {
             m.post {
-                setHighlightView(m)
+                setHighlightView(m,resId)
             }
             context.getSharedPreferences("app_prefs", MODE_PRIVATE)
                 .edit() {
@@ -126,7 +132,7 @@ class HighlightOverlayView @JvmOverloads constructor(
      * 将指示 View 移动到目标 View 的位置
      * @param targetView 需要高亮的 View（如按钮）
      */
-    private fun setHighlightView(targetView: ImageView) {
+    private fun setHighlightView(targetView: ImageView,resId:Int) {
         // 1. 获取目标 View 在屏幕中的位置
         val targetLocation = IntArray(2)
         targetView.getLocationOnScreen(targetLocation)
@@ -159,8 +165,12 @@ class HighlightOverlayView @JvmOverloads constructor(
 //
 //
 //
-        val imageDrawable: Drawable? = targetView.drawable
 
+        val imageDrawable = if (resId > 0) {
+            weakContext?.get()?.resources?.getDrawable(resId, null)
+        } else {
+            targetView.drawable
+        }
         // 4. 调整指示 View 的位置和大小
         highlightIndicator.layoutParams = LayoutParams(
             LayoutParams.WRAP_CONTENT,

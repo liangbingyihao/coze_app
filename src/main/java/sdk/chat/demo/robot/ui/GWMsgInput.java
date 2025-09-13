@@ -187,17 +187,20 @@ public class GWMsgInput extends RelativeLayout
     public void onClick(View view) {
         int id = view.getId();
         if (id == R.id.messageSendButton) {
+            whenStartAsrMillis = 0;
+            AsrHelper.INSTANCE.stopAsr();
             boolean isSubmitted = onSubmit();
             if (isSubmitted) {
+                LogHelper.INSTANCE.appendLog("send text success");
                 messageInput.setText("");
                 lastLength = 0;
                 messagePrompt.setVisibility(GONE);
                 setEditMode(0, false);
+            } else {
+                LogHelper.INSTANCE.appendLog("send text failed");
             }
             removeCallbacks(typingTimerRunnable);
             post(typingTimerRunnable);
-            whenStartAsrMillis = 0;
-            AsrHelper.INSTANCE.stopAsr();
         } else if (id == R.id.attachmentButton) {
             if (circleOverlayView.getVisibility() == View.VISIBLE) {
                 whenStartAsrMillis = 0;
@@ -222,6 +225,7 @@ public class GWMsgInput extends RelativeLayout
 ////            if (attachmentsListener != null) attachmentsListener.onChangeKeyboard(true);
 ////            stopSimulation();
         } else if (id == R.id.messageStopButton) {
+            Log.d("sending", "stop");
             ((GWThreadHandler) ChatSDK.thread()).stopPolling();
             onMsgStatusChanged(1);
 //            view.setVisibility(INVISIBLE);
@@ -266,18 +270,19 @@ public class GWMsgInput extends RelativeLayout
         if (messageInput.getLineCount() < lastLineCount || lastLineCount == 0) {
             if (typingListener != null) typingListener.onHeightChange();
         }
-        lastLineCount = messageInput.getLineCount();
-        Log.e("AsrHelper1", messageInput.getLineCount() + ",lastLineCount:" + lastLineCount.toString());
-        Log.d("AsrHelper1", "afterTextChanged and stop");
         startPos = -1;
+        Log.d("AsrHelper1", "afterTextChanged and stop");
         AsrHelper.INSTANCE.stopAsr();
-        if (editMode == 0) {
-            if (lastLineCount < 3 && messagePrompt.getVisibility() != VISIBLE) {
-                editModeButton.setVisibility(GONE);
-            } else if (editModeButton.getVisibility() != VISIBLE) {
-                editModeButton.setVisibility(VISIBLE);
-            }
-        }
+        checkExpand();
+//        lastLineCount = messageInput.getLineCount();
+//        Log.e("AsrHelper1", messageInput.getLineCount() + ",lastLineCount:" + lastLineCount.toString());
+//        if (editMode == 0) {
+//            if (lastLineCount < 3 && messagePrompt.getVisibility() != VISIBLE) {
+//                editModeButton.setVisibility(GONE);
+//            } else if (editModeButton.getVisibility() != VISIBLE) {
+//                editModeButton.setVisibility(VISIBLE);
+//            }
+//        }
     }
 
     @Override
@@ -286,6 +291,18 @@ public class GWMsgInput extends RelativeLayout
             typingListener.onStopTyping();
         }
         lastFocus = hasFocus;
+    }
+
+    private void checkExpand() {
+        lastLineCount = messageInput.getLineCount();
+        Log.e("AsrHelper1", messageInput.getLineCount() + ",lastLineCount:" + lastLineCount.toString());
+        if (editMode == 0) {
+            if (lastLineCount < 3 && messagePrompt.getVisibility() != VISIBLE) {
+                editModeButton.setVisibility(GONE);
+            } else if (editModeButton.getVisibility() != VISIBLE) {
+                editModeButton.setVisibility(VISIBLE);
+            }
+        }
     }
 
     private boolean onSubmit() {
@@ -426,6 +443,10 @@ public class GWMsgInput extends RelativeLayout
         }
     }
 
+    public boolean isFullScreen() {
+        return editMode == 1;
+    }
+
     public String getDraft() {
         String prompt = messagePrompt.getVisibility() == View.VISIBLE ? messagePrompt.getText().toString() : "";
         String draft = messageInput.getText().toString();
@@ -479,7 +500,7 @@ public class GWMsgInput extends RelativeLayout
         if (editMode == 0) {
             if (paramsContract == null) {
                 paramsContract = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
-                paramsContract.leftMargin = ActivityExtensionsKt.dpToPx(46, this.getContext());
+                paramsContract.leftMargin = ActivityExtensionsKt.dpToPx(58, this.getContext());
                 paramsContract.rightMargin = (int) messageSendButton.getWidth() + ActivityExtensionsKt.dpToPx(20, this.getContext());
                 int m = ActivityExtensionsKt.dpToPx(4, this.getContext());
                 paramsContract.topMargin = m;
@@ -497,13 +518,14 @@ public class GWMsgInput extends RelativeLayout
                 editModeButton.setVisibility(VISIBLE);
             } else {
                 lastLineCount = messageInput.getLineCount();
-                Log.e("setEditMode","lastLineCount:"+lastLineCount);
+                Log.e("setEditMode", "lastLineCount:" + lastLineCount);
                 if (lastLineCount < 3) {
                     editModeButton.setVisibility(GONE);
-                }else{
+                } else {
                     editModeButton.setVisibility(VISIBLE);
                 }
             }
+            inputContainer.setBackgroundResource(R.drawable.edittext_rounded_bg);
         } else {
             editModeButton.setVisibility(VISIBLE);
             if (paramsExpand == null) {
@@ -520,7 +542,7 @@ public class GWMsgInput extends RelativeLayout
                 Log.e("setEditMode", "no change..heightPixels:" + getResources().getDisplayMetrics().heightPixels + ",getKeyboardHeight:" + typingListener.getKeyboardHeight());
                 return;
             }
-            Log.e("setEditMode", "change..heightPixels:" + getResources().getDisplayMetrics().heightPixels + ",getKeyboardHeight:" + typingListener.getKeyboardHeight()+",h:"+h);
+            Log.e("setEditMode", "change..heightPixels:" + getResources().getDisplayMetrics().heightPixels + ",getKeyboardHeight:" + typingListener.getKeyboardHeight() + ",h:" + h);
             params.height = h;
             params.leftMargin = paramsExpand.leftMargin;
             params.rightMargin = paramsExpand.rightMargin;
@@ -528,6 +550,7 @@ public class GWMsgInput extends RelativeLayout
             params.bottomMargin = messageSendButton.getHeight();
             messageInput.setMaxLines(Integer.MAX_VALUE);
             editModeButton.setImageResource(R.mipmap.ic_contract);
+            inputContainer.setBackgroundResource(R.drawable.edittext_rounded_white_bg);
         }
 // 应用新的布局参数
         inputContainer.setLayoutParams(params);
@@ -559,7 +582,7 @@ public class GWMsgInput extends RelativeLayout
                     startPos = editable.length();
                 }
                 lastLength = 0;
-                LogHelper.INSTANCE.appendLog("set startPos: " + startPos+", for "+newText);
+                LogHelper.INSTANCE.appendLog("set startPos: " + startPos + ", for " + newText);
             }
             Log.e("AsrHelper1", "definite: " + definite + ",newText:" + newText + ",startPos:" + startPos);
 //            editable.insert(startPos, newText);
@@ -567,6 +590,8 @@ public class GWMsgInput extends RelativeLayout
 
 //            AsrHelper.INSTANCE.appendLog("1:startPos:" + startPos + "," + lastLength + "," + editable.toString().substring(startPos, startPos + lastLength) + " TO " + newText);
             editable.replace(startPos, startPos + lastLength, newText);
+            messageSendButton.setEnabled(input.length() > 0);
+            checkExpand();
 //            AsrHelper.INSTANCE.appendLog("2:" + editable.toString());
             lastLength = newText.length();
 //            messageInput.setSelection(startPos + lastLength);
