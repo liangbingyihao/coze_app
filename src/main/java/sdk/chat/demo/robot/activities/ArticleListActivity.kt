@@ -34,6 +34,7 @@ import sdk.chat.demo.robot.adpter.data.Article
 import sdk.chat.demo.robot.adpter.data.ArticleSession
 import sdk.chat.demo.robot.api.model.MessageDetail
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil
+import sdk.chat.demo.robot.extensions.LogHelper
 import sdk.chat.demo.robot.extensions.showMaterialConfirmationDialog
 import sdk.chat.demo.robot.handlers.GWMsgHandler
 import sdk.chat.demo.robot.handlers.GWThreadHandler
@@ -226,7 +227,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
         var menuPopupAdapter = SessionPopupAdapter(this, items, selectedPosition)
         var title = items[selectedPosition].title
         tvTitle.text = title
-        if (sessionId == GWThreadHandler.qaThreadId) {
+        if (items[selectedPosition].isQA) {
             vMoreMenus.visibility = View.INVISIBLE
         } else {
             vMoreMenus.visibility = View.VISIBLE
@@ -245,7 +246,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                         menuPopup.setTitle(item.title)
                         loadArticles()
 
-                        if (item.id == GWThreadHandler.qaThreadId) {
+                        if (item.isQA) {
                             vMoreMenus.visibility = View.INVISIBLE
                         } else {
                             vMoreMenus.visibility = View.VISIBLE
@@ -269,15 +270,15 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
     fun loadSessions() {
         dm.add(
             threadHandler.listSessions()
-                .flatMap(Function { sessions: MutableList<Thread> ->
-                    val articleSessions = sessions.map { session ->
-                        ArticleSession(
-                            id = session.entityID,
-                            title = session.name,
-                        )
-                    }
-                    Single.just(articleSessions)
-                } as Function<in MutableList<Thread>, SingleSource<MutableList<ArticleSession>>>)
+//                .flatMap(Function { sessions: MutableList<Thread> ->
+//                    val articleSessions = sessions.map { session ->
+//                        ArticleSession(
+//                            id = session.entityID,
+//                            title = session.name,
+//                        )
+//                    }
+//                    Single.just(articleSessions)
+//                } as Function<in MutableList<Thread>, SingleSource<MutableList<ArticleSession>>>)
                 .observeOn(RX.main())
                 .subscribe(
                     { articleSessions ->
@@ -288,7 +289,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                     { error -> // onError
                         Toast.makeText(
                             this@ArticleListActivity,
-                            "加载失败: ${error.message}",
+                            error.message,
                             Toast.LENGTH_SHORT
                         ).show()
                     })
@@ -353,9 +354,10 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                     },
                     { error -> // onError
                         swipeRefreshLayout.isRefreshing = false
+                        LogHelper.reportExportEvent("load.err", error.message.toString(),error)
                         Toast.makeText(
                             this@ArticleListActivity,
-                            "加载失败: ${error.message}",
+                            error.message,
                             Toast.LENGTH_SHORT
                         ).show()
                     })
@@ -589,6 +591,7 @@ class ArticleListActivity : BaseActivity(), View.OnClickListener {
                                 ArticleSession(
                                     id = sessionId,
                                     title = title,
+                                    false
                                 )
                             )
                             menuPopup.setTitle(title)

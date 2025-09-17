@@ -1,0 +1,9 @@
+<!-- res/drawable/red_dot.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+
+    <solid android:color="@color/item_text_selected" /> <!-- 红色填充 -->
+    <size
+        android:width="6dp"
+        android:height="6dp" />
+</shape>

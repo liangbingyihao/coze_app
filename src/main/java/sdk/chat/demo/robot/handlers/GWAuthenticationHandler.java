@@ -5,7 +5,7 @@ import android.util.Log;
 
 import com.bumptech.glide.Glide;
 
-import org.pmw.tinylog.Logger;
+import org.tinylog.Logger;
 
 import java.util.HashMap;
 import java.util.List;
@@ -76,15 +76,15 @@ public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
     }
 
     public static void ensureDatabase() throws Exception {
-        LogHelper.INSTANCE.appendLog("ensureDatabase isAuthenticated:"+GWApiManager.shared().isAuthenticated());
         if (!GWApiManager.shared().isAuthenticated()) {
+            Logger.error("ensureDatabase isAuthenticated:"+GWApiManager.shared().isAuthenticated());
             initDatabaseByUser(ChatSDK.currentUserID());
         }
     }
 
     public static void initDatabaseByUser(String userId) throws Exception {
         if(userId==null||userId.isEmpty()){
-            LogHelper.INSTANCE.appendLog("ensureDatabase no userId");
+            Logger.error("ensureDatabase no userId");
             throw new Exception("no userId");
         }
         ChatSDK.db().openDatabase(userId);
@@ -94,6 +94,7 @@ public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
             user.addContact(robot.get(0));
             ChatSDK.db().update(user);
         }
+        Logger.error("ensureDatabase done");
     }
 
     @SuppressLint("CheckResult")

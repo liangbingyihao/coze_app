@@ -29,7 +29,7 @@
     <string name="timeline">Grace Journal</string>
     <string name="pending_image">Processing image...</string>
     <string name="copied">Copied to clipboard.</string>
-    <string name="save">Favorite</string>
+    <string name="save">Favorites</string>
     <string name="unsave">Unsave</string>
     <string name="saved">Added to saved items</string>
     <string name="unsaved">Removed from saved items</string>
@@ -92,4 +92,8 @@
     <string name="message_deleted">Original message has been deleted</string>
     <string name="setting_export_pending">Exporting in progress, please wait…</string>
     <string name="setting_export_done">Export completed successfully. Please click to download in your browser.</string>
+    <string name="feedback">Feedback</string>
+    <string name="submit">Submit</string>
+    <string name="submit_success">Submission Successful</string>
+    <string name="download_prompt">Download Grace Word App\nPlease scan the QR code or search for "Grace Word" in the app store</string>
   </resources>

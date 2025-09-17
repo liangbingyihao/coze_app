@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.RadioButton
 import android.widget.RadioGroup
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -16,6 +17,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
+import sdk.chat.demo.robot.activities.ArticleListActivity
 import sdk.chat.demo.robot.api.ImageApi
 import sdk.chat.demo.robot.api.JsonCacheManager
 import sdk.chat.demo.robot.api.model.ExportInfo
@@ -23,6 +25,7 @@ import sdk.chat.demo.robot.extensions.LanguageUtils
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.ui.activities.BaseActivity
 import sdk.chat.ui.utils.ToastHelper
+import sdk.guru.common.RX
 
 
 class SettingLangsActivity : BaseActivity(), View.OnClickListener {
@@ -36,8 +39,8 @@ class SettingLangsActivity : BaseActivity(), View.OnClickListener {
         val radioGroup = findViewById<RadioGroup>(R.id.radioGroup)
         radioGroup.postDelayed({
             radioGroup.setOnCheckedChangeListener { group, checkedId ->
-                val radioButton = findViewById<RadioButton>(checkedId)
-                ToastHelper.show(this@SettingLangsActivity, radioButton.text.toString())
+//                val radioButton = findViewById<RadioButton>(checkedId)
+//                ToastHelper.show(this@SettingLangsActivity, radioButton.text.toString())
                 when (checkedId) {
                     R.id.radioZH -> {
                         LanguageUtils.switchLanguage(this, "zh-Hans")
@@ -56,7 +59,13 @@ class SettingLangsActivity : BaseActivity(), View.OnClickListener {
                 JsonCacheManager.save(this, "gwDaily", "")
                 val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
                 threadHandler.clearThreadCache()
-                finish()
+                dm.add(
+                    ImageApi.getServerConfigs()
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(RX.main())
+                        .doFinally { finish() }
+                        .subscribe()
+                )
             }
         }, 10)
     }
@@ -106,48 +115,48 @@ class SettingLangsActivity : BaseActivity(), View.OnClickListener {
         }
     }
 
-    fun getSettings() {
-        try {
-            packageManager
-                .getPackageInfo(packageName, 0)
-                .versionName
-                ?: "Unknown"
-        } catch (e: Exception) {
-            "Unknown"
-        }
-
-        AppCompatDelegate.setApplicationLocales(
-            LocaleListCompat.forLanguageTags("zh-CN")
-        )
-    }
-
-
-    fun getExportInfo() {
-        dm.add(
-            ImageApi.getExploreInfo()
-                .subscribeOn(Schedulers.io()) // Specify database operations on IO thread
-                .observeOn(AndroidSchedulers.mainThread()) // Results return to main thread
-                .subscribe(
-                    { exportInfo ->
-
-//                        val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
-//                        val clip = ClipData.newPlainText("恩语", exportInfo.downLoadUrl)
-//                        clipboard.setPrimaryClip(clip)
+//    fun getSettings() {
+//        try {
+//            packageManager
+//                .getPackageInfo(packageName, 0)
+//                .versionName
+//                ?: "Unknown"
+//        } catch (e: Exception) {
+//            "Unknown"
+//        }
+//
+//        AppCompatDelegate.setApplicationLocales(
+//            LocaleListCompat.forLanguageTags("zh-CN")
+//        )
+//    }
+//
+//
+//    fun getExportInfo() {
+//        dm.add(
+//            ImageApi.getExploreInfo()
+//                .subscribeOn(Schedulers.io()) // Specify database operations on IO thread
+//                .observeOn(AndroidSchedulers.mainThread()) // Results return to main thread
+//                .subscribe(
+//                    { exportInfo ->
+//
+////                        val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+////                        val clip = ClipData.newPlainText("恩语", exportInfo.downLoadUrl)
+////                        clipboard.setPrimaryClip(clip)
+////                        ToastHelper.show(
+////                            this@SettingsActivity,
+////                            R.string.export_hint
+////                        )
+//                        showExportMenus(exportInfo)
+//                    },
+//                    { error -> // onError
 //                        ToastHelper.show(
-//                            this@SettingsActivity,
-//                            R.string.export_hint
+//                            this@SettingLangsActivity,
+//                            error.message
 //                        )
-                        showExportMenus(exportInfo)
-                    },
-                    { error -> // onError
-                        ToastHelper.show(
-                            this@SettingLangsActivity,
-                            "加载失败: $error"
-                        )
-                    })
-        )
-
-    }
+//                    })
+//        )
+//
+//    }
 
     fun showExportMenus(exportInfo: ExportInfo) {
         MaterialAlertDialogBuilder(this@SettingLangsActivity)

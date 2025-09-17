@@ -9,20 +9,21 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import sdk.chat.demo.MainApp
 import sdk.chat.demo.pre.R
+import sdk.chat.demo.robot.adpter.data.ArticleSession
 import sdk.chat.demo.robot.extensions.dpToPx
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.demo.robot.handlers.GWThreadHandler.headTopic
 
-sealed class HistoryItem {
-    data class DateItem(val date: String) : HistoryItem()
-    data class SessionItem(var title: String, val sessionId: String) : HistoryItem()
-}
+//sealed class HistoryItem {
+//    data class DateItem(val date: String) : HistoryItem()
+//    data class SessionItem(var title: String, val sessionId: String) : HistoryItem()
+//}
 
 
 class SessionAdapter(
-    private val items: MutableList<HistoryItem> = mutableListOf(),
-    private val onItemClick: (Boolean, HistoryItem.SessionItem) -> Unit,
-    private val onItemEdit: (HistoryItem.SessionItem) -> Unit
+    private val items: MutableList<ArticleSession> = mutableListOf(),
+    private val onItemClick: (Boolean, ArticleSession) -> Unit,
+    private val onItemEdit: (ArticleSession) -> Unit
 ) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     //    private var selectedPosition = if(items.isNotEmpty()) 1 else -1
@@ -36,18 +37,18 @@ class SessionAdapter(
     }
 
 
-    fun updateAll(newItems: List<HistoryItem>) {
+    fun updateAll(newItems: List<ArticleSession>) {
         items.clear()
         items.addAll(newItems)
         selectedPosition = if (items.isNotEmpty()) 1 else -1
         notifyDataSetChanged() // 触发全局刷新
     }
 
-    fun getSelectItem(): HistoryItem.SessionItem? {
+    fun getSelectItem(): ArticleSession? {
         return if (selectedPosition in items.indices) {
             when (val item = items[selectedPosition]) {
-                is HistoryItem.SessionItem -> item
-                else -> null // 如果选中的是DateItem则返回null
+                // 如果选中的是DateItem则返回null
+                else -> item
             }
         } else {
             null
@@ -56,7 +57,7 @@ class SessionAdapter(
 
     fun setSelectItemName(name: String) {
         if (selectedPosition in items.indices) {
-            val item: HistoryItem.SessionItem = items[selectedPosition] as HistoryItem.SessionItem
+            val item: ArticleSession = items[selectedPosition]
             item.title = name
             notifyItemChanged(selectedPosition)
         }
@@ -64,23 +65,18 @@ class SessionAdapter(
 
     override fun getItemViewType(position: Int): Int {
         var item = items[position]
-        if (item is HistoryItem.DateItem) {
-            return TYPE_DATE
-        }
-        if (item is HistoryItem.SessionItem) {
-            if (position == 0 && (item.sessionId == GWThreadHandler.qaThreadId)) {
-                return TYPE_HEADER
-            }
+        if (position == 0 && (item.isQA)) {
+            return TYPE_HEADER
         }
         return TYPE_ARTICLE
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
-            TYPE_DATE -> DateViewHolder(
-                LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_history_date, parent, false)
-            )
+//            TYPE_DATE -> DateViewHolder(
+//                LayoutInflater.from(parent.context)
+//                    .inflate(R.layout.item_history_date, parent, false)
+//            )
 
             TYPE_HEADER -> ArticleViewHolder(
                 LayoutInflater.from(parent.context)
@@ -95,30 +91,33 @@ class SessionAdapter(
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        when (val item = items[position]) {
-            is HistoryItem.DateItem -> (holder as DateViewHolder).bind(item)
-            is HistoryItem.SessionItem -> (holder as ArticleViewHolder).bind(item, position)
-        }
+        val item = items[position]
+        (holder as ArticleViewHolder).bind(item, position)
+//        when (val item = items[position]) {
+//            ArticleViewHolder.bind(item, position)
+//            is HistoryItem.DateItem -> (holder as DateViewHolder).bind(item)
+//            is HistoryItem.SessionItem -> (holder as ArticleViewHolder).bind(item, position)
+//        }
     }
 
     override fun getItemCount() = items.size
 
-    inner class DateViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        private val dateText: TextView = view.findViewById(R.id.date_text)
-
-        fun bind(item: HistoryItem.DateItem) {
-            dateText.text = item.date
-        }
-    }
+//    inner class DateViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+//        private val dateText: TextView = view.findViewById(R.id.date_text)
+//
+//        fun bind(item: ArticleSession.DateItem) {
+//            dateText.text = item.date
+//        }
+//    }
 
     inner class ArticleViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val titleText: TextView = view.findViewById(R.id.title_text)
 //        private val editTopic: View? = view.findViewById(R.id.edit_topic)
 
-        fun bind(item: HistoryItem.SessionItem, position: Int) {
+        fun bind(item: ArticleSession, position: Int) {
             titleText.text = item.title
             if (position == 0) {
-                if(item.sessionId == GWThreadHandler.qaThreadId){
+                if(item.isQA){
                     titleText.background = GradientDrawable().apply {
                         // 设置四角半径（顺序：左上,右上,右下,左下）
                         cornerRadii = floatArrayOf(
@@ -130,7 +129,7 @@ class SessionAdapter(
                         setColor(Color.WHITE)
                     }
                 }
-            } else if (position == 1 && (items[0] as HistoryItem.SessionItem).sessionId == GWThreadHandler.qaThreadId) {
+            } else if (position == 1 && items[0].isQA) {
                 if (items.size > 2) {
                     itemView.background = GradientDrawable().apply {
                         // 设置四角半径（顺序：左上,右上,右下,左下）

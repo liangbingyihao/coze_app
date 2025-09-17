@@ -13,6 +13,7 @@ import sdk.chat.core.utils.Device;
 import sdk.chat.demo.robot.ChatSDKCoze;
 import sdk.chat.demo.robot.extensions.LanguageUtils;
 import sdk.chat.demo.robot.extensions.LogHelper;
+import sdk.chat.demo.robot.extensions.TinyLoggerManager;
 import sdk.chat.demo.robot.handlers.GWAuthenticationHandler;
 import sdk.chat.demo.robot.push.UpdateTokenWorker;
 import sdk.guru.common.DisposableMap;
@@ -29,6 +30,8 @@ import androidx.work.WorkManager;
 
 import com.bytedance.speech.speechengine.SpeechEngineGenerator;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
+
+import org.tinylog.Logger;
 
 import java.util.concurrent.TimeUnit;
 
@@ -70,8 +73,9 @@ public class MainApp extends Application implements Configuration.Provider, Appl
     @Override
     public void onCreate() {
         super.onCreate();
+        TinyLoggerManager.initialize(this);
         registerActivityLifecycleCallbacks(this);
-        LogHelper.INSTANCE.appendLog("MainApp.onCreate");
+        Logger.error("MainApp.onCreate");
         context = getApplicationContext();
         scheduleTokenUpdate();
 
@@ -88,18 +92,18 @@ public class MainApp extends Application implements Configuration.Provider, Appl
                     .doFinally(GWAuthenticationHandler::ensureDatabase)
                     .subscribe(
                             () -> {
-                                LogHelper.INSTANCE.appendLog("authenticate done");
+                                Logger.error("authenticate done");
                                 isInitialized = true;
                                 chatSDK = ChatSDK.shared();
                             },
                             error -> { /* 错误处理 */
-                                LogHelper.INSTANCE.appendLog("authenticate error:"+error.getMessage());
+                                Logger.error("authenticate error:" + error.getMessage());
                                 LogHelper.INSTANCE.reportExportEvent("app.init", "authenticate error", error);
                                 isInitialized = true;
                             }
                     ));
         } catch (Exception e) {
-            LogHelper.INSTANCE.appendLog("MainApp.onCreate:e:"+e.getMessage());
+            Logger.error("MainApp.onCreate:e:",e);
             LogHelper.INSTANCE.reportExportEvent("app.init", "init error", e);
             assert (false);
         }
@@ -112,6 +116,11 @@ public class MainApp extends Application implements Configuration.Provider, Appl
                 Thread.getDefaultUncaughtExceptionHandler();
 
         Thread.setDefaultUncaughtExceptionHandler((thread, ex) -> {
+            try {
+                LogHelper.INSTANCE.error("uncaughtException", ex);
+            } catch (Exception e) {
+
+            }
             try {
                 FirebaseCrashlytics crashlytics = FirebaseCrashlytics.getInstance();
 

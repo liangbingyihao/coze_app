@@ -323,7 +323,7 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
                 params = aiFeedback.getFeedback().getBible();
             }
             threadHandler.sendExploreMessage(
-                    "关于以上内容的祷告和默想建议",
+                    "",
                     message,
                     AIExplore.ExploreItem.action_daily_pray,
                     params

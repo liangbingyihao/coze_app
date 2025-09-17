@@ -18,6 +18,7 @@ object LanguageUtils {
     }
 
     private const val PREFS_LANGUAGE_KEY = "app_language"
+    private var currentLang: String? = null
 
 
     fun initAppLanguage(context: Context) {
@@ -31,10 +32,25 @@ object LanguageUtils {
         setAppLanguage(languageToSet)
     }
 
+    fun getAppLanguage(context: Context, refresh: Boolean): String? {
+        if (!refresh &&currentLang!=null&& currentLang!!.isNotEmpty()) {
+            return currentLang
+        }
+        val savedLang = getSavedLanguage(context)
+        currentLang = if (savedLang.isNotEmpty()) {
+            savedLang
+        } else {
+            // 如果没有保存过语言，使用系统语言
+            getSystemLanguage()
+        }
+        return currentLang
+    }
+
     // 切换语言并保存
     fun switchLanguage(context: Context, languageCode: String) {
         setAppLanguage(languageCode)
         saveLanguage(context, languageCode)
+        getAppLanguage(context, true)
     }
 
     private fun setAppLanguage(languageCode: String) {

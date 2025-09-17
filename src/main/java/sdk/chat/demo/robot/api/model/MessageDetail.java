@@ -3,8 +3,10 @@ package sdk.chat.demo.robot.api.model;
 import com.google.gson.annotations.SerializedName;
 
 public class MessageDetail {
+    public static final int STATUS_INIT = 0;
     public static final int STATUS_PENDING = 1;
     public static final int STATUS_SUCCESS = 2;
+    public static final int STATUS_ERROR = 4;
     public static final int STATUS_CANCEL = 6;
     private String id;
     private int status;

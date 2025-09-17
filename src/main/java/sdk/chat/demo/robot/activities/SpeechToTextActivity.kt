@@ -2,8 +2,8 @@ package sdk.chat.demo.robot.activities
 
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -22,15 +22,14 @@ import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.api.ImageApi
 import sdk.chat.demo.robot.api.JsonCacheManager
-import sdk.chat.demo.robot.audio.AsrHelper
 import sdk.chat.demo.robot.audio.TTSHelper
 import sdk.chat.demo.robot.extensions.LanguageUtils
-import sdk.chat.demo.robot.extensions.LogHelper
 import sdk.chat.demo.robot.handlers.DailyTaskHandler
 import sdk.chat.demo.robot.handlers.SpeechToTextHelper
 import sdk.chat.demo.robot.push.UpdateTokenWorker
 import sdk.chat.ui.utils.ToastHelper
 import sdk.guru.common.DisposableMap
+import java.util.Locale
 
 data class SpinnerItem(val label: String, val value: String) {
     override fun toString(): String = label
@@ -145,6 +144,8 @@ class SpeechToTextActivity : AppCompatActivity(), View.OnClickListener,
                     }
                 })
         )
+
+        Log.d("LanguageTag","lang:"+Locale.getDefault().toLanguageTag()+","+getString(R.string.questions));
     }
 
     fun setVoiceTypeSpinner() {
@@ -254,12 +255,13 @@ class SpeechToTextActivity : AppCompatActivity(), View.OnClickListener,
             }
 
             R.id.setPrompt -> {
-                startActivity(
-                    Intent(
-                        this@SpeechToTextActivity,
-                        SettingPromptActivity::class.java
-                    )
-                )
+//                startActivity(
+//                    Intent(
+//                        this@SpeechToTextActivity,
+//                        SettingPromptActivity::class.java
+//                    )
+//                )
+                throw RuntimeException("This is a test crash")
             }
 
             R.id.clearCache -> {
@@ -285,9 +287,10 @@ class SpeechToTextActivity : AppCompatActivity(), View.OnClickListener,
             }
 
             R.id.getLog ->{
-                val clipboard =getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
-                val clip = ClipData.newPlainText("恩语", LogHelper.logStr)
-                clipboard.setPrimaryClip(clip)
+//                LogUploader.uploadLogs(this@SpeechToTextActivity)
+//                val clipboard =getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+//                val clip = ClipData.newPlainText("恩语", LogHelper.logStr)
+//                clipboard.setPrimaryClip(clip)
             }
 
 //            R.id.initdbasr -> {

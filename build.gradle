@@ -137,4 +137,8 @@ dependencies {
     implementation 'com.bytedance.speechengine:speechengine_tob:0.0.8.1-bugfix'
     implementation 'androidx.lifecycle:lifecycle-process:2.0.0'
 
+
+    implementation 'org.tinylog:tinylog-api:2.4.1'
+    runtimeOnly 'org.tinylog:tinylog-impl:2.4.1'
+
 }

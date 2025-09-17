@@ -517,6 +517,8 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                             }, throwable -> ToastHelper.show(getActivity(), throwable.getLocalizedMessage())));
 
                         }
+//                    }else if("message".equals(errType)){
+//                        Log.d("sending", "msg error:" + networkEvent.getMessage().getText()+","+msg);
                     }
                 }));
 
@@ -574,10 +576,10 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
         thread.setDraft(null);
 
         if (text == null || text.isEmpty()) {
-            LogHelper.INSTANCE.appendLog("sendMessage with empty text ");
+//            LogHelper.INSTANCE.appendLog("sendMessage with empty text ");
             return;
         }
-        LogHelper.INSTANCE.appendLog("sendMessage:" + text.substring(0, Math.min(10, text.length())));
+//        LogHelper.INSTANCE.appendLog("sendMessage:" + text.substring(0, Math.min(10, text.length())));
 
         String prompt = input.getMessagePrompt();
 
@@ -607,10 +609,10 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
         removeUserFromChatOnExit = !ChatSDK.config().publicChatAutoSubscriptionEnabled;
 
-        if (thread.typeIs(ThreadType.Public)) {
-            User currentUser = ChatSDK.currentUser();
-            ChatSDK.thread().addUsersToThread(thread, currentUser).subscribe();
-        }
+//        if (thread.typeIs(ThreadType.Public)) {
+//            User currentUser = ChatSDK.currentUser();
+//            ChatSDK.thread().addUsersToThread(thread, currentUser).subscribe();
+//        }
 
         // Show a local notification if the text is from a different thread
         ChatSDK.ui().setLocalNotificationHandler(thread -> !thread.getEntityID().equals(this.thread.getEntityID()));

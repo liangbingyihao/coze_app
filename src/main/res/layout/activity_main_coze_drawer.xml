@@ -31,6 +31,12 @@
                     android:padding="6dp"
                     android:src="@drawable/icon_home" />
 
+                <ImageView
+                    android:id="@+id/red_dot"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/red_dot" />
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -48,21 +54,28 @@
                     android:layout_marginRight="20dp"
                     android:padding="6dp"
                     android:src="@mipmap/ic_gw_task" />
-            </FrameLayout>
 
-            <TextView
-                android:id="@+id/error_hint"
-                android:layout_width="match_parent"
-                android:layout_height="26dp"
-                android:background="#1acf4b40"
-                android:gravity="center"
-                android:textColor="#CF4B40"
-                android:textSize="12sp" />
+                <ImageView
+                    android:id="@+id/red_dot2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/red_dot" />
+            </FrameLayout>
 
             <FrameLayout
                 android:id="@+id/fragment_container"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
+            <TextView
+                android:id="@+id/error_hint"
+                android:layout_width="match_parent"
+                android:layout_height="26dp"
+                android:layout_marginTop="?attr/actionBarSize"
+                android:background="#1acf4b40"
+                android:gravity="center"
+                android:textColor="#CF4B40"
+                android:textSize="12sp" />
+
         </FrameLayout>
 
         <LinearLayout

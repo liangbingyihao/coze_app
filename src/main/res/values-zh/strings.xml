@@ -90,4 +90,8 @@
     <string name="message_deleted">原消息已删除</string>
     <string name="setting_export_pending">正在导出中，请稍后…</string>
     <string name="setting_export_done">已成功导出，请点击浏览器下载</string>
+    <string name="feedback">用户反馈</string>
+    <string name="submit">提交</string>
+    <string name="submit_success">提交成功</string>
+    <string name="download_prompt">下載恩語App\n請掃描二維碼或App商店搜尋「恩語」</string>
 </resources>

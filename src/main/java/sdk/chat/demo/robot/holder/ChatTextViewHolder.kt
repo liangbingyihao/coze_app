@@ -295,7 +295,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
     open fun bindSendStatus(holder: T): Boolean {
         var aiFeedback: MessageDetail? = (holder as? TextHolder)?.getAiFeedback();
         var status = holder.message.messageStatus
-//        Log.d("sending", "bindSendStatus:" + status.name)
+        Log.d("sending", "bindSendStatus:" + status.name)
         if (status.ordinal < MessageSendStatus.Replying.ordinal) {
             feedbackMenu?.visibility = View.GONE
             feedback?.visibility = View.GONE

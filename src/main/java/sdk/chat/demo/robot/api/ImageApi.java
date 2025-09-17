@@ -43,19 +43,23 @@ import sdk.chat.demo.robot.api.model.ImageDailyList;
 import sdk.chat.demo.robot.api.model.ImageItem;
 import sdk.chat.demo.robot.api.model.ImageTag;
 import sdk.chat.demo.robot.api.model.ImageTagList;
+import sdk.chat.demo.robot.api.model.LogRequest;
 import sdk.chat.demo.robot.api.model.MessageDetail;
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil;
+import sdk.chat.demo.robot.extensions.LanguageUtils;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
 import sdk.guru.common.RX;
 
 public class ImageApi {
-    public final static String URL2 = "https://api-test.kolacdn.xyz/api/v1/app/";
+    public final static String URL2_MAIN = "https://api-test.kolacdn.xyz/api/v1/";
+    public final static String URL2 = URL2_MAIN+"app/";
     private static ImageTagList imageTagCache;
     private final static Gson gson = new Gson();
     private final static String URL_IMAGE_TAG = URL2 + "scripture/background";
     private final static String URL_IMAGE_DAILY_GW = URL2 + "scripture/daily";
     private final static String URL_CONFIGS = URL2 + "configs";
     private final static String URL_EXPORT = URL2 + "export";
+    private final static String URL_FEEDBACK = URL2 + "feedback";
     private final static String KEY_CACHE_IMG_DAILY = "gwDaily";
     private final static String KEY_CACHE_CONFIGS = "gwConfigs";
     private static String oldestImageDailyDate = null;
@@ -356,7 +360,7 @@ public class ImageApi {
     public static Single<ExportInfo> getExploreInfo() {
         return Single.create(emitter -> {
             Map<String, String> params = new HashMap<>();
-            params.put("lang", Locale.getDefault().toLanguageTag());
+            params.put("lang", LanguageUtils.INSTANCE.getAppLanguage(MainApp.getContext(),false));
 
             Request request = buildPostRequest(params, URL_EXPORT);
 
@@ -377,6 +381,38 @@ public class ImageApi {
                         JsonObject data = gson.fromJson(responseBody, JsonObject.class).getAsJsonObject("data");
                         ExportInfo exportInfo = gson.fromJson(data, ExportInfo.class);
                         emitter.onSuccess(exportInfo); // 请求成功
+                    } catch (Exception e) {
+                        emitter.onError(e);
+                    } finally {
+                        response.close(); // 关闭 Response
+                    }
+                }
+            });
+        });
+    }
+
+    public static Single<Boolean> feedback(String description) {
+        return Single.create(emitter -> {
+            Map<String, String> params = new HashMap<>();
+            params.put("tz", GWApiManager.timeZoneId);
+            params.put("description",description);
+
+            Request request = buildPostRequest(params, URL_FEEDBACK);
+
+            OkHttpClient client = GWApiManager.shared().getClient();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    emitter.onError(e); // 请求失败
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    try {
+                        String responseBody = response.body() != null ? response.body().string() : "";
+                        String data = gson.fromJson(responseBody, JsonObject.class).getAsJsonPrimitive("code").getAsString();
+                        emitter.onSuccess("OK".equals(data) || "DUPLICATE_OPERATION".equals(data)); // 请求成功
                     } catch (Exception e) {
                         emitter.onError(e);
                     } finally {

@@ -37,7 +37,7 @@
     <string name="unfold">全文</string>
     <string name="fold">收起</string>
     <string name="next">下一步</string>
-    <string name="send">發送</string>
+    <string name="send">傳送</string>
     <string name="enter">進入主頁</string>
     <string name="failed_and_retry">操作失敗，稍後重試</string>
     <string name="added_to_timeline">已幫你收錄進恩語錄</string>
@@ -86,6 +86,12 @@
     <string name="questions">信仰問答</string>
     <string name="search_keyword_hint">搜尋關鍵字</string>
     <string name="message_deleted">訊息已刪除</string>
+    <string name="settings_lang">語言</string>
     <string name="setting_export_pending">正在匯出中，請稍後…</string>
     <string name="setting_export_done">已成功匯出，請點擊瀏覽器下載</string>
+    <string name="copy">拷貝</string>
+    <string name="feedback">意見反映</string>
+    <string name="submit">遞交</string>
+    <string name="submit_success">您的遞交已成功完成</string>
+    <string name="download_prompt">下載恩語App\n請掃描QR碼或App商店搜尋「恩語」</string>
 </resources>

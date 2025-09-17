@@ -39,6 +39,7 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
         findViewById<View>(R.id.export).setOnClickListener(this)
         findViewById<View>(R.id.debug).setOnClickListener(this)
         findViewById<View>(R.id.config_lang).setOnClickListener(this)
+        findViewById<View>(R.id.feedback).setOnClickListener(this)
         tvLang = findViewById<TextView>(R.id.lang_value)
         initView()
         getSettings()
@@ -63,6 +64,14 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
                     Intent(
                         this@SettingsActivity,
                         SettingLangsActivity::class.java
+                    )
+                )
+            }
+            R.id.feedback -> {
+                startActivity(
+                    Intent(
+                        this,
+                        ComplaintActivity::class.java
                     )
                 )
             }

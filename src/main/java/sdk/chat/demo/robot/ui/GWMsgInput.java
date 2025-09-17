@@ -48,7 +48,7 @@ public class GWMsgInput extends RelativeLayout
     public EditText messageInput;
     private EditText messagePrompt;
     private View inputContainer;
-    //    public View asrContainer;
+    private View buttonContainer;
     public View messageSendButton;
     private View stopSendButton;
     private ImageView attachmentButton;
@@ -191,7 +191,7 @@ public class GWMsgInput extends RelativeLayout
             AsrHelper.INSTANCE.stopAsr();
             boolean isSubmitted = onSubmit();
             if (isSubmitted) {
-                LogHelper.INSTANCE.appendLog("send text success");
+//                LogHelper.INSTANCE.appendLog("send text success");
                 messageInput.setText("");
                 lastLength = 0;
                 messagePrompt.setVisibility(GONE);
@@ -242,7 +242,7 @@ public class GWMsgInput extends RelativeLayout
     @Override
     public void onTextChanged(CharSequence s, int start, int count, int after) {
         input = s;
-        messageSendButton.setEnabled(input.length() > 0);
+        messageSendButton.setEnabled(!s.toString().trim().isEmpty());
         if (s.length() > 0) {
             if (!isTyping) {
                 isTyping = true;
@@ -353,7 +353,7 @@ public class GWMsgInput extends RelativeLayout
         messageSendButton = findViewById(R.id.messageSendButton);
         stopSendButton = findViewById(R.id.messageStopButton);
         attachmentButton = findViewById(R.id.attachmentButton);
-//        asrContainer = findViewById(R.id.asrContainer);
+        buttonContainer = findViewById(R.id.buttonContainer);
 //        soundWaveView = findViewById(R.id.soundWave);
         circleOverlayView = findViewById(R.id.circleOverlay);
 //                circleOverlay.startAnimation()
@@ -485,7 +485,7 @@ public class GWMsgInput extends RelativeLayout
     private void setEditMode(int editMode, boolean showKeyBoard) {
         removeCallbacks(setEditModeRunnable);
         this.editMode = editMode;
-        postDelayed(setEditModeRunnable, 10);
+        postDelayed(setEditModeRunnable, 100);
         if (showKeyBoard && attachmentsListener != null) attachmentsListener.onChangeKeyboard(true);
     }
 
@@ -501,12 +501,16 @@ public class GWMsgInput extends RelativeLayout
             if (paramsContract == null) {
                 paramsContract = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
                 paramsContract.leftMargin = ActivityExtensionsKt.dpToPx(58, this.getContext());
-                paramsContract.rightMargin = (int) messageSendButton.getWidth() + ActivityExtensionsKt.dpToPx(20, this.getContext());
+                paramsContract.rightMargin = (int) buttonContainer.getWidth() + ActivityExtensionsKt.dpToPx(20, this.getContext());
                 int m = ActivityExtensionsKt.dpToPx(4, this.getContext());
                 paramsContract.topMargin = m;
                 paramsContract.bottomMargin = m;
                 paramsContract.height = FrameLayout.LayoutParams.WRAP_CONTENT;
+                Log.e("setEditMode", String.format("paramsContract:%d,%d,%d,%d",
+                        paramsContract.leftMargin, paramsContract.rightMargin, paramsContract.topMargin, paramsContract.bottomMargin));
             }
+            Log.e("setEditMode", String.format("paramsContract 1:%d,%d,%d,%d",
+                    paramsContract.leftMargin, paramsContract.rightMargin, paramsContract.topMargin, paramsContract.bottomMargin));
             params.leftMargin = paramsContract.leftMargin;
             params.rightMargin = paramsContract.rightMargin;
             params.topMargin = paramsContract.topMargin;
@@ -518,7 +522,6 @@ public class GWMsgInput extends RelativeLayout
                 editModeButton.setVisibility(VISIBLE);
             } else {
                 lastLineCount = messageInput.getLineCount();
-                Log.e("setEditMode", "lastLineCount:" + lastLineCount);
                 if (lastLineCount < 3) {
                     editModeButton.setVisibility(GONE);
                 } else {
@@ -536,13 +539,17 @@ public class GWMsgInput extends RelativeLayout
                 paramsExpand.topMargin = m;
                 paramsExpand.bottomMargin = m + messageInput.getHeight();
                 paramsExpand.height = getResources().getDisplayMetrics().heightPixels - m - paramsExpand.bottomMargin;
+                Log.e("setEditMode", String.format("paramsExpand:%d,%d,%d,%d",
+                        paramsExpand.leftMargin, paramsExpand.rightMargin, paramsExpand.topMargin, paramsExpand.bottomMargin));
             }
+            Log.e("setEditMode", String.format("paramsExpand 1:%d,%d,%d,%d",
+                    paramsExpand.leftMargin, paramsExpand.rightMargin, paramsExpand.topMargin, paramsExpand.bottomMargin));
             int h = paramsExpand.height - typingListener.getKeyboardHeight();
             if (h == params.height) {
-                Log.e("setEditMode", "no change..heightPixels:" + getResources().getDisplayMetrics().heightPixels + ",getKeyboardHeight:" + typingListener.getKeyboardHeight());
+//                Log.e("setEditMode", "no change..heightPixels:" + getResources().getDisplayMetrics().heightPixels + ",getKeyboardHeight:" + typingListener.getKeyboardHeight());
                 return;
             }
-            Log.e("setEditMode", "change..heightPixels:" + getResources().getDisplayMetrics().heightPixels + ",getKeyboardHeight:" + typingListener.getKeyboardHeight() + ",h:" + h);
+//            Log.e("setEditMode", "change..heightPixels:" + getResources().getDisplayMetrics().heightPixels + ",getKeyboardHeight:" + typingListener.getKeyboardHeight() + ",h:" + h);
             params.height = h;
             params.leftMargin = paramsExpand.leftMargin;
             params.rightMargin = paramsExpand.rightMargin;
@@ -550,7 +557,8 @@ public class GWMsgInput extends RelativeLayout
             params.bottomMargin = messageSendButton.getHeight();
             messageInput.setMaxLines(Integer.MAX_VALUE);
             editModeButton.setImageResource(R.mipmap.ic_contract);
-            inputContainer.setBackgroundResource(R.drawable.edittext_rounded_white_bg);
+            //FIXME
+//            inputContainer.setBackgroundResource(R.drawable.edittext_rounded_white_bg);
         }
 // 应用新的布局参数
         inputContainer.setLayoutParams(params);

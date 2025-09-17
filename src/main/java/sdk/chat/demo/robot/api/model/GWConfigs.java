@@ -7,8 +7,8 @@ import java.util.List;
 public class GWConfigs {
     private GWConfigItem configs;
 
-//    @SerializedName("welcome_msg")
-//    private MessageDetail welcomeMsg;
+    @SerializedName("default_msg")
+    private MessageDetail defaultMsg;
 
     @SerializedName("text_to_speech_voices")
     private List<DBVoiceType> dbVoiceTypes;
@@ -49,6 +49,13 @@ public class GWConfigs {
         }
     }
 
+    public MessageDetail getDefaultMsg() {
+        return defaultMsg;
+    }
+
+    public void setDefaultMsg(MessageDetail defaultMsg) {
+        this.defaultMsg = defaultMsg;
+    }
 
     public static class DBVoiceType {
         private String name;

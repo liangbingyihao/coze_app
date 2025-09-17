@@ -79,6 +79,7 @@
         <activity android:name="sdk.chat.demo.robot.activities.SearchActivity" />
         <activity android:name="sdk.chat.demo.robot.activities.TaskActivity" />
         <activity android:name="sdk.chat.demo.robot.activities.TaskCalendarActivity" />
+        <activity android:name="sdk.chat.demo.robot.activities.ComplaintActivity" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

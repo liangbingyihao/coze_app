@@ -4,12 +4,12 @@
 <!--    android:layout_width="match_parent"-->
 <!--    android:layout_height="match_parent"-->
 <!--    android:background="@drawable/gradient_primary">-->
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/gradient_primary">
+    android:orientation="vertical">
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -37,47 +37,52 @@
             android:layout_gravity="center"
             android:drawablePadding="6dp"
             android:ellipsize="end"
+            android:text="@string/feedback"
             android:gravity="center"
             android:maxLength="10"
             android:singleLine="true"
             android:textColor="@color/item_text_normal"
-            android:textSize="16sp"
-            app:drawableEndCompat="@drawable/ic_down">
+            android:textSize="16sp">
 
         </TextView>
     </FrameLayout>
 
     <FrameLayout
+        android:id="@+id/inputContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="?attr/actionBarSize">
-
-        <View
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:layout_marginStart="64dp"
-            android:layerType="software"
-            android:background="@drawable/dashed_line_vertical" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:background="@drawable/edittext_rounded_bg">
+    <EditText
+        android:id="@id/messageInput"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:gravity="top|left"
+        android:background="@color/bg_gray_button"
+        android:inputType="textAutoCorrect|textAutoComplete|textMultiLine|textCapSentences"
+        android:padding="8dp"
+        android:textSize="14sp" />
     </FrameLayout>
-    <!--    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>-->
 
-    <!-- 加载更多进度条 -->
-    <!--    <ProgressBar-->
-    <!--        android:id="@+id/progressBar"-->
-    <!--        android:layout_width="wrap_content"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:layout_gravity="center_horizontal"-->
-    <!--        android:layout_margin="16dp"-->
-    <!--        android:visibility="gone" />-->
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/submit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:stateListAnimator="@null"
+        android:layout_gravity="center"
+        android:textAllCaps="false"
+        android:text="@string/submit"
+        android:textColor="@color/item_text_selected"
+        android:textSize="14sp"
+        app:backgroundTint="@color/white"
+        app:cornerRadius="24dp"
+        app:elevation="0dp"
+        app:strokeColor="@color/item_text_selected"
+        app:strokeWidth="1dp" />
+</LinearLayout>
 
 
     <!--    android:background="@drawable/gradient_primary"-->

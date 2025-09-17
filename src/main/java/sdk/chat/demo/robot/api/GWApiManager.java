@@ -9,7 +9,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONObject;
-import org.pmw.tinylog.Logger;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -39,6 +38,7 @@ import sdk.chat.demo.MainApp;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.api.model.FavoriteList;
 import sdk.chat.demo.robot.api.model.SystemConf;
+import sdk.chat.demo.robot.extensions.LanguageUtils;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
 import sdk.chat.demo.robot.push.UpdateTokenWorker;
 import sdk.guru.common.RX;
@@ -84,7 +84,7 @@ public class GWApiManager {
                         // 添加全局查询参数
                         HttpUrl.Builder urlBuilder = request.url().newBuilder();
                         urlBuilder.addQueryParameter("tz", timeZoneId);
-                        urlBuilder.addQueryParameter("lang", Locale.getDefault().toLanguageTag());
+                        urlBuilder.addQueryParameter("lang", LanguageUtils.INSTANCE.getAppLanguage(MainApp.getContext(),false));
 
                         // 构建新请求
                         Request newRequest = request.newBuilder()
@@ -453,7 +453,6 @@ public class GWApiManager {
             client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException error) {
-                    Logger.warn("Message: " + message.getText() + "请求失败: " + error.getMessage());
                     message.setMessageStatus(MessageSendStatus.Failed, true);
                     emitter.onError(new Exception(error.getMessage()));
                 }

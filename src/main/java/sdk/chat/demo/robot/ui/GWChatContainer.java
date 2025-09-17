@@ -280,8 +280,7 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
                             Context context = getContext(); // 获取Context
                             if (context != null) {
                                 Toast.makeText(
-                                        context,
-                                        "加载失败: " + error.getMessage(),
+                                        context, error.getMessage(),
                                         Toast.LENGTH_SHORT
                                 ).show();
                             }
@@ -293,46 +292,14 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
     @Override
     public void onLoadMore(int page, int totalItemsCount) {
         loadElder();
-//        // There is an issue with Firebase whereby the message date is
-//        // initially just estimated. When the message is added, the scrollview
-//        // scrolls and that triggers the on-load-more which then does a database query
-//        // while that is running the message date has been updated to a later date
-//        // so a duplicate message comes back...
-//        if (!loadMoreEnabled) {
-//            return;
-//        }
-//
-//        Long startId = 0L;
-//
-//        // If there are already items in the list, load messages before oldest
-//        if (!messageHolders.isEmpty()) {
-//            startId = messageHolders.get(messageHolders.size() - 1).getMessage().getId();
-//        }
-//        Logger.warn("onLoadMore:" + startId);
-//        GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
-//        dm.add(
-//                // Changed this from before to after because it makes more sense...
-//                handler.loadMessagesEarlier(startId, true)
-//                        .flatMap((Function<List<Message>, SingleSource<List<MessageHolder>>>) messages -> {
-//                            return getMessageHoldersAsync(messages, false);
-//                        })
-//                        .observeOn(RX.main())
-//                        .subscribe(messages -> {
-//                            synchronize(() -> {
-//                                addMessageHoldersToEnd(messages, false);
-//                            });
-//                        }, error -> {
-//                            Context context = getContext(); // 获取Context
-//                            if (context != null) {
-//                                Toast.makeText(
-//                                        context,
-//                                        "加载失败: " + error.getMessage(),
-//                                        Toast.LENGTH_SHORT
-//                                ).show();
-//                            }
-//                        }));
+    }
 
+    public void loadPendingMsg(){
+        String messageId = delegate.getMessageId();
 
+        if (messageId != null && !messageId.isEmpty()) {
+
+        }
     }
 
     /**
