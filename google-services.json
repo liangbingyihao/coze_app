@@ -1,10 +1,30 @@
 {
   "project_info": {
     "project_number": "652016788210",
+    "firebase_url": "https://testim-ae3cf-default-rtdb.firebaseio.com",
     "project_id": "testim-ae3cf",
     "storage_bucket": "testim-ae3cf.firebasestorage.app"
   },
   "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:652016788210:android:77adb911415475c416666b",
+        "android_client_info": {
+          "package_name": "com.chuanxiang.graceword"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAG4kq0oQUOtvmcAwYWiEVeX_j9VUK_Aao"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
     {
       "client_info": {
         "mobilesdk_app_id": "1:652016788210:android:ae2b15db5514be3116666b",

@@ -33,6 +33,7 @@ import com.google.gson.JsonParser;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.tinylog.Logger;
 
 import java.lang.reflect.Field;
 
@@ -166,7 +167,9 @@ public class GWMsgInput extends RelativeLayout
         circleOverlayView.stopAnimation();
         circleOverlayView.setVisibility(View.GONE);
         messageInput.setShowSoftInputOnFocus(true);
-        if (attachmentsListener != null) attachmentsListener.onChangeKeyboard(true);
+        if(editMode==1){
+            if (attachmentsListener != null) attachmentsListener.onChangeKeyboard(true);
+        }
 //        stopSimulation();
     }
 
@@ -196,8 +199,6 @@ public class GWMsgInput extends RelativeLayout
                 lastLength = 0;
                 messagePrompt.setVisibility(GONE);
                 setEditMode(0, false);
-            } else {
-                LogHelper.INSTANCE.appendLog("send text failed");
             }
             removeCallbacks(typingTimerRunnable);
             post(typingTimerRunnable);
@@ -271,7 +272,7 @@ public class GWMsgInput extends RelativeLayout
             if (typingListener != null) typingListener.onHeightChange();
         }
         startPos = -1;
-        Log.d("AsrHelper1", "afterTextChanged and stop");
+        Log.d("AsrHelper", "afterTextChanged and stop");
         AsrHelper.INSTANCE.stopAsr();
         checkExpand();
 //        lastLineCount = messageInput.getLineCount();
@@ -590,7 +591,7 @@ public class GWMsgInput extends RelativeLayout
                     startPos = editable.length();
                 }
                 lastLength = 0;
-                LogHelper.INSTANCE.appendLog("set startPos: " + startPos + ", for " + newText);
+                Logger.info("set startPos: " + startPos + ", for " + newText);
             }
             Log.e("AsrHelper1", "definite: " + definite + ",newText:" + newText + ",startPos:" + startPos);
 //            editable.insert(startPos, newText);
@@ -609,7 +610,7 @@ public class GWMsgInput extends RelativeLayout
             }
             messageInput.addTextChangedListener(this);
         } catch (Exception e) {
-            LogHelper.INSTANCE.appendLog("smartInsertAtCursor:" + e.toString());
+            Logger.error(e,"smartInsertAtCursor");
         }
     }
 

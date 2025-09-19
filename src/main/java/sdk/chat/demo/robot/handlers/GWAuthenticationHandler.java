@@ -113,22 +113,6 @@ public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
             handler.getWelcomeMsg().subscribe();
             handler.createChatSessions();
             ImageApi.listImageTags().subscribe();
-
-//            if (ChatSDK.hook() != null) {
-//                HashMap<String, Object> data = new HashMap<>();
-//                data.put(HookEvent.User, user);
-//                ChatSDK.hook().executeHook(HookEvent.DidAuthenticate, data).subscribe(ChatSDK.events());
-//            }
-
-
-//            ChatSDK.core().sendAvailablePresence().subscribe();
-//            ChatSDK.db().getDaoCore().getDaoSession().getMessageDao().queryBuilder()
-//                    .where(MessageDao.Properties.Type.eq(MessageType.System))
-//                    .buildDelete()
-//                    .executeDeleteWithoutDetachingEntities();
-
-//            Logger.info("Authentication complete! name = " + user.getName() + ", id = " + user.getEntityID());
-
             setAuthStateToIdle();
 
 
@@ -148,11 +132,11 @@ public class GWAuthenticationHandler extends AbstractAuthenticationHandler {
     }
 
     public AccountDetails cachedAccountDetails() {
-        AccountDetails accountDetails = AccountDetails.username(ChatSDK.shared().getKeyStorage().get(KeyStorage.UsernameKey), ChatSDK.shared().getKeyStorage().get(KeyStorage.PasswordKey));
-        if (!accountDetails.areValid()) {
-            accountDetails = AccountDetails.token(DeviceIdHelper.INSTANCE.getDeviceId(ChatSDK.ctx()));
-        }
-        return accountDetails;
+//        AccountDetails accountDetails = AccountDetails.username(ChatSDK.shared().getKeyStorage().get(KeyStorage.UsernameKey), ChatSDK.shared().getKeyStorage().get(KeyStorage.PasswordKey));
+//        if (!accountDetails.areValid()) {
+//            accountDetails = AccountDetails.token(DeviceIdHelper.INSTANCE.getDeviceId(ChatSDK.ctx()));
+//        }
+        return AccountDetails.token(DeviceIdHelper.INSTANCE.getDeviceId(ChatSDK.ctx()));
     }
 
     public Boolean cachedCredentialsAvailable() {

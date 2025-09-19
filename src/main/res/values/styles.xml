@@ -69,6 +69,13 @@
     <style name="FeedOperator">
         <item name="android:layout_width">27dp</item>
         <item name="android:layout_height">27dp</item>
+        <item name="android:layout_marginEnd">14dp</item>
+        <item name="android:padding">2dp</item>
+        <item name="android:background">@drawable/dashed_border_selector</item>
+    </style>
+    <style name="FeedOperatorRight">
+        <item name="android:layout_width">27dp</item>
+        <item name="android:layout_height">27dp</item>
         <item name="android:layout_marginStart">14dp</item>
         <item name="android:padding">2dp</item>
         <item name="android:background">@drawable/dashed_border_selector</item>

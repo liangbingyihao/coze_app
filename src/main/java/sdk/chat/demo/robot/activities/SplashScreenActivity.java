@@ -42,6 +42,8 @@ import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.gyf.immersionbar.ImmersionBar;
 
+import org.tinylog.Logger;
+
 public class SplashScreenActivity extends AppCompatActivity {
 
     public static int AUTH = 1;
@@ -54,6 +56,7 @@ public class SplashScreenActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Logger.info("SplashScreenActivity.oncreate");
         ImmersionBar.with(this).init();
 
         setContentView(R.layout.activity_splash_gw);
@@ -83,7 +86,7 @@ public class SplashScreenActivity extends AppCompatActivity {
         MainApp app = (MainApp) getApplication();
 
         if (app.isInitialized()) {
-
+            Logger.error("app.isInitialized is true");
             boolean hasShownGuide = getSharedPreferences("app_prefs", MODE_PRIVATE)
                     .getBoolean("has_shown_guide", false);
             if (hasShownGuide) {
@@ -94,6 +97,7 @@ public class SplashScreenActivity extends AppCompatActivity {
             }
         } else {
             // 每隔500ms检查一次
+            Logger.error("check app.isInitialized");
             new Handler().postDelayed(this::checkInitializationStatus, 200);
         }
     }
@@ -101,7 +105,12 @@ public class SplashScreenActivity extends AppCompatActivity {
     private void proceedToMain() {
         // 确保主界面启动前所有服务就绪
         if (ChatSDK.currentUser()!=null) {
-            startActivity(new Intent(this, MainDrawerActivity.class));
+//            startActivity(new Intent(this, MainDrawerActivity.class));
+            Intent intent = new Intent(this, MainDrawerActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
+                    Intent.FLAG_ACTIVITY_NEW_TASK |
+                    Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
             finish();
         } else {
             ToastHelper.show(this,R.string.network_error);

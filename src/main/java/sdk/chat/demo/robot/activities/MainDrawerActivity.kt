@@ -18,9 +18,11 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.functions.Consumer
 import io.reactivex.schedulers.Schedulers
 import materialsearchview.MaterialSearchView
+import org.tinylog.Logger
 import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.session.ChatSDK
+import sdk.chat.demo.MainApp
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.adpter.SessionAdapter
 import sdk.chat.demo.robot.audio.AsrHelper
@@ -80,6 +82,9 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
 //            LogHelper.reportExportEvent("app.init", "getDaoSession == null: "+LogHelper.logStr, null)
 //        }
 
+
+        var isInitialized = (application as MainApp).isInitialized
+        Logger.error{"MainDrawerActivity.onCreate,isInitialized:${isInitialized}"}
         drawerLayout = findViewById(R.id.root_container)
         highlightOverlay = findViewById(R.id.overlay)
         findViewById<View>(R.id.menu_favorites).setOnClickListener(this)

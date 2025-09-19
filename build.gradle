@@ -8,7 +8,8 @@ android {
     compileSdk Integer.parseInt(project.ANDROID_COMPILE_SDK_VERSION)
 
     defaultConfig {
-        applicationId "sdk.chat.android.robot"
+//        applicationId "sdk.chat.android.robot"
+        applicationId "com.chuanxiang.graceword"
 
         multiDexEnabled = true
         minSdkVersion Integer.parseInt(project.DEMO_MIN_SDK)
@@ -60,11 +61,14 @@ android {
 
     buildTypes {
         release {
+//            applicationId "com.chuanxiang.graceword"
             minifyEnabled true
             signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android.txt'), '../chat-sdk-proguard-rules.pro', 'proguard-rules.pro'
         }
         debug {
+//            resValue "string", "app_name", "MyApp Debug"
+//            applicationId "sdk.chat.android.robot"
 //            minifyEnabled project.hasProperty('minifyDebug') && minifyDebug
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), '../chat-sdk-proguard-rules.pro', 'proguard-rules.pro'
@@ -72,14 +76,19 @@ android {
         }
     }
 //    applicationVariants.all { variant ->
-//        variant.outputs.all { output ->
-//            def versionName = variant.versionName
-//            def versionCode = variant.versionCode
-//            def flavor = variant.flavorName
-//            def formattedDate = new Date().format('yyyyMMddHHmm')
-//
-//            outputFileName = "graceword_v${versionName}_${versionCode}.apk"
+//        def buildType = variant.buildType.name
+//        copy {
+//            from "src/${buildType}/google-services.json"
+//            into "."
 //        }
+////        variant.outputs.all { output ->
+////            def versionName = variant.versionName
+////            def versionCode = variant.versionCode
+////            def flavor = variant.flavorName
+////            def formattedDate = new Date().format('yyyyMMddHHmm')
+////
+////            outputFileName = "graceword_v${versionName}_${versionCode}.apk"
+////        }
 //    }
 
     lint {

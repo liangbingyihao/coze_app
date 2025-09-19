@@ -19,7 +19,7 @@ tmp/
 
 # Files for the Dalvik VM
 *.dex
-
+*.log
 # Intellij
 *.iml
 .idea

@@ -117,9 +117,9 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
     open fun bind(t: T) {
         Log.e("bindImage", t.message.id.toString())
         loadImage(t)
-        progressView?.actionButton?.setOnClickListener(View.OnClickListener {
-            actionButtonPressed(t)
-        })
+//        progressView?.actionButton?.setOnClickListener(View.OnClickListener {
+//            actionButtonPressed(t)
+//        })
         progressView?.bringToFront()
 
         bubble?.let {
@@ -140,9 +140,9 @@ open class ChatImageViewHolder<T : ImageMessageHolder>(
 //        bindSendStatus(t)
 //        bindProgress(t)
 
-        btnCopy?.setOnClickListener {
-            ToastHelper.show(it.context, "copy....");
-        }
+//        btnCopy?.setOnClickListener {
+//            ToastHelper.show(it.context, "copy....");
+//        }
 
 
         val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler

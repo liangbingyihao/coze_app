@@ -52,7 +52,7 @@
             android:id="@+id/actionButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="待开启"
+            android:text="@string/task_action_p"
             android:textAllCaps="false"
             android:textColor="@color/item_text_selected"
             android:textSize="12sp"

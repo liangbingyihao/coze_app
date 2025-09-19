@@ -31,7 +31,7 @@ import androidx.fragment.app.FragmentContainerView;
 import com.lassi.common.utils.KeyUtils;
 import com.stfalcon.chatkit.messages.MessageInput;
 
-import org.pmw.tinylog.Logger;
+import org.tinylog.Logger;
 
 import java.io.File;
 import java.io.Serializable;
@@ -508,9 +508,11 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                 .subscribe(networkEvent -> {
                     Map<String, Object> params = networkEvent.getData();
                     String errType = (String) params.getOrDefault("type", "");
-                    String msg = (String) params.getOrDefault("msg", "error...");
+                    String msg = (String) params.getOrDefault("msg", "");
                     if ("asr".equals(errType)) {
-                        ToastHelper.show(getActivity(), msg);
+                        if(msg!=null&&!msg.isEmpty()){
+                            ToastHelper.show(getActivity(), msg);
+                        }
                         input.onAsrStop(true);
                         if ("ERR_REC_CHECK_ENVIRONMENT_FAILED".equals(msg)) {
                             dm.add(PermissionRequestHandler.requestRecordAudio(getActivity()).subscribe(() -> {
@@ -597,7 +599,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
         completable.observeOn(RX.main()).doOnError(throwable -> {
             Log.e("sending", throwable.getLocalizedMessage());
             showToast(throwable.getLocalizedMessage());
-            LogHelper.INSTANCE.appendLog("handleMessageSend error:" + throwable.getMessage());
+            Logger.error(throwable,"handleMessageSend");
         }).subscribe(this);
     }
 

@@ -153,15 +153,15 @@ class TaskCalendarActivity : BaseActivity(), View.OnClickListener {
                 .subscribe(
                     { data ->
                         if (data != null) {
-                            var fake = Chapter()
-                            fake.content = "fakestory"
-                            fake.date = "2025-05-07"
-                            fake.title = "faketitle"
-                            data.history.add(0, fake)
+//                            var fake = Chapter()
+//                            fake.content = "fakestory"
+//                            fake.date = "2025-05-07"
+//                            fake.title = "faketitle"
+//                            data.history.add(0, fake)
                             taskProcess = data
                             setCalendar()
                         } else {
-                            throw IllegalArgumentException("获取数据失败")
+                            throw IllegalArgumentException(getString(R.string.failed_and_retry))
                         }
                     },
                     this

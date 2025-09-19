@@ -3,13 +3,17 @@ package sdk.chat.demo.robot.ui;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import sdk.chat.demo.robot.holder.ExploreHolder;
 
 import com.stfalcon.chatkit.commons.models.IMessage;
 import com.stfalcon.chatkit.messages.MessageHolders;
@@ -34,6 +38,9 @@ import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.utils.TimeLog;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.adpter.ChatAdapter;
+import sdk.chat.demo.robot.adpter.data.AIExplore;
+import sdk.chat.demo.robot.api.model.MessageDetail;
+import sdk.chat.demo.robot.handlers.GWMsgHandler;
 import sdk.chat.demo.robot.handlers.GWThreadHandler;
 import sdk.chat.ui.ChatSDKUI;
 import sdk.chat.ui.chat.model.MessageHolder;
@@ -205,7 +212,7 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
 //                    ? delegate.getMessageId() -1
 //                    : 0L;
         }
-        Logger.warn("onLoadLater:" + startId);
+        Log.e("AIExplore", "onLoadLater:" + startId);
         GWThreadHandler handler = (GWThreadHandler) ChatSDK.thread();
         dm.add(
                 handler.loadMessagesLater(startId, true)
@@ -294,7 +301,7 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
         loadElder();
     }
 
-    public void loadPendingMsg(){
+    public void loadPendingMsg() {
         String messageId = delegate.getMessageId();
 
         if (messageId != null && !messageId.isEmpty()) {
@@ -342,6 +349,7 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
         for (MessageHolder holder : holders) {
             if (!messageHolders.contains(holder)) {
                 messageHolders.add(0, holder);
+                Log.e("AIExplore", "onLoadLater: add " + holder.message.getId());
                 toAdd.add(holder);
             } else {
                 Logger.error("We have a duplicate");
@@ -352,7 +360,8 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
             LinearLayoutManager layoutManager = (LinearLayoutManager) messagesList.getLayoutManager();
 //            int position = layoutManager.findLastVisibleItemPosition();
             assert layoutManager != null;
-            layoutManager.scrollToPositionWithOffset(toAdd.size(), 600);
+//            layoutManager.scrollToPositionWithOffset(toAdd.size(), 600);
+            layoutManager.scrollToPosition(toAdd.size());
             return Unit.INSTANCE;
         });
     }
@@ -401,6 +410,11 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
         if (holders == null || holders.isEmpty()) {
             return;
         }
+//        if (messageHolders.isEmpty()) {
+//            Message message = holders.get(0).message;
+//            messagesListAdapter.addNewMessage(new ExploreHolder(message),null);
+//        }
+        Log.e("AIExplore", "addMessageHoldersToEnd");
         List<MessageHolder> toAdd = new ArrayList<>();
         for (MessageHolder holder : holders) {
             if (!messageHolders.contains(holder)) {
@@ -414,15 +428,51 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
         // Reverse order because we are adding to end
         LinearLayoutManager layoutManager = (LinearLayoutManager) messagesList.getLayoutManager();
         assert layoutManager != null;
-        int position = layoutManager.findLastVisibleItemPosition();
+        int position = messagesListAdapter.getItemCount() == 0 ? 1 : layoutManager.findLastVisibleItemPosition();
 
         messagesListAdapter.addHistoryMessages(toAdd, () -> {
             messagesList.setItemAnimator(null);
-            layoutManager.scrollToPositionWithOffset(position + 1, 700);
+//            layoutManager.scrollToPositionWithOffset(position + 1, 700);
+            scrollToPositionTop(position, 300);
+//            layoutManager.scrollToPosition(2);
+//            layoutManager.scrollVerticallyBy()
 
             return Unit.INSTANCE;
         });
 //        messagesListAdapter.addToEnd(toAdd, false, notify);
+    }
+
+    /**
+     * 滚动到指定 position，并让 item 顶部贴近 RecyclerView 顶部
+     *
+     * @param targetPosition 目标位置
+     * @param offsetPx       额外偏移量（例如 100px，让 item 顶部距离顶部 100px）
+     */
+    private void scrollToPositionTop(int targetPosition, int offsetPx) {
+        LinearLayoutManager layoutManager = (LinearLayoutManager) messagesList.getLayoutManager();
+        if (layoutManager == null || messagesList == null) return;
+
+        messagesList.post(() -> {
+            View itemView = layoutManager.findViewByPosition(targetPosition);
+            if (itemView != null) {
+                int itemHeight = itemView.getHeight();
+                int recyclerViewHeight = messagesList.getHeight();
+                int offset = recyclerViewHeight - itemHeight - offsetPx;
+                layoutManager.scrollToPositionWithOffset(targetPosition, offset);
+            } else {
+                // 如果 item 未渲染，先滚动到目标位置再微调
+                layoutManager.scrollToPosition(targetPosition);
+                messagesList.post(() -> {
+                    View delayedView = layoutManager.findViewByPosition(targetPosition);
+                    if (delayedView != null) {
+                        int itemHeight = delayedView.getHeight();
+                        int recyclerViewHeight = messagesList.getHeight();
+                        int finalOffset = recyclerViewHeight - itemHeight - offsetPx;
+                        layoutManager.scrollToPositionWithOffset(targetPosition, finalOffset);
+                    }
+                });
+            }
+        });
     }
 
     protected void synchronize(Runnable modifyList) {
@@ -508,7 +558,7 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
     public void clear() {
         if (messagesListAdapter != null) {
             messageHolders.clear();
-            messagesListAdapter.submitList(new ArrayList<IMessage>(), null);
+            messagesListAdapter.clear();
         }
     }
 

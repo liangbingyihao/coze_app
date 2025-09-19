@@ -227,7 +227,7 @@ class ImageViewerActivity : BaseActivity(), View.OnClickListener {
 //                threadHandler.aiExplore.contextId
                     threadHandler.sendExploreMessage(
                         "【每日恩语】-${date}",
-                        threadHandler.aiExplore.message,
+                        null,
                         action,
                         date
                     ).subscribe();

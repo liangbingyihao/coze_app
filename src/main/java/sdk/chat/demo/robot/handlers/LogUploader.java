@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -117,20 +119,20 @@ public class LogUploader {
             File logDir = new File(context.getExternalFilesDir(null), "logs");
 
             if (logDir.exists()) {
-                long cutoffTime = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(30);
+                long cutoffTime = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(12);
 
                 // 遍历所有 error_{count}.log 文件
                 File[] errorLogFiles = logDir.listFiles((dir, name) ->
                         name.matches("error_\\d+\\.log") || name.equals("error.log")
                 );
-
-                if (errorLogFiles != null) {
+                if(errorLogFiles!=null){
+                    Arrays.sort(errorLogFiles, Comparator.comparingLong(File::lastModified));
                     for (File logFile : errorLogFiles) {
                         if (logFile.lastModified() >= cutoffTime) {
                             logs.addAll(readLogsSince(logFile, cutoffTime));
-                            Log.e("LogManager", logFile.getName()+",after readLogsSince:"+logs.size());
-                        }else{
-                            Log.e("LogManager", logFile.getName()+",skip file..");
+                            Log.e("LogManager", logFile.getName() + ",after readLogsSince:" + logs.size());
+                        } else {
+                            Log.e("LogManager", logFile.getName() + ",skip file..");
                         }
                     }
                 }

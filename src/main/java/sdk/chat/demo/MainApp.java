@@ -97,15 +97,14 @@ public class MainApp extends Application implements Configuration.Provider, Appl
                                 chatSDK = ChatSDK.shared();
                             },
                             error -> { /* 错误处理 */
-                                Logger.error("authenticate error:" + error.getMessage());
+                                Logger.error(error,"authenticate error");
                                 LogHelper.INSTANCE.reportExportEvent("app.init", "authenticate error", error);
                                 isInitialized = true;
                             }
                     ));
         } catch (Exception e) {
-            Logger.error("MainApp.onCreate:e:",e);
+            Logger.error(e,"MainApp.onCreate");
             LogHelper.INSTANCE.reportExportEvent("app.init", "init error", e);
-            assert (false);
         }
         setupEnhancedCrashReporting();
         LanguageUtils.INSTANCE.initAppLanguage(this);
@@ -117,7 +116,7 @@ public class MainApp extends Application implements Configuration.Provider, Appl
 
         Thread.setDefaultUncaughtExceptionHandler((thread, ex) -> {
             try {
-                LogHelper.INSTANCE.error("uncaughtException", ex);
+                Logger.error(ex,"uncaughtException");
             } catch (Exception e) {
 
             }

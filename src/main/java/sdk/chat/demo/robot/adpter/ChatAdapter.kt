@@ -1,6 +1,8 @@
 package sdk.chat.demo.robot.adpter
 
 import android.annotation.SuppressLint
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.util.SparseArray
 import android.view.LayoutInflater
@@ -14,6 +16,7 @@ import com.stfalcon.chatkit.commons.models.IMessage
 import io.reactivex.Single
 import org.pmw.tinylog.Logger
 import sdk.chat.demo.pre.R
+import sdk.chat.demo.robot.adpter.data.AIExplore
 import sdk.chat.demo.robot.holder.ChatImageViewHolder
 import sdk.chat.demo.robot.holder.ChatTextViewHolder
 import sdk.chat.demo.robot.holder.ExploreHolder
@@ -21,6 +24,7 @@ import sdk.chat.demo.robot.holder.ExploreViewHolder
 import sdk.chat.demo.robot.holder.ImageHolder
 import sdk.chat.demo.robot.holder.TextHolder
 import sdk.chat.demo.robot.holder.TimeHolder
+import sdk.chat.ui.chat.model.MessageHolder
 import sdk.guru.common.RX
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -30,7 +34,6 @@ class MessageDiffCallback(
     private val oldList: List<IMessage>,
     private val newList: List<IMessage>
 ) : DiffUtil.Callback() {
-
     override fun getOldListSize(): Int = oldList.size
     override fun getNewListSize(): Int = newList.size
 
@@ -99,13 +102,25 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         fun onMessageViewClick(view: View?, message: IMessage?)
     }
 
-    init {
-        if (items.isEmpty()) {
-            items.add(ExploreHolder())
+//    init {
+//        if (items.isEmpty()) {
+//            items.add(ExploreHolder())
+//        }
+//    }
+
+    //    private val exploreHolder = ExploreHolder()
+    var aiExplore: AIExplore? = null
+        set(value) {
+            field = value
+            Log.e("AIExplore", "set AIExplore:" + aiExplore?.message?.id)
+            Handler(Looper.getMainLooper()).postDelayed(
+                { notifyItemChanged(0); },
+                2
+            )
         }
-    }
 
     var header = false
+        get() = field
         set(value) {
             if (field != value) {
                 field = value
@@ -132,8 +147,17 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         }
     }
 
+    fun clear() {
+
+        Log.e("AIExplore", "clear")
+        if (items.isNotEmpty()) {
+            items.clear()
+            notifyDataSetChanged()
+        }
+    }
+
     @SuppressLint("CheckResult")
-    fun submitList(newList: List<IMessage>, onComplete: (() -> Unit)? = null) {
+    private fun submitList(newList: List<IMessage>, onComplete: (() -> Unit)? = null) {
 //        val diffResult = DiffUtil.calculateDiff(MessageDiffCallback(items, newList))
 //        items.clear()
 //        items.addAll(newList)
@@ -146,6 +170,7 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             .observeOn(RX.main())
             .subscribe({ diffResult ->
                 items.clear()
+//                items.add(exploreHolder);
                 items.addAll(newList)
                 diffResult.dispatchUpdatesTo(this@ChatAdapter)
 //                notifyDataSetChanged()
@@ -154,6 +179,7 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                 Log.e("ChatAdapter", "DiffUtil计算失败", error)
                 // 降级方案：普通全量刷新
                 items.clear()
+//                items.add(exploreHolder);
                 items.addAll(newList)
                 notifyDataSetChanged()
                 onComplete?.invoke()
@@ -162,8 +188,28 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     // 添加新消息（自动插入到头部）
     fun addNewMessage(item: IMessage, onComplete: (() -> Unit)? = null) {
-        val newList = items.toMutableList().apply { add(1, item) }
-        submitList(newList, onComplete)
+//        val newList = items.toMutableList().apply { add(1, item) }
+//        submitList(newList, onComplete)
+        Log.e("AIExplore", "addNewMessage:${item.id}")
+        var msg = (item as? MessageHolder)?.message
+        val oldHeader = getItemViewType(0) == TYPE_HEADER
+
+        if (oldHeader) {
+            items[0] = ExploreHolder(msg)
+        } else {
+            items.add(0, ExploreHolder(msg))
+        }
+
+        items.add(1, item)
+
+        // 批量通知
+        if (oldHeader) {
+            notifyItemChanged(0)      // 头部内容变化
+            notifyItemInserted(1)     // 新项插入
+        } else {
+            notifyItemRangeInserted(0, 2)  // 两个新项插入
+        }
+        onComplete?.invoke()
     }
 
     /**
@@ -176,46 +222,141 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             onComplete?.invoke()
             return
         }
+//        if (itemCount == 0) {
+//            var msgHolder = newMessages[0]
+//            var message = when (msgHolder) {
+//                is TextHolder -> msgHolder.message
+//                is ImageHolder -> msgHolder.message
+//                else -> null
+//            }
+//            if(message!=null){
+//                items.add(ExploreHolder(message))
+//            }
+//        }
+        Log.e("AIExplore", "addNewMessage List")
 
-        val newList = ArrayList<IMessage>(items.size + newMessages.size).apply {
-            // 1. 添加旧数据的第一条（如果存在,这是探索...）
-            if (items.isNotEmpty()) {
-                add(items[0])
-            }
+        var msg = (newMessages[newMessages.lastIndex] as? MessageHolder)?.message
+        val oldHeader = getItemViewType(0) == TYPE_HEADER
 
-            // 2. 追加所有新消息
-            addAll(newMessages)
-
-            // 3. 追加旧数据第二条及之后的数据（如果存在）
-            if (items.size > 1) {
-                addAll(items.subList(1, items.size))
-            }
+        if (oldHeader) {
+            items[0] = ExploreHolder(msg)
+        } else {
+            items.add(0, ExploreHolder(msg))
         }
 
-        submitList(newList, onComplete)
+        items.addAll(1, newMessages)
+//        notifyDataSetChanged()
+
+        // 批量通知
+        if (oldHeader) {
+            notifyItemChanged(0)      // 头部内容变化
+            notifyItemRangeInserted(1, newMessages.size)     // 新项插入
+        } else {
+            notifyItemRangeInserted(0, newMessages.size + 1)  // 两个新项插入
+        }
+        onComplete?.invoke()
+
+
+//        if (itemCount == 0 && newMessages.isNotEmpty()) {
+//            (newMessages[0] as? MessageHolder)?.message?.let { items.add(ExploreHolder(it)) }
+//        }
+//        items.addAll(newMessages)
+//        notifyItemRangeInserted(0, newMessages.size)
+//        items.apply {
+//            if (size >= 2) {
+//                val tail = subList(2, size)
+//                subList(1, size).clear()
+//                addAll(1, newMessages)
+//                addAll(tail)
+//            } else if (size == 1) {
+//                addAll(1, newMessages)
+//            } else {
+//                items.add(ExploreHolder())
+//                addAll(0, newMessages)
+//            }
+//        }
+//        notifyDataSetChanged()
+
+//        val newList = ArrayList<IMessage>(items.size + newMessages.size).apply {
+//            // 1. 添加旧数据的第一条（如果存在,这是探索...）
+//            if (items.isNotEmpty()) {
+//                add(items[0])
+//            }
+//
+//            // 2. 追加所有新消息
+//            addAll(newMessages)
+//
+//            // 3. 追加旧数据第二条及之后的数据（如果存在）
+//            if (items.size > 1) {
+//                addAll(items.subList(1, items.size))
+//            }
+//        }
+//
+//        submitList(newList, onComplete)
 
     }
 
     // 批量添加历史消息（追加到尾部）
     fun addHistoryMessages(newItems: List<IMessage>, onComplete: (() -> Unit)? = null) {
-        val newList = items.toMutableList().apply { addAll(newItems) }
-        submitList(newList, onComplete)
+        Log.e("AIExplore", "addHistoryMessages:${newItems.size}")
+//        val newList = items.toMutableList().apply { addAll(newItems) }
+//        submitList(newList, onComplete)
+        var s = itemCount
+        if (itemCount == 0 && newItems.isNotEmpty()) {
+            (newItems[0] as? MessageHolder)?.message?.let { items.add(ExploreHolder(it)) }
+        }
+        items.addAll(newItems)
+        notifyItemRangeInserted(s, newItems.size + 1)
+        onComplete?.invoke()
     }
 
 
-    fun delMessage(message: IMessage, onComplete: (() -> Unit)? = null) {
+    fun delMessage(item: IMessage, onComplete: (() -> Unit)? = null) {
         // Create new list with items removed
-        val deletePos = items.indexOfFirst { it.id == message.id }
+        val deletePos = items.indexOfFirst { it.id == item.id }
 
         if (deletePos == -1) {
-            Log.e("delmsg", "message.id:${message.id},del:-1,size:${items.size}")
+//            Log.e("delmsg", "message.id:${message.id},del:-1,size:${items.size}")
             onComplete?.invoke()
             return
         }
-        Log.e("delmsg", "message.id:${message.id},del:${deletePos}:${items[deletePos].id},size:${items.size}")
-        val newList = ArrayList(items).apply { removeAt(deletePos) }
-        //status: 0: pending,1:idle
-        submitList(newList, onComplete)
+
+        Log.e("AIExplore", "delMessage:${item.id},deletePos:${deletePos}")
+//        var newExploreHolder: ExploreHolder? = null
+//        if (itemCount > deletePos) {
+//            var msg = (items[deletePos + 1] as? MessageHolder)?.message
+//            newExploreHolder = ExploreHolder(msg)
+//        }
+
+//        var msg = (item as? MessageHolder)?.message
+        items.removeAt(deletePos)
+        if (deletePos == 1) {
+            val oldExploreMsg = (items[0] as? ExploreHolder)?.message
+            if (oldExploreMsg != null && oldExploreMsg.entityID == item.id) {
+                Log.e("AIExplore", "delMessage:${item.id},deletePos:${deletePos}, and del explore")
+                items.removeAt(0)
+                notifyItemRangeRemoved(0,2)
+                onComplete?.invoke()
+                return
+            }
+        }
+        notifyItemRemoved(deletePos)
+        onComplete?.invoke()
+
+//        if (delExplore) {
+//            items.removeAt(deletePos)
+//            items.removeAt(0)
+//            notifyItemChanged(0)      // 头部内容变化
+//            notifyItemRangeInserted(1, newMessages.size)     // 新项插入
+//        } else {
+//            notifyItemRangeInserted(0, newMessages.size + 1)  // 两个新项插入
+//        }
+//
+//        notifyItemRemoved(deletePos)
+//        onComplete?.invoke()
+//        val newList = ArrayList(items).apply { removeAt(deletePos) }
+//        //status: 0: pending,1:idle
+//        submitList(newList, onComplete)
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -274,6 +415,8 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+
+//        Log.e("AIExplore", "onBindViewHolder:" + position+","+holder)
         when (holder) {
             is ChatTextViewHolder<*> -> {
                 val item = getItem(position)
@@ -299,7 +442,8 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
             is TimeViewHolder -> holder.bind(getItem(position) as TimeHolder)
             is ExploreViewHolder -> {
-                holder.bind(header)
+                val item = getItem(position)
+                holder.bind(header, item as ExploreHolder)
 //                bindListeners(holder, null)
             }
 

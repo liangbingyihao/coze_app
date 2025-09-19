@@ -52,7 +52,8 @@
 
         <activity
             android:name="sdk.chat.demo.robot.activities.SplashScreenActivity"
-            android:exported="true">
+            android:exported="true"
+            android:clearTaskOnLaunch="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

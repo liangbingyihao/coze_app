@@ -20,10 +20,14 @@ import com.bytedance.speech.speechengine.SpeechEngineDefines
 import com.bytedance.speech.speechengine.SpeechEngineGenerator
 import org.json.JSONException
 import org.json.JSONObject
+import org.tinylog.Logger
 import sdk.chat.core.dao.Message
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.core.utils.AppBackgroundMonitor.StopListener
+import sdk.chat.demo.MainApp
+import sdk.chat.demo.pre.R
+import sdk.chat.demo.robot.api.ImageApi
 import sdk.chat.demo.robot.extensions.LanguageUtils
 import java.util.Locale
 
@@ -62,7 +66,7 @@ object TTSHelper {
     private var mResumeOnFocusGain = true
     private var mPlaybackNowAuthorized = false
     private var audioFocusRequest: AudioFocusRequest? = null
-    var voiceType = "BV026_streaming"
+    var voiceType = "BV001_streaming"
 
 
     fun initTTS(context: AppCompatActivity) {
@@ -137,6 +141,9 @@ object TTSHelper {
     }
 
     fun speek(text: String, msgId: String) {
+        if (ImageApi.getGwConfigs() == null) {
+            return
+        }
         if (ttsType == 0) {
             mCurTtsText = text.replace("*", "").replace("<br>|</br>|<br/>".toRegex(), "")
             textToSpeech?.language = LanguageUtils.getTextLanguage(mCurTtsText)
@@ -679,6 +686,32 @@ object TTSHelper {
 
 
     private fun configInitParams() {
+        var configs = ImageApi.getGwConfigs()
+        if (configs == null || configs.voiceBaseConfigs == null) {
+            Logger.error { "configInitParams but voice base configs is null " }
+            return
+        }
+
+        var defaultVoiceTypes = configs.defaultVoiceTypes
+        if (defaultVoiceTypes != null) {
+            var lang = LanguageUtils.getAppLanguage(MainApp.getContext(), false)
+            if (lang?.isNotEmpty() == true) {
+                var dvt: String? = null
+                if (lang.contains("en", ignoreCase = true)) {
+                    dvt = defaultVoiceTypes["en"]
+                } else if (lang.contains("Hant", ignoreCase = true)) {
+                    dvt = defaultVoiceTypes["zh-hant"]
+                } else if (lang.contains("zh", ignoreCase = true)) {
+                    dvt = defaultVoiceTypes["zh-hans"]
+                }
+                if (dvt != null) {
+                    voiceType = dvt
+                    Logger.error { "set default voicetype:${voiceType}" }
+                    Log.d(TAG,"set default voicetype:${voiceType}")
+                }
+            }
+        }
+
         //【必需配置】Engine Name
         mSpeechEngine!!.setOptionString(
             SpeechEngineDefines.PARAMS_KEY_ENGINE_NAME_STRING,
@@ -743,8 +776,12 @@ object TTSHelper {
 //        if (mCurAppId.isEmpty()) {
 //            mCurAppId = SensitiveDefines.APPID
 //        }
-        //【必需配置】在线合成鉴权相关：Appid
-        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_APP_ID_STRING, "2617262954")
+        //【必需配置】在线合成鉴权相关：Appid "2617262954"
+        ImageApi.getGwConfigs().voiceBaseConfigs.appId
+        mSpeechEngine!!.setOptionString(
+            SpeechEngineDefines.PARAMS_KEY_APP_ID_STRING,
+            configs.voiceBaseConfigs.appId
+        )
 
 //        var token: String = mSettings.getString(R.string.config_token)
 //        if (token.isEmpty()) {
@@ -753,7 +790,7 @@ object TTSHelper {
         //【必需配置】在线合成鉴权相关：Token
         mSpeechEngine!!.setOptionString(
             SpeechEngineDefines.PARAMS_KEY_APP_TOKEN_STRING,
-            "Bearer;Yn2tI0wSDWOgEJhP8PPLcXtGInB11N4M"
+            "Bearer;" + configs.voiceBaseConfigs.token
         )
 
 //        var address: String = mSettings.getString(R.string.config_address)

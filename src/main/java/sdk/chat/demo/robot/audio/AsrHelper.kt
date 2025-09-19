@@ -4,14 +4,14 @@ import android.util.Log
 import com.bytedance.speech.speechengine.SpeechEngine
 import com.bytedance.speech.speechengine.SpeechEngineDefines
 import com.bytedance.speech.speechengine.SpeechEngineGenerator
-import com.lassi.common.utils.Logger
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import org.tinylog.Logger
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.MainApp
-import sdk.chat.demo.robot.extensions.LogHelper
+import sdk.chat.demo.robot.api.ImageApi
 import sdk.chat.demo.robot.extensions.SpeechStreamRecorder
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -111,7 +111,8 @@ object AsrHelper {
 //            }
 //            Log.i(TAG, "got $isFinal")
             if(!recordIsRunning){
-                LogHelper.appendLog("speechAsrResult but asr stopped")
+                Logger.error("speechAsrResult but asr stopped" as Any)
+                Log.i(TAG, "speechAsrResult but asr stopped")
                 return
             }
             val result = JSONObject(data).opt("result").let { rawResult ->
@@ -151,7 +152,8 @@ object AsrHelper {
                 }
                 lastAsrResult = text
                 lastDefinite = definite
-                LogHelper.appendLog("logId:$logId,index:$i,definite:$definite,text:,$text")
+//                Logger.info("logId:$logId,index:$i,definite:$definite,text:,$text" as Any)
+                Log.i(TAG, "logId:$logId,index:$i,definite:$definite,text:,$text")
                 ChatSDK.events().source()
                     .accept(NetworkEvent.messageInputAsr(definite, text, true))
 
@@ -313,6 +315,12 @@ object AsrHelper {
         //流式语音识别
         //https://www.volcengine.com/docs/6561/113642
 
+        var configs = ImageApi.getGwConfigs()
+        if(configs==null||configs.voiceBaseConfigs==null){
+            Logger.error { "configBaseInitParams but voice base configs is null " }
+            return
+        }
+
         //【必需配置】识别服务域名
         mSpeechEngine!!.setOptionString(
             SpeechEngineDefines.PARAMS_KEY_ASR_ADDRESS_STRING,
@@ -326,13 +334,13 @@ object AsrHelper {
         )
 
         //【必需配置】鉴权相关：Appid
-        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_APP_ID_STRING, "2617262954")
+        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_APP_ID_STRING, configs.voiceBaseConfigs.appId)
 
 //        val token: String? = mSettings.getString(R.string.config_token)
         //【必需配置】鉴权相关：Token
         mSpeechEngine!!.setOptionString(
             SpeechEngineDefines.PARAMS_KEY_APP_TOKEN_STRING,
-            "Bearer;Yn2tI0wSDWOgEJhP8PPLcXtGInB11N4M"
+            "Bearer;"+configs.voiceBaseConfigs.token
         )
 
         //【必需配置】识别服务所用集群
@@ -350,6 +358,11 @@ object AsrHelper {
         if (mSpeechEngine == null) {
             return
         }
+        var configs = ImageApi.getGwConfigs()
+        if(configs==null||configs.voiceBaseConfigs==null){
+            Logger.error { "configLlmInitParams but voice base configs is null " }
+            return
+        }
 
         //【必需配置】识别服务域名，固定值
         mSpeechEngine!!.setOptionString(
@@ -362,11 +375,11 @@ object AsrHelper {
             "/api/v3/sauc/bigmodel"
         );
 //【必需配置】鉴权相关：Appid，参考控制台使用FAQ--Q1
-        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_APP_ID_STRING, "2617262954");
+        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_APP_ID_STRING, configs.voiceBaseConfigs.appId);
 //【必需配置】鉴权相关：Token，无需添加Bearer; 前缀，参考控制台使用FAQ--Q1
         mSpeechEngine!!.setOptionString(
             SpeechEngineDefines.PARAMS_KEY_APP_TOKEN_STRING,
-            "Yn2tI0wSDWOgEJhP8PPLcXtGInB11N4M"
+            configs.voiceBaseConfigs.token
         );
 //【必需配置】识别服务资源信息ResourceId，参考大模型流式语音识别API--鉴权
 // https://www.volcengine.com/docs/6561/1354869
@@ -389,6 +402,7 @@ object AsrHelper {
 
     fun startAsr() {
         recordIsRunning = false
+        Logger.info("try startAsr" as Any)
         recordRunnable = Runnable {
 
             lastAsrResult = ""
@@ -446,21 +460,24 @@ object AsrHelper {
             if (ret != SpeechEngineDefines.ERR_NO_ERROR) {
                 var msg = "directive DIRECTIVE_SYNC_STOP_ENGINE failed, $ret"
                 Log.e(TAG, msg)
+                Logger.info(msg as Any)
                 ChatSDK.events().source().accept(NetworkEvent.errorEvent(null, "asr", msg))
             } else {
+                Logger.info("asr 启动引擎成功" as Any)
                 Log.i(TAG, "启动引擎")
                 Log.i(TAG, "Directive: DIRECTIVE_START_ENGINE")
                 ret = mSpeechEngine!!.sendDirective(SpeechEngineDefines.DIRECTIVE_START_ENGINE, "")
                 if (ret == SpeechEngineDefines.ERR_REC_CHECK_ENVIRONMENT_FAILED) {
-
                     var msg = "ERR_REC_CHECK_ENVIRONMENT_FAILED"
                     Log.e(TAG, msg)
+                    Logger.info(msg as Any)
                     ChatSDK.events().source().accept(NetworkEvent.errorEvent(null, "asr", msg))
 //                    mEngineStatusTv.setText(R.string.check_rec_permission)
 //                    requestPermission(com.bytedance.speech.speechdemo.AsrActivity.ASR_PERMISSIONS)
                 } else if (ret != SpeechEngineDefines.ERR_NO_ERROR) {
                     var msg = "send directive start failed, $ret"
                     Log.e(TAG, msg)
+                    Logger.info(msg as Any)
                     ChatSDK.events().source().accept(NetworkEvent.errorEvent(null, "asr", msg))
                 }
             }
@@ -472,13 +489,15 @@ object AsrHelper {
     fun stopAsr() {
         if (recordIsRunning) {
             recordIsRunning = false
+            Logger.info("stop asr" as Any)
             Log.i(TAG, "AsrTouch: Finish")
             // Directive：结束用户音频输入。
             Log.i(TAG, "Directive: DIRECTIVE_FINISH_TALKING")
             mSpeechEngine!!.sendDirective(SpeechEngineDefines.DIRECTIVE_FINISH_TALKING, "")
             mStreamRecorder!!.Stop()
-        } else if (recordRunnable != null) {
-            Log.i(TAG, "AsrTouch: Cancel")
+        } else{
+            ChatSDK.events().source().accept(NetworkEvent.errorEvent(null, "asr", ""))
+            Logger.info("force stop asr" as Any)
 //            recordHandler!!.removeCallbacks(recordRunnable)
         }
     }

@@ -107,7 +107,7 @@ class TaskActivity : BaseActivity(), View.OnClickListener {
 //                threadHandler.aiExplore.contextId
                     threadHandler.sendExploreMessage(
                         "【每日恩语】-${date}",
-                        threadHandler.aiExplore.message,
+                        null,
                         AIExplore.ExploreItem.action_daily_gw_pray,
                         date
                     ).subscribe();
@@ -260,7 +260,6 @@ class TaskActivity : BaseActivity(), View.OnClickListener {
 
 
     private fun initTaskPie(taskProgressSelected: TaskProgress) {
-        LogHelper.appendLog("initTaskPie")
         tvStoryName.text = getString(R.string.grace_journey, taskProgressSelected.storyName)
         taskPieAdapter.setData(taskProgressSelected.taskDetail)
 //        taskContainer.setTaskData(0, taskProgressSelected.taskDetail)

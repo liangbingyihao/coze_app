@@ -34,9 +34,10 @@ class SearchResultPagerAdapter(
     fragmentActivity: FragmentActivity
 ) : FragmentStateAdapter(fragmentActivity) {
     private val fragments = SparseArray<SearchResultFragment>()
-    private val queryType = arrayOf("feed", "topic", "question", "favorite")
+    private val queryType = arrayOf("feed")
+//    private val queryType = arrayOf("feed", "topic", "question", "favorite")
 
-    override fun getItemCount(): Int = 4
+    override fun getItemCount(): Int = 1
 
     override fun createFragment(position: Int): Fragment {
         return SearchResultFragment.newInstance(queryType[position]).also {
@@ -60,7 +61,8 @@ class SearchActivity : BaseActivity(), View.OnClickListener,OnDataListener {
     private lateinit var searchResultAdapter: SearchResultPagerAdapter
     val threadHandler = ChatSDK.thread() as GWThreadHandler
     //FIXME
-    private val hints = listOf(R.string.search_record, R.string.timeline, R.string.questions, R.string.save)
+    private val hints = listOf(R.string.search_record)
+//    private val hints = listOf(R.string.search_record, R.string.timeline, R.string.questions, R.string.save)
     private var sharedPref: SharedPreferences? = null
 
     @SuppressLint("CheckResult")
@@ -91,10 +93,10 @@ class SearchActivity : BaseActivity(), View.OnClickListener,OnDataListener {
 
         searchResultAdapter = SearchResultPagerAdapter(this)
         viewPager.adapter = searchResultAdapter
-        // 将 TabLayout 与 ViewPager2 关联
-        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            tab.text = getString(hints[position])
-        }.attach()
+//        // 将 TabLayout 与 ViewPager2 关联
+//        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+//            tab.text = getString(hints[position])
+//        }.attach()
 //        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
 //            override fun onPageSelected(position: Int) {
 //                viewPager.post { performSearch(false) }
@@ -172,7 +174,7 @@ class SearchActivity : BaseActivity(), View.OnClickListener,OnDataListener {
     }
 
     private fun showHistory() {
-        tabLayout.visibility = View.INVISIBLE
+//        tabLayout.visibility = View.INVISIBLE
         viewPager.visibility = View.INVISIBLE
         searchHistory.visibility = View.VISIBLE
 
@@ -196,7 +198,7 @@ class SearchActivity : BaseActivity(), View.OnClickListener,OnDataListener {
     }
 
     private fun showResults() {
-        tabLayout.visibility = View.VISIBLE
+//        tabLayout.visibility = View.VISIBLE
         viewPager.visibility = View.VISIBLE
         searchHistory.visibility = View.INVISIBLE
         hideKeyboard()

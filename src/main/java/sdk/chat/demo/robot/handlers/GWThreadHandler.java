@@ -12,6 +12,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import org.greenrobot.greendao.query.QueryBuilder;
+import org.tinylog.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -77,9 +78,9 @@ public class GWThreadHandler extends AbstractThreadHandler {
     public final static String headTopic = "信仰问答";
 //    public static String qaThreadId = null;
 
-    public AIExplore getAiExplore() {
-        return aiExplore;
-    }
+//    public AIExplore getAiExplore() {
+//        return aiExplore;
+//    }
 
 
     public Single<SystemConf> getServerPrompt() {
@@ -306,26 +307,26 @@ public class GWThreadHandler extends AbstractThreadHandler {
             }
             qb.orderAsc(MessageDao.Properties.Date).limit(20);
             List<Message> messages = qb.list();
-            int i = messages.size() - 1;
-            if (i >= 0) {
-                AIExplore newAiExplore = null;
-                while (newAiExplore == null && i < messages.size()) {
-                    Message tmp = messages.get(i);
-                    MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(tmp);
-                    if (aiFeedback != null && aiFeedback.getFeedback() != null) {
-                        newAiExplore = AIExplore.loads(tmp);
-                    }
-                    --i;
-                }
-                if (newAiExplore != null) {
-//                    Message oldMsg = aiExplore != null ? aiExplore.getMessage() : null;
-                    aiExplore = newAiExplore;
-                    Log.d("aiExplore", "aiExplore2=" + aiExplore.getMessage().getId());
-//                    if (oldMsg != null) {
-//                        ChatSDK.events().source().accept(NetworkEvent.messageUpdated(oldMsg));
+//            int i = messages.size() - 1;
+//            if (i >= 0) {
+//                AIExplore newAiExplore = null;
+//                while (newAiExplore == null && i < messages.size()) {
+//                    Message tmp = messages.get(i);
+//                    MessageDetail aiFeedback = GWMsgHandler.getAiFeedback(tmp);
+//                    if (aiFeedback != null && aiFeedback.getFeedback() != null) {
+//                        newAiExplore = AIExplore.loads(tmp);
 //                    }
-                }
-            }
+//                    --i;
+//                }
+//                if (newAiExplore != null) {
+////                    Message oldMsg = aiExplore != null ? aiExplore.getMessage() : null;
+//                    aiExplore = newAiExplore;
+//                    Log.d("aiExplore", "aiExplore2=" + aiExplore.getMessage().getId());
+////                    if (oldMsg != null) {
+////                        ChatSDK.events().source().accept(NetworkEvent.messageUpdated(oldMsg));
+////                    }
+//                }
+//            }
             return Single.just(messages);
         }).subscribeOn(RX.db());
     }
@@ -372,7 +373,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
             if (action == AIExplore.ExploreItem.action_input_prompt) {
                 message.setMetaValue("reply", params);
             } else {
-                message.setMetaValue("context_id", contextMsg.getEntityID());
+                message.setMetaValue("context_id", contextMsg!=null?contextMsg.getEntityID():"empty");
                 message.setMetaValue("action", action);
             }
 //    action_daily_ai = 0
@@ -608,15 +609,21 @@ public class GWThreadHandler extends AbstractThreadHandler {
                         return Single.error(new IllegalStateException("Invalid API response: " + result));
                     }
                     return Single.fromCallable(() -> {
-
-                        if (message.getText().isEmpty()) {
+                        Integer action = message.integerForKey("action");
+                        if (message.getText().isEmpty() || (action != null && action > 0)) {
                             message.cascadeDelete();
                             ChatSDK.events().source().accept(NetworkEvent.messageRemoved(message));
                         } else {
                             JsonObject data = gson.fromJson(message.stringForKey(KEY_AI_FEEDBACK), JsonObject.class);
                             if (data != null && data.has("feedback_text")) {
                                 data.addProperty("feedback_text", "");
-                                updateMessage(message, data);
+                                if(data.has("feedback")){
+                                    data.remove("feedback");
+                                }
+                                message.setMetaValue(KEY_AI_FEEDBACK, data.toString());
+//                                ChatSDK.db().update(message, false);
+                                ChatSDK.events().source().accept(NetworkEvent.messageUpdated(message));
+//                                updateMessage(message, data);
                             }
                         }
 
@@ -1124,9 +1131,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
                 }
             }
 
-            boolean finish = false;
             if (aiFeedback.getStatus() > MessageDetail.STATUS_SUCCESS) {
-                finish = true;
                 AIFeedback fb = aiFeedback.getFeedback();
                 if (aiFeedback.getStatus() == MessageDetail.STATUS_ERROR) {
                     GWConfigs configs = ImageApi.getGwConfigs();
@@ -1147,7 +1152,6 @@ public class GWThreadHandler extends AbstractThreadHandler {
             }
 
             if (aiFeedback.getStatus() == MessageDetail.STATUS_SUCCESS) {
-                finish = true;
                 message.setMessageStatus(MessageSendStatus.Sent, false);
                 if (sid != null && sid > 0 && !sid.equals(message.getThreadId())) {
                     message.setThreadId(sid);
@@ -1269,9 +1273,9 @@ public class GWThreadHandler extends AbstractThreadHandler {
                             if (message != null) {
                                 if (error instanceof TimeoutException) {
                                     timeoutMsgRemoteId = contextId;
-                                    LogHelper.INSTANCE.error("get ai feedback timeout: " + message.getEntityID(), error);
+                                    Logger.error("get ai feedback timeout: " + message.getEntityID(), error);
                                 } else {
-                                    LogHelper.INSTANCE.error("get ai feedback error " + message.getEntityID(), error);
+                                    Logger.error("get ai feedback error " + message.getEntityID(), error);
                                 }
                                 message.setMessageStatus(MessageSendStatus.Failed, true);
                                 ChatSDK.events().source().accept(NetworkEvent.errorEvent(message, "message", error.getMessage()));

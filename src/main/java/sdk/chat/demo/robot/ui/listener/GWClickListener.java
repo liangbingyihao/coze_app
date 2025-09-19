@@ -14,6 +14,7 @@ import com.stfalcon.chatkit.commons.models.IMessage;
 
 import java.lang.ref.WeakReference;
 
+import io.noties.markwon.Markwon;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -143,6 +144,10 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
         if (id == R.id.btn_share_text || id == R.id.btn_share_user_text) {
             if (imessage.getClass() == TextHolder.class) {
                 String copyText = id == R.id.btn_share_text && aiFeedback != null ? aiFeedback.getFeedbackText() : message.getText();
+                if(id==R.id.btn_share_text){
+                    Markwon md = Markwon.create(view.getContext());
+                    copyText = md.render(md.parse(copyText)).toString();
+                }
                 Intent shareIntent = new Intent(Intent.ACTION_SEND);
                 shareIntent.setType("text/plain"); // 或具体类型如 "image/jpeg"
                 shareIntent.putExtra(Intent.EXTRA_TEXT, copyText);
@@ -219,7 +224,9 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
 //            ImageHolder imageHolder = (ImageHolder) imessage;
 //            ImageDaily imageDaily = imageHolder.getImageDaily();
             if (resId == R.layout.item_image_gw) {
-                ImageViewerActivity.Companion.start(this.weakContext.get(), imageDaily.getDate());
+                if(imageDaily!=null){
+                    ImageViewerActivity.Companion.start(this.weakContext.get(), imageDaily.getDate());
+                }
             } else if (imageDaily != null) {
                 ImageMessageOnClickHandler.onClick(this.weakContext.get(), view, imageDaily.getBackgroundUrl(), imageDaily.getScripture());
             }
@@ -247,6 +254,13 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
             if (this.weakContext.get() != null && imessage.getClass() == TextHolder.class) {
                 TextHolder t = (TextHolder) imessage;
                 AIFeedback feedback = t.getAiFeedback().getFeedback();
+                if(feedback==null){
+                    ToastHelper.show(
+                            weakContext.get(),
+                            weakContext.get().getString(R.string.failed_and_retry)
+                    );
+                    return;
+                }
                 threadHandler.sendExploreMessage(
                         "",
                         t.message,

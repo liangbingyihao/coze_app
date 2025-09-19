@@ -43,8 +43,14 @@ class FavoriteListActivity : BaseActivity(), View.OnClickListener {
         findViewById<View?>(R.id.home).setOnClickListener(this)
         setupRecyclerView()
         setupRefreshLayout()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        currentPage=1
         listFavorite(currentPage)
     }
+
 
     private fun setupRecyclerView() {
         recyclerView = findViewById<RecyclerView?>(R.id.recyclerview)

@@ -39,8 +39,8 @@ public class TinyLoggerManager {
             // 错误日志（也启用滚动）
             Configuration.set("writer2", "rolling file"); // 关键修改
             Configuration.set("writer2.file", new File(logDir, "error_{count}.log").getAbsolutePath());
-            Configuration.set("writer2.level", "error");
-            Configuration.set("writer.format", "{date:yyyy-MM-dd HH:mm:ss} [{thread}] [{method}] {level}: {message}");
+            Configuration.set("writer2.level", "info");
+            Configuration.set("writer.format", "{date:yyyy-MM-dd HH:mm:ss} [PID:{pid}] [{thread}] [{method}] {level}: {message}");
             Configuration.set("writer2.rolling.strategy", "size");
             Configuration.set("writer2.rolling.size", "10MB"); // 错误日志通常较小
             Configuration.set("writer2.rolling.backups", "3");

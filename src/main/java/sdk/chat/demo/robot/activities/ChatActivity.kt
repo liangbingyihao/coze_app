@@ -29,8 +29,8 @@ import java.util.Locale
 class ChatActivity : BaseActivity(), View.OnClickListener,
     GWClickListener.TTSSpeaker {
     private val chatTag = "tag_chat";
-    private var textToSpeech: TextToSpeech? = null
-    private lateinit var ttsCheckLauncher: ActivityResultLauncher<Intent>
+//    private var textToSpeech: TextToSpeech? = null
+//    private lateinit var ttsCheckLauncher: ActivityResultLauncher<Intent>
 
     companion object {
         private const val EXTRA_INITIAL_DATA = "initial_data"
@@ -63,43 +63,43 @@ class ChatActivity : BaseActivity(), View.OnClickListener,
 
         findViewById<View?>(R.id.home).setOnClickListener(this)
 
-        // 检查 TTS 是否可用
-        // 注册 ActivityResultLauncher
-        ttsCheckLauncher =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result.resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
-                    initTTS() // TTS 可用，初始化
-                } else {
-                    // 提示用户安装 TTS 数据
-                    val installIntent = Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA)
-                    startActivity(installIntent)
-                }
-            }
-
-        // 检查 TTS 数据
-        val checkIntent = Intent(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA)
-//        ttsCheckLauncher.launch(checkIntent)
-
-
-        if (checkIntent.resolveActivity(packageManager) != null) {
-            // 确认有 TTS 引擎后再启动
-            ttsCheckLauncher.launch(checkIntent)
-        } else {
-            // 设备完全无 TTS 支持时的处理
-//            handleNoTtsEngine()
-            Toast.makeText(this, "暂不支持语音播放", Toast.LENGTH_SHORT).show()
-
-//            AlertDialog.Builder(this)
-//                .setTitle("需要语音支持")
-//                .setMessage("您的设备缺少语音合成引擎，是否安装 Google TTS？")
-//                .setPositiveButton("安装") { _, _ ->
-//                    safeInstallTtsEngine()
+//        // 检查 TTS 是否可用
+//        // 注册 ActivityResultLauncher
+//        ttsCheckLauncher =
+//            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+//                if (result.resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+//                    initTTS() // TTS 可用，初始化
+//                } else {
+//                    // 提示用户安装 TTS 数据
+//                    val installIntent = Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA)
+//                    startActivity(installIntent)
 //                }
-//                .setNegativeButton("取消") { _, _ ->
-//                    Toast.makeText(this, "部分功能将不可用", Toast.LENGTH_SHORT).show()
-//                }
-//                .show()
-        }
+//            }
+//
+//        // 检查 TTS 数据
+//        val checkIntent = Intent(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA)
+////        ttsCheckLauncher.launch(checkIntent)
+//
+//
+//        if (checkIntent.resolveActivity(packageManager) != null) {
+//            // 确认有 TTS 引擎后再启动
+//            ttsCheckLauncher.launch(checkIntent)
+//        } else {
+//            // 设备完全无 TTS 支持时的处理
+////            handleNoTtsEngine()
+//            Toast.makeText(this, "暂不支持语音播放", Toast.LENGTH_SHORT).show()
+//
+////            AlertDialog.Builder(this)
+////                .setTitle("需要语音支持")
+////                .setMessage("您的设备缺少语音合成引擎，是否安装 Google TTS？")
+////                .setPositiveButton("安装") { _, _ ->
+////                    safeInstallTtsEngine()
+////                }
+////                .setNegativeButton("取消") { _, _ ->
+////                    Toast.makeText(this, "部分功能将不可用", Toast.LENGTH_SHORT).show()
+////                }
+////                .show()
+//        }
     }
 
     private fun safeInstallTtsEngine() {
@@ -120,38 +120,38 @@ class ChatActivity : BaseActivity(), View.OnClickListener,
         }
     }
 
-    private fun initTTS() {
-        textToSpeech = TextToSpeech(this) { status ->
-            if (status == TextToSpeech.SUCCESS) {
-                val result = textToSpeech?.setLanguage(Locale.getDefault())
-                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    Toast.makeText(this, "Language not supported", Toast.LENGTH_SHORT).show()
-                } else {
-//                    speek("你好, Android TTS")
-//                    textToSpeech.speak("Hello, Android TTS", TextToSpeech.QUEUE_FLUSH, null, null)
-                }
-            } else {
-                Toast.makeText(this, "TTS initialization failed", Toast.LENGTH_SHORT).show()
-            }
-        }
-        textToSpeech?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onStart(utteranceId: String?) {
-                Toast.makeText(this@ChatActivity, "onStart", Toast.LENGTH_SHORT).show()
-            }
-
-            override fun onDone(utteranceId: String?) {
-
-                //通知老的播放按键恢复一下
-                TTSHelper.setPlayingMsg(null);
-                Toast.makeText(this@ChatActivity, "onDone", Toast.LENGTH_SHORT).show()
-            }
-
-            override fun onError(utteranceId: String?) {
-                TTSHelper.setPlayingMsg(null);
-                Toast.makeText(this@ChatActivity, "playError", Toast.LENGTH_SHORT).show()
-            }
-        })
-    }
+//    private fun initTTS() {
+//        textToSpeech = TextToSpeech(this) { status ->
+//            if (status == TextToSpeech.SUCCESS) {
+//                val result = textToSpeech?.setLanguage(Locale.getDefault())
+//                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+//                    Toast.makeText(this, "Language not supported", Toast.LENGTH_SHORT).show()
+//                } else {
+////                    speek("你好, Android TTS")
+////                    textToSpeech.speak("Hello, Android TTS", TextToSpeech.QUEUE_FLUSH, null, null)
+//                }
+//            } else {
+//                Toast.makeText(this, "TTS initialization failed", Toast.LENGTH_SHORT).show()
+//            }
+//        }
+//        textToSpeech?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+//            override fun onStart(utteranceId: String?) {
+//                Toast.makeText(this@ChatActivity, "onStart", Toast.LENGTH_SHORT).show()
+//            }
+//
+//            override fun onDone(utteranceId: String?) {
+//
+//                //通知老的播放按键恢复一下
+//                TTSHelper.setPlayingMsg(null);
+//                Toast.makeText(this@ChatActivity, "onDone", Toast.LENGTH_SHORT).show()
+//            }
+//
+//            override fun onError(utteranceId: String?) {
+//                TTSHelper.setPlayingMsg(null);
+//                Toast.makeText(this@ChatActivity, "playError", Toast.LENGTH_SHORT).show()
+//            }
+//        })
+//    }
 
     override fun speek(text: String, msgId: String) {
         TTSHelper.speek(text, msgId)
@@ -163,9 +163,9 @@ class ChatActivity : BaseActivity(), View.OnClickListener,
 
     override fun stop() {
         TTSHelper.stop()
-        if (textToSpeech!=null&& textToSpeech!!.isSpeaking) {
-            textToSpeech!!.stop()
-        }
+//        if (textToSpeech!=null&& textToSpeech!!.isSpeaking) {
+//            textToSpeech!!.stop()
+//        }
     }
 
 
@@ -181,9 +181,6 @@ class ChatActivity : BaseActivity(), View.OnClickListener,
 
     override fun onDestroy() {
         super.onDestroy()
-        if(textToSpeech!=null){
-            textToSpeech!!.stop()
-            textToSpeech!!.shutdown()
-        }
+//        TTSHelper.clear()
     }
 }

@@ -95,5 +95,7 @@
     <string name="feedback">Feedback</string>
     <string name="submit">Submit</string>
     <string name="submit_success">Submission Successful</string>
-    <string name="download_prompt">Download Grace Word App\nPlease scan the QR code or search for "Grace Word" in the app store</string>
-  </resources>
+    <string name="download_prompt1">Download Grace Word App\nPlease scan the QR code or search for "Grace Word" in the app store</string>
+    <string name="download_prompt">Scan the QR code\nReceive encouraging scriptures, meditation prayers, and practical suggestions</string>
+
+</resources>

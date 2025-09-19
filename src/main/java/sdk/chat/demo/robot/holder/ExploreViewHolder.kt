@@ -6,6 +6,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.widget.ContentLoadingProgressBar
 import androidx.recyclerview.widget.RecyclerView
+import io.reactivex.functions.Predicate
 import sdk.chat.core.events.EventType
 import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.session.ChatSDK
@@ -27,24 +28,28 @@ open class ExploreViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         "explore2" to itemView.findViewById<TextView>(R.id.explore3)
     )
     open val dm = DisposableMap()
+    var loading: Boolean = false
 
-    fun bind(loading: Boolean) {
-        bindListeners()
+    fun bind(loading: Boolean,aiExplore: ExploreHolder) {
+        bindListeners(aiExplore)
         // 根据header类型处理
+        this.loading = loading
         contentLoadingProgressBar.visibility = if (loading) View.VISIBLE else View.GONE
-        bindExplore()
+        bindExplore(aiExplore)
     }
 
-    open fun bindExplore() {
+    open fun bindExplore(aiExplore: ExploreHolder) {
+        bindListeners(aiExplore)
         val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
 
+        Log.e("AIExplore", "bindExplore:" + aiExplore.message?.id)
         var i = 0
-        var aiExplore: AIExplore? = threadHandler.aiExplore
+        var aiExplore: AIExplore? = aiExplore.aiExplore
         val aiFeedback = GWMsgHandler.getAiFeedback(aiExplore?.message)
 //        Log.d("sending","threadHandler.isSendingMsg:${threadHandler.pendingMsgId()},aiExplore:${aiExplore?.message?.id},${aiExplore?.itemList?.size}");
         while (i < 3) {
             var v: TextView = exploreView.getValue("explore$i")
-            if (threadHandler.pendingMsgId() == null && aiExplore != null && i < aiExplore.itemList.size) {
+            if (aiExplore != null && i < aiExplore.itemList.size) {
 //                Log.d("sending", "bindExplore:visible $i");
                 var data = aiExplore.itemList[i]
                 v.visibility = View.VISIBLE
@@ -95,18 +100,22 @@ open class ExploreViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         }
     }
 
-    open fun bindListeners() {
+    fun filterById(id: Long?): Predicate<NetworkEvent?> {
+        Log.e("AIExplore", "ExploreViewHolder.MessageUpdated:" + id)
+        return Predicate { networkEvent: NetworkEvent? -> networkEvent?.message?.id == id }
+    }
+
+    open fun bindListeners(t: ExploreHolder) {
         dm.dispose()
         dm.add(
             ChatSDK.events().sourceOnSingle()
-                .filter(
-                    NetworkEvent.filterType(
-                        EventType.MessageSendStatusUpdated, EventType.MessageUpdated
-                    )
-                )
+                .filter(NetworkEvent.filterType(EventType.MessageUpdated))
+                .filter(filterById(t.message.id))
                 .subscribe {
+                    Log.e("AIExplore", "ExploreViewHolder.MessageUpdated:" + t.message.id)
                     RX.main().scheduleDirect {
-                        bindExplore()
+                        t.aiExplore = null
+                        bind(this.loading,t)
                     }
                 })
     }

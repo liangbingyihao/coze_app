@@ -71,23 +71,23 @@
 
         <ImageView
             android:id="@+id/btn_copy_user_text"
-            style="@style/FeedOperator"
+            style="@style/FeedOperatorRight"
             android:layout_marginStart="0dp"
             android:src="@mipmap/ic_copy_black" />
 
         <ImageView
             android:id="@+id/btn_like_user_text"
-            style="@style/FeedOperator"
+            style="@style/FeedOperatorRight"
             android:src="@mipmap/ic_like_black" />
 
         <ImageView
             android:id="@+id/btn_share_user_text"
-            style="@style/FeedOperator"
+            style="@style/FeedOperatorRight"
             android:src="@mipmap/ic_share_black" />
 
         <ImageView
             android:id="@+id/btn_del_user_text"
-            style="@style/FeedOperator"
+            style="@style/FeedOperatorRight"
             android:src="@mipmap/ic_del_black" />
     </LinearLayout>
 
@@ -187,7 +187,6 @@
         <ImageView
             android:id="@+id/btn_pic"
             style="@style/FeedOperator"
-            android:layout_marginStart="0dp"
             android:src="@mipmap/ic_pic_black" />
 
         <ImageView

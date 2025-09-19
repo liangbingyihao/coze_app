@@ -115,7 +115,6 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
 //        bubble?.let {
 //            it.isSelected = isSelected
 //        }
-
         val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
         replyText?.visibility = View.GONE
         var action = (t as? TextHolder)?.action
@@ -193,6 +192,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
         }
 
 
+        var bibleText = aiFeedback?.feedback?.bible
         if (t.message.entityID.equals("welcome")) {
             contentMenu?.visibility = View.GONE
             bubble?.visibility = View.GONE
@@ -200,12 +200,12 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
             sessionContainer?.visibility = View.GONE
             processContainer?.visibility = View.GONE
             sendErrorHint?.visibility = View.GONE
-            showFeedbackMenus(feedbackMenu, View.GONE)
+            showFeedbackMenus(feedbackMenu, View.GONE,bibleText)
         } else {
             if (feedbackText.isEmpty()) {
                 feedbackMenu?.visibility = View.GONE
             }else{
-                showFeedbackMenus(feedbackMenu, View.VISIBLE)
+                showFeedbackMenus(feedbackMenu, View.VISIBLE,bibleText)
             }
             if (t.message.text.isEmpty() || action == AIExplore.ExploreItem.action_daily_pray) {
                 contentMenu?.visibility = View.GONE
@@ -216,7 +216,6 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
 
 
         var imageUrl = t.message.stringForKey(Keys.ImageUrl)
-        var bibleText = aiFeedback?.feedback?.bible
         if (imageUrl.isEmpty() || bibleText == null || bibleText.isEmpty()) {
             imageContainer?.visibility = View.GONE
             imageMenu?.visibility = View.GONE
@@ -254,7 +253,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
 
     }
 
-    fun showFeedbackMenus(v: View?, visible: Int) {
+    fun showFeedbackMenus(v: View?, visible: Int,bibleText:String?) {
         if(v==null){
             return
         }
@@ -262,9 +261,20 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
         for (i in ids) {
             var sv = v.findViewById<View>(i)
             if (sv == null || sv.visibility == visible) {
-                return
+                break
             } else {
                 sv.visibility = visible
+            }
+        }
+        var bibleVisible = View.GONE
+        if(bibleText!=null&&bibleText.isNotEmpty()){
+            bibleVisible = View.VISIBLE
+        }
+        val id2s: IntArray = intArrayOf(R.id.btn_pic, R.id.btn_pray)
+        for (i in id2s) {
+            var sv = v.findViewById<View>(i)
+            if (sv != null && sv.visibility != bibleVisible) {
+                sv.visibility = bibleVisible
             }
         }
     }
@@ -440,6 +450,7 @@ open class ChatTextViewHolder<T : MessageHolder>(itemView: View) :
                 .doOnError(this)
                 .subscribe {
                     RX.main().scheduleDirect {
+                        (t as? TextHolder)?.aiFeedback = null
                         bind(t)
                     }
                 })

@@ -13,12 +13,12 @@ object LogHelper {
 //        private set // 外部可读不可直接修改
 //    private var lastLogTime = 0L
 
-    /**
-     * 添加带时间戳的日志
-     * @param newLog 日志内容（自动添加时间前缀）
-     */
-    fun appendLog(newLog: String) {
-        error(newLog)
+//    /**
+//     * 添加带时间戳的日志
+//     * @param newLog 日志内容（自动添加时间前缀）
+//     */
+//    fun appendLog(newLog: String) {
+//        error(newLog)
 //        val currentTime = System.currentTimeMillis()
 
 //        // 超过间隔时间则清空旧日志
@@ -32,7 +32,7 @@ object LogHelper {
 //        logStr += "\n[$timestamp] $newLog"
 //
 //        lastLogTime = currentTime
-    }
+//    }
 
 
     fun reportExportEvent(event: String, log: String, throwable: Throwable?) {
@@ -58,35 +58,35 @@ object LogHelper {
 
     }
 
-    // 记录错误（会同时记录到 error.log 和 app.log）
-    fun error(message: String?, throwable: Throwable?) {
-        Logger.error(throwable, message)
-
-
-        // 额外记录到 Android Logcat（可选）
-        Log.e("AppError", message, throwable)
-    }
-
-    fun error(message: String) {
-        Logger.error(message as Any)
-        Log.e("AppError", message)
-    }
-
-    // 记录警告
-    fun warn(message: String) {
-        Logger.warn(message as Any)
-        Log.w("AppWarn", message)
-    }
-
-    // 记录信息
-    fun info(message: String) {
-        Logger.info(message as Any)
-        Log.i("AppInfo", message)
-    }
-
-    // 记录调试信息
-    fun debug(message: String) {
-        Logger.debug(message as Any)
-        Log.d("AppDebug", message)
-    }
+//    // 记录错误（会同时记录到 error.log 和 app.log）
+//    fun error(message: String?, throwable: Throwable?) {
+//        Logger.error(throwable, message)
+//
+//
+//        // 额外记录到 Android Logcat（可选）
+//        Log.e("AppError", message, throwable)
+//    }
+//
+//    fun error(message: String) {
+//        Logger.error(message as Any)
+//        Log.e("AppError", message)
+//    }
+//
+//    // 记录警告
+//    fun warn(message: String) {
+//        Logger.warn(message as Any)
+//        Log.w("AppWarn", message)
+//    }
+//
+//    // 记录信息
+//    fun info(message: String) {
+//        Logger.info(message as Any)
+//        Log.i("AppInfo", message)
+//    }
+//
+//    // 记录调试信息
+//    fun debug(message: String) {
+//        Logger.debug(message as Any)
+//        Log.d("AppDebug", message)
+//    }
 }
