@@ -41,6 +41,7 @@ public class MainApp extends Application implements Configuration.Provider, Appl
     private boolean isInitialized = false;
     private Activity currentActivity;
     private ChatSDK chatSDK;
+    public long startTimeStamp;
 
     public static Context getContext() {
         return context;
@@ -73,6 +74,7 @@ public class MainApp extends Application implements Configuration.Provider, Appl
     @Override
     public void onCreate() {
         super.onCreate();
+        startTimeStamp = System.currentTimeMillis();
         TinyLoggerManager.initialize(this);
         registerActivityLifecycleCallbacks(this);
         Logger.error("MainApp.onCreate");
@@ -87,6 +89,7 @@ public class MainApp extends Application implements Configuration.Provider, Appl
             ChatSDKCoze.quickStartWithEmail(this, drawerEnabled, "");
 //            ContactBookModule.shared()
 
+            chatSDK = ChatSDK.shared();
             dm.add(ChatSDK.auth().authenticate()
                     .observeOn(RX.main())
                     .doFinally(GWAuthenticationHandler::ensureDatabase)
@@ -94,12 +97,11 @@ public class MainApp extends Application implements Configuration.Provider, Appl
                             () -> {
                                 Logger.error("authenticate done");
                                 isInitialized = true;
-                                chatSDK = ChatSDK.shared();
                             },
                             error -> { /* 错误处理 */
                                 Logger.error(error,"authenticate error");
                                 LogHelper.INSTANCE.reportExportEvent("app.init", "authenticate error", error);
-                                isInitialized = true;
+                                isInitialized = false;
                             }
                     ));
         } catch (Exception e) {

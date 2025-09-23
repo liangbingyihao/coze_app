@@ -93,7 +93,7 @@
 
             <LinearLayout
                 android:id="@+id/export"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="58dp"
                 android:orientation="horizontal"
                 android:padding="16dp">
@@ -133,7 +133,7 @@
 
             <LinearLayout
                 android:id="@+id/feedback"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="58dp"
                 android:orientation="horizontal"
                 android:padding="16dp">
@@ -142,6 +142,26 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/feedback"
+                    android:textColor="@color/item_text_normal"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/gray_divider" />
+
+            <LinearLayout
+                android:id="@+id/my_userid"
+                android:layout_width="match_parent"
+                android:layout_height="58dp"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/get_my_userid"
                     android:textColor="@color/item_text_normal"
                     android:textSize="16sp" />
             </LinearLayout>

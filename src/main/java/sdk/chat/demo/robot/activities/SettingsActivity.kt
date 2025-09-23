@@ -7,25 +7,20 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import android.widget.RadioButton
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
-import androidx.core.os.LocaleListCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.MainApp
 import sdk.chat.demo.pre.R
-import sdk.chat.demo.robot.activities.MainDrawerActivity
-import sdk.chat.demo.robot.activities.SettingLangsActivity
 import sdk.chat.demo.robot.api.ImageApi
 import sdk.chat.demo.robot.api.model.ExportInfo
 import sdk.chat.demo.robot.extensions.LanguageUtils
 import sdk.chat.ui.activities.BaseActivity
 import sdk.chat.ui.utils.ToastHelper
-import sdk.guru.common.RX
 
 class SettingsActivity : BaseActivity(), View.OnClickListener {
     private lateinit var tvLang: TextView
@@ -40,6 +35,7 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
         findViewById<View>(R.id.debug).setOnClickListener(this)
         findViewById<View>(R.id.config_lang).setOnClickListener(this)
         findViewById<View>(R.id.feedback).setOnClickListener(this)
+        findViewById<View>(R.id.my_userid).setOnClickListener(this)
         tvLang = findViewById<TextView>(R.id.lang_value)
         initView()
         getSettings()
@@ -67,6 +63,7 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
                     )
                 )
             }
+
             R.id.feedback -> {
                 startActivity(
                     Intent(
@@ -84,6 +81,18 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
                     )
                 )
             }
+
+            R.id.my_userid -> {
+                var userId = ChatSDK.currentUserID()
+                val clipboard =
+                    getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+                val clip = ClipData.newPlainText("恩语", userId)
+                clipboard.setPrimaryClip(clip)
+                ToastHelper.show(
+                    MainApp.getContext(),
+                    MainApp.getContext().getString(R.string.copied)
+                )
+            }
         }
     }
 
@@ -93,7 +102,7 @@ class SettingsActivity : BaseActivity(), View.OnClickListener {
                 .getPackageInfo(packageName, 0)
                 .versionName
                 ?: "Unknown"
-            findViewById<TextView>(R.id.version).text = versionName
+            findViewById<TextView>(R.id.version).text = getString(R.string.my_version,versionName)
         } catch (e: Exception) {
             "Unknown"
         }

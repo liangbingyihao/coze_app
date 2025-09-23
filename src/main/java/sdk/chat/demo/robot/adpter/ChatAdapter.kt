@@ -192,7 +192,11 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 //        submitList(newList, onComplete)
         Log.e("AIExplore", "addNewMessage:${item.id}")
         var msg = (item as? MessageHolder)?.message
-        val oldHeader = getItemViewType(0) == TYPE_HEADER
+        val oldHeader = if (itemCount > 0) {
+            getItemViewType(0) == TYPE_HEADER
+        } else {
+            false // 如果 itemCount 为 0，直接返回 false
+        }
 
         if (oldHeader) {
             items[0] = ExploreHolder(msg)
@@ -236,7 +240,11 @@ class ChatAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         Log.e("AIExplore", "addNewMessage List")
 
         var msg = (newMessages[newMessages.lastIndex] as? MessageHolder)?.message
-        val oldHeader = getItemViewType(0) == TYPE_HEADER
+        val oldHeader = if (itemCount > 0) {
+            getItemViewType(0) == TYPE_HEADER
+        } else {
+            false // 如果 itemCount 为 0，直接返回 false
+        }
 
         if (oldHeader) {
             items[0] = ExploreHolder(msg)

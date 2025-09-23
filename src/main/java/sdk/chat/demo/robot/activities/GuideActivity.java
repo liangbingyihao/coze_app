@@ -19,14 +19,21 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.button.MaterialButton;
 import com.gyf.immersionbar.ImmersionBar;
 
+import org.tinylog.Logger;
+
 import java.util.Locale;
 
 import sdk.chat.core.session.ChatSDK;
+import sdk.chat.demo.MainApp;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.extensions.LanguageUtils;
+import sdk.chat.demo.robot.extensions.LogHelper;
+import sdk.chat.demo.robot.handlers.GWAuthenticationHandler;
+import sdk.chat.ui.activities.BaseActivity;
 import sdk.chat.ui.utils.ToastHelper;
+import sdk.guru.common.RX;
 
-public class GuideActivity extends AppCompatActivity {
+public class GuideActivity extends BaseActivity {
 
     private ViewPager2 viewPager;
     private LinearLayout dotsLayout;
@@ -105,6 +112,11 @@ public class GuideActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected int getLayout() {
+        return 0;
+    }
+
 //    private void addDots(int currentPosition) {
 //        dotsLayout.removeAllViews();
 //
@@ -129,13 +141,38 @@ public class GuideActivity extends AppCompatActivity {
         float density = getResources().getDisplayMetrics().density;
         return Math.round(dp * density);
     }
+    private boolean retrying = false;
 
     private void launchMainActivity() {
-        if (ChatSDK.currentUser() != null) {
+        MainApp app = (MainApp) getApplication();
+        if (app.isInitialized()&&ChatSDK.currentUser() != null) {
             startActivity(new Intent(this, MainDrawerActivity.class));
             finish();
-        } else {
+        } else if(!retrying){
+            retrying = true;
+            btnNext.setText(getString(R.string.retrying));
             ToastHelper.show(this, R.string.network_error);
+            dm.add(ChatSDK.auth().authenticate()
+                    .observeOn(RX.main())
+                    .doFinally(() -> {
+                        btnNext.setText(getString(R.string.retry));
+                        GWAuthenticationHandler.ensureDatabase();
+                        retrying = false;
+                    })
+                    .subscribe(
+                            () -> {
+                                startActivity(new Intent(this, MainDrawerActivity.class));
+                                finish();
+                                Logger.error("guide.authenticate done");
+                            },
+                            error -> { /* 错误处理 */
+                                Logger.error(error, "guide.authenticate error");
+                                retrying = false;
+                                btnNext.setText(getString(R.string.retry));
+                                ToastHelper.show(this, R.string.network_error);
+                                LogHelper.INSTANCE.reportExportEvent("app.init", "authenticate error", error);
+                            }
+                    ));
         }
     }
 

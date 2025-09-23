@@ -38,6 +38,8 @@
     <string name="fold">收起</string>
     <string name="next">下一步</string>
     <string name="send">傳送</string>
+    <string name="retry">重試</string>
+    <string name="retrying">重試中…</string>
     <string name="enter">進入主頁</string>
     <string name="failed_and_retry">操作失敗，稍後重試</string>
     <string name="added_to_timeline">已幫你收錄進恩語錄</string>
@@ -95,4 +97,7 @@
     <string name="submit_success">您的遞交已成功完成</string>
     <string name="download_prompt1">下載恩語App\n請掃描QR碼或App商店搜尋「恩語」</string>
     <string name="download_prompt">掃描二維碼\n獲得勉勵經文、默想禱告和實踐建議</string>
+    <string name="network_error_and_retry">網絡不可用，請檢查網絡狀況，正在為您重試</string>
+    <string name="get_my_userid">複製遷移ID</string>
+    <string name="my_version">目前版本: %s</string>
 </resources>

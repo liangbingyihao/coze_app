@@ -143,6 +143,7 @@ public class GWChatContainer extends LinearLayout implements MessagesListAdapter
         // 绑定RecyclerView
         swipeRefreshLayout.setupWithRecyclerView(messagesList);
 
+
         // 上拉加载监听
         swipeRefreshLayout.setOnLoadMoreListener(new LoadMoreSwipeRefreshLayout.OnLoadMoreListener() {
             @Override

@@ -12,6 +12,7 @@ import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.MainApp
 import sdk.chat.demo.robot.api.ImageApi
+import sdk.chat.demo.robot.extensions.LanguageUtils
 import sdk.chat.demo.robot.extensions.SpeechStreamRecorder
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -24,7 +25,7 @@ object AsrHelper {
     private var mSpeechEngine: SpeechEngine? = null
     private var mEngineStarted = false
     private var mStreamRecorder: SpeechStreamRecorder? = null
-
+    private var isTraditional = false
     private var mSpeechListener: SpeechEngine.SpeechListener =
         object : SpeechEngine.SpeechListener {
             override fun onSpeechMessage(
@@ -110,7 +111,7 @@ object AsrHelper {
 //                }
 //            }
 //            Log.i(TAG, "got $isFinal")
-            if(!recordIsRunning){
+            if (!recordIsRunning) {
                 Logger.error("speechAsrResult but asr stopped" as Any)
                 Log.i(TAG, "speechAsrResult but asr stopped")
                 return
@@ -154,6 +155,9 @@ object AsrHelper {
                 lastDefinite = definite
 //                Logger.info("logId:$logId,index:$i,definite:$definite,text:,$text" as Any)
                 Log.i(TAG, "logId:$logId,index:$i,definite:$definite,text:,$text")
+                if (isTraditional) {
+                    text = LanguageUtils.simplifiedToTraditional(MainApp.getContext(), text)
+                }
                 ChatSDK.events().source()
                     .accept(NetworkEvent.messageInputAsr(definite, text, true))
 
@@ -241,10 +245,10 @@ object AsrHelper {
         )
 
         //【可选配置】Debug & Log
-        mSpeechEngine!!.setOptionString(
-            SpeechEngineDefines.PARAMS_KEY_DEBUG_PATH_STRING,
-            "/sdcard/Download/"
-        )
+//        mSpeechEngine!!.setOptionString(
+//            SpeechEngineDefines.PARAMS_KEY_DEBUG_PATH_STRING,
+//            "/sdcard/Download/"
+//        )
         mSpeechEngine!!.setOptionString(
             SpeechEngineDefines.PARAMS_KEY_LOG_LEVEL_STRING,
             SpeechEngineDefines.LOG_LEVEL_DEBUG
@@ -316,7 +320,7 @@ object AsrHelper {
         //https://www.volcengine.com/docs/6561/113642
 
         var configs = ImageApi.getGwConfigs()
-        if(configs==null||configs.voiceBaseConfigs==null){
+        if (configs == null || configs.voiceBaseConfigs == null) {
             Logger.error { "configBaseInitParams but voice base configs is null " }
             return
         }
@@ -334,13 +338,16 @@ object AsrHelper {
         )
 
         //【必需配置】鉴权相关：Appid
-        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_APP_ID_STRING, configs.voiceBaseConfigs.appId)
+        mSpeechEngine!!.setOptionString(
+            SpeechEngineDefines.PARAMS_KEY_APP_ID_STRING,
+            configs.voiceBaseConfigs.appId
+        )
 
 //        val token: String? = mSettings.getString(R.string.config_token)
         //【必需配置】鉴权相关：Token
         mSpeechEngine!!.setOptionString(
             SpeechEngineDefines.PARAMS_KEY_APP_TOKEN_STRING,
-            "Bearer;"+configs.voiceBaseConfigs.token
+            "Bearer;" + configs.voiceBaseConfigs.token
         )
 
         //【必需配置】识别服务所用集群
@@ -359,7 +366,7 @@ object AsrHelper {
             return
         }
         var configs = ImageApi.getGwConfigs()
-        if(configs==null||configs.voiceBaseConfigs==null){
+        if (configs == null || configs.voiceBaseConfigs == null) {
             Logger.error { "configLlmInitParams but voice base configs is null " }
             return
         }
@@ -375,7 +382,10 @@ object AsrHelper {
             "/api/v3/sauc/bigmodel"
         );
 //【必需配置】鉴权相关：Appid，参考控制台使用FAQ--Q1
-        mSpeechEngine!!.setOptionString(SpeechEngineDefines.PARAMS_KEY_APP_ID_STRING, configs.voiceBaseConfigs.appId);
+        mSpeechEngine!!.setOptionString(
+            SpeechEngineDefines.PARAMS_KEY_APP_ID_STRING,
+            configs.voiceBaseConfigs.appId
+        );
 //【必需配置】鉴权相关：Token，无需添加Bearer; 前缀，参考控制台使用FAQ--Q1
         mSpeechEngine!!.setOptionString(
             SpeechEngineDefines.PARAMS_KEY_APP_TOKEN_STRING,
@@ -481,6 +491,17 @@ object AsrHelper {
                     ChatSDK.events().source().accept(NetworkEvent.errorEvent(null, "asr", msg))
                 }
             }
+            isTraditional = false;
+            var appLang = LanguageUtils.getAppLanguage(MainApp.getContext(), false)
+            if (appLang != null) {
+                if (appLang.contains("hant", true)
+                    || appLang.contains("hk", true)
+                    || appLang.contains("tw", true)
+                ) {
+                    isTraditional = true;
+                }
+            }
+
         }
         executor?.execute(recordRunnable)
     }
@@ -495,7 +516,7 @@ object AsrHelper {
             Log.i(TAG, "Directive: DIRECTIVE_FINISH_TALKING")
             mSpeechEngine!!.sendDirective(SpeechEngineDefines.DIRECTIVE_FINISH_TALKING, "")
             mStreamRecorder!!.Stop()
-        } else{
+        } else {
             ChatSDK.events().source().accept(NetworkEvent.errorEvent(null, "asr", ""))
             Logger.info("force stop asr" as Any)
 //            recordHandler!!.removeCallbacks(recordRunnable)

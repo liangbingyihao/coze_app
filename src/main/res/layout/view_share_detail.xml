@@ -27,7 +27,7 @@
         <ImageView
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:src="@mipmap/ic_qrcode" />
+            android:src="@mipmap/ic_qr_daily" />
 
         <TextView
             android:layout_width="wrap_content"

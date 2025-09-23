@@ -38,6 +38,8 @@
     <string name="unfold">Unfold</string>
     <string name="fold">Fold</string>
     <string name="next">Next</string>
+    <string name="retry">Retry</string>
+    <string name="retrying">Retrying…</string>
     <string name="enter">Start Journey</string>
     <string name="failed_and_retry">Something went wrong. Please try again later.</string>
     <string name="added_to_timeline">Added to your grace journal</string>
@@ -97,5 +99,7 @@
     <string name="submit_success">Submission Successful</string>
     <string name="download_prompt1">Download Grace Word App\nPlease scan the QR code or search for "Grace Word" in the app store</string>
     <string name="download_prompt">Scan the QR code\nReceive encouraging scriptures, meditation prayers, and practical suggestions</string>
-
+    <string name="network_error_and_retry">Network unavailable, please check your network connection, retrying for you</string>
+    <string name="get_my_userid">Copy Migration ID</string>
+    <string name="my_version">Current Version: %s</string>
 </resources>

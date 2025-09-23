@@ -48,7 +48,7 @@
                 android:layout_height="64dp"
                 android:layout_gravity="bottom"
                 android:layout_margin="34dp"
-                android:src="@mipmap/ic_qrcode" />
+                android:src="@mipmap/ic_qr_verse" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -57,7 +57,7 @@
                 android:layout_marginLeft="112dp"
                 android:layout_marginBottom="34dp"
                 android:gravity="center_vertical"
-                android:text="下载恩语App\n请扫描二维码或App商店搜索“恩语”"
+                android:text="@string/download_prompt"
                 android:textColor="#B1B1B1"
                 android:textSize="15sp" />
         </FrameLayout>

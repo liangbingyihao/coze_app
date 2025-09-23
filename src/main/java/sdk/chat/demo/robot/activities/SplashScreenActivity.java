@@ -20,6 +20,7 @@ import sdk.chat.core.utils.StringChecker;
 import sdk.chat.demo.MainApp;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.api.GWApiManager;
+import sdk.chat.demo.robot.handlers.GWAuthenticationHandler;
 import sdk.chat.ui.utils.ToastHelper;
 // 基础导入
 import android.view.View;
@@ -47,16 +48,17 @@ import org.tinylog.Logger;
 public class SplashScreenActivity extends AppCompatActivity {
 
     public static int AUTH = 1;
-
     protected ProgressBar progressBar;
     protected ConstraintLayout root;
+    private boolean hasShownGuide;
 
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        Logger.info("SplashScreenActivity.oncreate");
+        hasShownGuide = getSharedPreferences("app_prefs", MODE_PRIVATE)
+                .getBoolean("has_shown_guide", false);
+        Logger.info("SplashScreenActivity.oncreate,hasShownGuide:" + hasShownGuide);
         ImmersionBar.with(this).init();
 
         setContentView(R.layout.activity_splash_gw);
@@ -79,32 +81,62 @@ public class SplashScreenActivity extends AppCompatActivity {
         checkInitializationStatus();
     }
 
-
-
+    private Handler handler = new Handler();
 
     private void checkInitializationStatus() {
-        MainApp app = (MainApp) getApplication();
+//        MainApp app = (MainApp) getApplication();
+//
+//        if (app.isInitialized()) {
+//            Logger.error("app.isInitialized is true");
+//            hasShownGuide = getSharedPreferences("app_prefs", MODE_PRIVATE)
+//                    .getBoolean("has_shown_guide", false);
+//            if (hasShownGuide) {
+//                new Handler().postDelayed(this::proceedToMain, 500);
+//            } else {
+//                startActivity(new Intent(this, GuideActivity.class));
+//                finish();
+//            }
+//        } else {
+//            // 每隔500ms检查一次
+//            Logger.error("check app.isInitialized");
+//            new Handler().postDelayed(this::checkInitializationStatus, 200);
+//        }
 
-        if (app.isInitialized()) {
-            Logger.error("app.isInitialized is true");
-            boolean hasShownGuide = getSharedPreferences("app_prefs", MODE_PRIVATE)
-                    .getBoolean("has_shown_guide", false);
-            if (hasShownGuide) {
-                new Handler().postDelayed(this::proceedToMain, 500);
+        MainApp app = (MainApp) getApplication();
+        long cost = System.currentTimeMillis() - app.startTimeStamp;
+        if (hasShownGuide) {
+            if (app.isInitialized()) {
+                Logger.error("app.isInitialized hasShownGuide and initialized");
+                handler.postDelayed(this::proceedToMain, Math.max(500 - cost, 0));
+            }
+            if (System.currentTimeMillis() - app.startTimeStamp > 3000) {
+                try {
+                    GWAuthenticationHandler.ensureDatabase();
+                } catch (Exception e) {
+                    hasShownGuide = false;
+                    Logger.error("app.isInitialized ensureDatabase e:" + e.getMessage());
+                    handler.postDelayed(this::checkInitializationStatus, 200);
+                }
+                Logger.error("app.isInitialized hasShownGuide but timeout");
+                proceedToMain();
             } else {
-                startActivity(new Intent(this, GuideActivity.class));
-                finish();
+                handler.postDelayed(this::checkInitializationStatus, 200);
             }
         } else {
-            // 每隔500ms检查一次
-            Logger.error("check app.isInitialized");
-            new Handler().postDelayed(this::checkInitializationStatus, 200);
+            if (app.isInitialized()||System.currentTimeMillis() - app.startTimeStamp > 4000) {
+                Logger.error("app.isInitialized new user and timeout");
+                startActivity(new Intent(this, GuideActivity.class));
+                finish();
+            }else{
+                handler.postDelayed(this::checkInitializationStatus, 200);
+            }
+
         }
     }
 
     private void proceedToMain() {
         // 确保主界面启动前所有服务就绪
-        if (ChatSDK.currentUser()!=null) {
+        if (ChatSDK.currentUser() != null) {
 //            startActivity(new Intent(this, MainDrawerActivity.class));
             Intent intent = new Intent(this, MainDrawerActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
@@ -113,7 +145,8 @@ public class SplashScreenActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         } else {
-            ToastHelper.show(this,R.string.network_error);
+            ToastHelper.show(this, R.string.network_error);
+            hasShownGuide = false;
         }
     }
 

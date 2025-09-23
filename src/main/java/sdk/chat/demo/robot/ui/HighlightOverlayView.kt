@@ -53,6 +53,7 @@ class HighlightOverlayView @JvmOverloads constructor(
         // 处理点击事件
         when (view.id) {
             R.id.mask_background -> {
+                visibility = GONE
                 true
             }
 

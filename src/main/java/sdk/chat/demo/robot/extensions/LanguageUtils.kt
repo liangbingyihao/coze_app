@@ -7,14 +7,28 @@ import java.util.Locale
 import android.os.Build
 import android.os.LocaleList
 import androidx.core.content.edit
+import android.icu.text.Transliterator
+import com.zqc.opencc.android.lib.ChineseConverter
+import com.zqc.opencc.android.lib.ConversionType
 
 object LanguageUtils {
+
     fun isChineseChar(c: Char): Boolean {
         return c in '\u4E00'..'\u9FA5' || c in '\u3400'..'\u4DBF'
     }
 
     fun getTextLanguage(text: String): Locale {
         return if (text.any { isChineseChar(it) }) Locale.CHINESE else Locale.US
+    }
+
+    fun simplifiedToTraditional(context:Context,text: String): String {
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//            val converter = Transliterator.getInstance("Simplified-Traditional")
+//            return converter.transliterate(text)
+//        } else {
+//            return ChineseConverter.convert(text,ConversionType.S2T,context)
+//        }
+        return ChineseConverter.convert(text,ConversionType.S2T,context)
     }
 
     private const val PREFS_LANGUAGE_KEY = "app_language"
