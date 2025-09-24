@@ -51,7 +51,8 @@ import sdk.chat.demo.robot.handlers.GWThreadHandler;
 import sdk.guru.common.RX;
 
 public class ImageApi {
-    public final static String URL2_MAIN = "https://api-test.kolacdn.xyz/api/v1/";
+//    public final static String URL2_MAIN = "https://api-test.kolacdn.xyz/api/v1/";
+    public final static String URL2_MAIN = "https://api.grace-word.com/api/v1/";
     public final static String URL2 = URL2_MAIN+"app/";
     private static ImageTagList imageTagCache;
     private final static Gson gson = new Gson();

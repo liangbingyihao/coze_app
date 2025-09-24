@@ -14,6 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
+import sdk.chat.core.dao.User;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.core.ui.LifecycleService;
 import sdk.chat.core.utils.StringChecker;
@@ -108,7 +109,7 @@ public class SplashScreenActivity extends AppCompatActivity {
             if (app.isInitialized()) {
                 Logger.error("app.isInitialized hasShownGuide and initialized");
                 handler.postDelayed(this::proceedToMain, Math.max(500 - cost, 0));
-            }else if (System.currentTimeMillis() - app.startTimeStamp > 3000) {
+            } else if (System.currentTimeMillis() - app.startTimeStamp > 3000) {
                 try {
                     GWAuthenticationHandler.ensureDatabase();
                 } catch (Exception e) {
@@ -122,11 +123,11 @@ public class SplashScreenActivity extends AppCompatActivity {
                 handler.postDelayed(this::checkInitializationStatus, 200);
             }
         } else {
-            if (app.isInitialized()||System.currentTimeMillis() - app.startTimeStamp > 4000) {
+            if (app.isInitialized() || System.currentTimeMillis() - app.startTimeStamp > 4000) {
                 Logger.error("app.isInitialized new user and timeout");
                 startActivity(new Intent(this, GuideActivity.class));
                 finish();
-            }else{
+            } else {
                 handler.postDelayed(this::checkInitializationStatus, 200);
             }
 
@@ -135,7 +136,14 @@ public class SplashScreenActivity extends AppCompatActivity {
 
     private void proceedToMain() {
         // 确保主界面启动前所有服务就绪
-        if (ChatSDK.currentUser() != null) {
+        User me = null;
+        try {
+            me = ChatSDK.currentUser();
+        } catch (Exception e) {
+            Logger.error(e, "currentUser error");
+            me = null;
+        }
+        if (me != null) {
 //            startActivity(new Intent(this, MainDrawerActivity.class));
             Intent intent = new Intent(this, MainDrawerActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |

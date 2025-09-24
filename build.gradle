@@ -37,6 +37,9 @@ android {
         free {
             dimension "version"
             applicationId "sdk.chat.android.robot"
+//            applicationId "com.chuanxiang.graceword"
+//            versionName "1.0.1"
+//            versionCode 1 as int
         }
         official {
             dimension "version"
@@ -59,14 +62,14 @@ android {
 
     signingConfigs {
         debug {
-//            keyAlias 'androiddebugkey'
-//            keyPassword 'D3bug123'
-//            storeFile file('debug.keystore')
-//            storePassword 'D3bug123'
-            keyAlias project.property("signing.keyId")
-            keyPassword project.property("signing.password")
-            storeFile file('d:\\graceword.jks')
-            storePassword project.property("signing.password")
+            keyAlias 'androiddebugkey'
+            keyPassword 'D3bug123'
+            storeFile file('debug.keystore')
+            storePassword 'D3bug123'
+//            keyAlias project.property("signing.keyId")
+//            keyPassword project.property("signing.password")
+//            storeFile file('d:\\graceword.jks')
+//            storePassword project.property("signing.password")
         }
         release {
             keyAlias project.property("signing.keyId")
@@ -117,8 +120,15 @@ android {
         jvmTarget = '11'
     }
 
-
 }
+
+gradle.taskGraph.whenReady {
+    tasks.each { task ->
+        if (task.name.contains("uploadCrashlyticsMappingFile")) {
+            task.enabled = false
+        }
+    }}
+
 
 repositories {
     // 默认会继承项目级的仓库配置

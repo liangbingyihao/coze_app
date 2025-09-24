@@ -23,6 +23,7 @@ import org.tinylog.Logger;
 
 import java.util.Locale;
 
+import sdk.chat.core.dao.User;
 import sdk.chat.core.session.ChatSDK;
 import sdk.chat.demo.MainApp;
 import sdk.chat.demo.pre.R;
@@ -145,7 +146,14 @@ public class GuideActivity extends BaseActivity {
 
     private void launchMainActivity() {
         MainApp app = (MainApp) getApplication();
-        if (app.isInitialized()&&ChatSDK.currentUser() != null) {
+        User me = null;
+        try {
+            me = ChatSDK.currentUser();
+        } catch (Exception e) {
+            Logger.error(e, "currentUser error");
+            me = null;
+        }
+        if (app.isInitialized()&&me != null) {
             startActivity(new Intent(this, MainDrawerActivity.class));
             finish();
         } else if(!retrying){

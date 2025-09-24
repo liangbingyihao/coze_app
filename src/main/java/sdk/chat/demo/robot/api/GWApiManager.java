@@ -49,8 +49,8 @@ public class GWApiManager {
     private final Gson gson = new Gson();
     private final OkHttpClient client;
     private String accessToken;
-    private final static String URL = "https://api-test.grace-word.com/api/";
-//    private final static String URL = "http://8.217.172.116:5000/api/";
+//    private final static String URL = "https://api-test.grace-word.com/api/";
+    private final static String URL = "https://api.grace-word.com/api/";
     private final static String URL_LOGIN = URL + "auth/login";
     private final static String URL_SESSION = URL + "session";
     private final static String URL_MESSAGE = URL + "message";
