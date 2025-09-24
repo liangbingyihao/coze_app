@@ -26,7 +26,6 @@ import sdk.chat.core.events.NetworkEvent
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.core.utils.AppBackgroundMonitor.StopListener
 import sdk.chat.demo.MainApp
-import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.api.ImageApi
 import sdk.chat.demo.robot.extensions.LanguageUtils
 import java.util.Locale
@@ -67,6 +66,8 @@ object TTSHelper {
     private var mPlaybackNowAuthorized = false
     private var audioFocusRequest: AudioFocusRequest? = null
     var voiceType = "BV001_streaming"
+//    var customeVoiceType:String? = null
+//    var speaker = "volc.megatts.default"
 
 
     fun initTTS(context: AppCompatActivity) {
@@ -151,6 +152,7 @@ object TTSHelper {
         } else {
 //            mCurTtsText = mCurTtsText.take(20)
             mCurTtsText = text
+            setVoiceTypeByText(text)
             startEngine()
             triggerSynthesis()
         }
@@ -493,6 +495,33 @@ object TTSHelper {
         mEngineInited = true;
     }
 
+    private fun setVoiceTypeByText(text: String) {
+        var configs = ImageApi.getGwConfigs()
+        var defaultVoiceTypes = configs.defaultVoiceTypes
+        if (defaultVoiceTypes != null) {
+            var lang = LanguageUtils.getAppLanguage(MainApp.getContext(), false)
+            var isEnLangText = LanguageUtils.getTextLanguage(text) == Locale.US
+            if (lang?.isNotEmpty() == true) {
+                var dvt: String? = null
+                if (isEnLangText) {
+                    dvt = defaultVoiceTypes["en"]
+                } else if (lang.contains("Hant", ignoreCase = true)) {
+                    dvt = defaultVoiceTypes["zh-hant"]
+                } else if (lang.contains("zh", false)
+                    && (lang.contains("tw",false) || lang.contains("hk", false))) {
+                    dvt = defaultVoiceTypes["zh-hant"]
+                } else {
+                    dvt = defaultVoiceTypes["zh-hans"]
+                }
+                if (dvt != null) {
+                    voiceType = dvt
+                    Logger.error { "set default voicetype:${voiceType},isEnLangText:$isEnLangText" }
+                    Log.d(TAG, "set default voicetype:${voiceType},isEnLangText:$isEnLangText")
+                }
+            }
+        }
+    }
+
     private fun startEngine() {
         Log.d(TAG, "Start engine, current status: " + mEngineStarted)
 //        if (!mEngineStarted) {
@@ -586,9 +615,10 @@ object TTSHelper {
 //        mCurVoiceOnline = "volc.megatts.default"
 //        Log.d(SpeechDemoDefines.TAG, "Current online voice: " + mCurVoiceOnline)
         //【必需配置】在线合成使用的发音人代号
+        var speaker = "other"
         mSpeechEngine!!.setOptionString(
             SpeechEngineDefines.PARAMS_KEY_TTS_VOICE_ONLINE_STRING,
-            "volc.megatts.default"
+            speaker
         )
 //        var curVoiceTypeOnline: String = mSettings.getString(R.string.config_voice_type_online)
 //        if (curVoiceTypeOnline.isEmpty()) {
@@ -607,7 +637,7 @@ object TTSHelper {
             NetworkEvent.errorEvent(
                 null,
                 "tts.params",
-                "voicetype:" + voiceType + "\n,voice:" + "volc.megatts.default"
+                "voicetype:$voiceType\n,speaker:$speaker"
             )
         )
 
@@ -690,26 +720,6 @@ object TTSHelper {
         if (configs == null || configs.voiceBaseConfigs == null) {
             Logger.error { "configInitParams but voice base configs is null " }
             return
-        }
-
-        var defaultVoiceTypes = configs.defaultVoiceTypes
-        if (defaultVoiceTypes != null) {
-            var lang = LanguageUtils.getAppLanguage(MainApp.getContext(), false)
-            if (lang?.isNotEmpty() == true) {
-                var dvt: String? = null
-                if (lang.contains("en", ignoreCase = true)) {
-                    dvt = defaultVoiceTypes["en"]
-                } else if (lang.contains("Hant", ignoreCase = true)) {
-                    dvt = defaultVoiceTypes["zh-hant"]
-                } else if (lang.contains("zh", ignoreCase = true)) {
-                    dvt = defaultVoiceTypes["zh-hans"]
-                }
-                if (dvt != null) {
-                    voiceType = dvt
-                    Logger.error { "set default voicetype:${voiceType}" }
-                    Log.d(TAG,"set default voicetype:${voiceType}")
-                }
-            }
         }
 
         //【必需配置】Engine Name

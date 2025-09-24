@@ -71,7 +71,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="26dp"
                 android:layout_marginTop="?attr/actionBarSize"
-                android:background="#1acf4b40"
+                android:background="#FCECEC"
                 android:gravity="center"
                 android:textColor="#CF4B40"
                 android:textSize="12sp" />

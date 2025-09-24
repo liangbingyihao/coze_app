@@ -108,8 +108,7 @@ public class SplashScreenActivity extends AppCompatActivity {
             if (app.isInitialized()) {
                 Logger.error("app.isInitialized hasShownGuide and initialized");
                 handler.postDelayed(this::proceedToMain, Math.max(500 - cost, 0));
-            }
-            if (System.currentTimeMillis() - app.startTimeStamp > 3000) {
+            }else if (System.currentTimeMillis() - app.startTimeStamp > 3000) {
                 try {
                     GWAuthenticationHandler.ensureDatabase();
                 } catch (Exception e) {

@@ -77,6 +77,7 @@ public class MainApp extends Application implements Configuration.Provider, Appl
         startTimeStamp = System.currentTimeMillis();
         TinyLoggerManager.initialize(this);
         registerActivityLifecycleCallbacks(this);
+        Log.i("MainApp",getPackageName());
         Logger.error("MainApp.onCreate");
         context = getApplicationContext();
         scheduleTokenUpdate();

@@ -21,6 +21,7 @@ import sdk.chat.demo.robot.activities.ArticleListActivity
 import sdk.chat.demo.robot.api.ImageApi
 import sdk.chat.demo.robot.api.JsonCacheManager
 import sdk.chat.demo.robot.api.model.ExportInfo
+import sdk.chat.demo.robot.audio.TTSHelper
 import sdk.chat.demo.robot.extensions.LanguageUtils
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.ui.activities.BaseActivity
@@ -45,7 +46,6 @@ class SettingLangsActivity : BaseActivity(), View.OnClickListener {
                     R.id.radioZH -> {
                         LanguageUtils.switchLanguage(this, "zh-Hans")
                     }
-
                     R.id.radioHant -> {
                         LanguageUtils.switchLanguage(this, "zh-Hant")
                     }
@@ -57,6 +57,7 @@ class SettingLangsActivity : BaseActivity(), View.OnClickListener {
                 }
                 JsonCacheManager.save(this, "gwTaskProcess", "")
                 JsonCacheManager.save(this, "gwDaily", "")
+                TTSHelper.resetVoiceType()
                 val threadHandler: GWThreadHandler = ChatSDK.thread() as GWThreadHandler
                 threadHandler.clearThreadCache()
                 dm.add(

@@ -191,16 +191,9 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
                     .subscribeOn(RX.io())
                     .observeOn(RX.main())
                     .subscribe(
-                        { data ->
-                            if (data != null) {
-                                highlightOverlay?.handleFirst(
-                                    this@MainDrawerActivity,
-                                    data
-                                )
-                            }
+                        {
                         },
-                        { error ->
-                        }
+                        this
                     )
             )
         }
@@ -212,6 +205,11 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
         TTSHelper.initTTS(this@MainDrawerActivity)
         AsrHelper.initAsrEngine()
         checkTaskDetail()
+
+        highlightOverlay?.handleStatic(
+            this@MainDrawerActivity,
+            null
+        )
     }
 
     private fun checkTaskDetail() {

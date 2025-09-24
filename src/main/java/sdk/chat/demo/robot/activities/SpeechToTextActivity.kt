@@ -202,6 +202,7 @@ class SpeechToTextActivity : AppCompatActivity(), View.OnClickListener,
                     TTSHelper.resetVoiceType()
                 }
                 TTSHelper.voiceType = selected.value
+//                TTSHelper.speaker = selected.label
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}

@@ -10,7 +10,6 @@
         android:layout_height="match_parent"
         android:background="#CC000000" />
 
-
     <LinearLayout
         android:id="@+id/guide_view"
         android:layout_width="wrap_content"
@@ -22,17 +21,17 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/rounded_bg"
-            android:padding="8dp"
             android:drawableLeft="@drawable/icon_home"
             android:drawablePadding="16dp"
+            android:padding="8dp"
             android:text="@string/guide_drawer"
             android:textColor="@color/black"
             android:textSize="18sp" />
 
-<!--        android:paddingLeft="16dp"-->
-<!--        android:paddingTop="8dp"-->
-<!--        android:paddingRight="16dp"-->
-<!--        android:paddingBottom="8dp"-->
+        <!--        android:paddingLeft="16dp"-->
+        <!--        android:paddingTop="8dp"-->
+        <!--        android:paddingRight="16dp"-->
+        <!--        android:paddingBottom="8dp"-->
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -46,11 +45,11 @@
             android:layout_width="300dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
+            android:gravity="center"
             android:paddingLeft="16dp"
             android:paddingTop="8dp"
             android:paddingRight="16dp"
             android:paddingBottom="8dp"
-            android:gravity="center"
             android:text="@string/guide_pic_desc"
             android:textColor="@color/white"
             android:textSize="16sp" />

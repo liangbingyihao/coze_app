@@ -1126,6 +1126,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
             Long sid = aiFeedback.getSessionId();
             if (sid != null && sid > 0 && !sid.equals(message.getThreadId())) {
                 message.setThreadId(sid);
+                ChatSDK.db().update(message);
                 if (aiFeedback.getFeedback() != null) {
                     updateThread(Long.toString(sid), aiFeedback.getFeedback().getTopic(), new Date());
                 }

@@ -10,6 +10,7 @@ import androidx.core.content.edit
 import android.icu.text.Transliterator
 import com.zqc.opencc.android.lib.ChineseConverter
 import com.zqc.opencc.android.lib.ConversionType
+import org.tinylog.Logger
 
 object LanguageUtils {
 
@@ -43,7 +44,13 @@ object LanguageUtils {
             // 如果没有保存过语言，使用系统语言
             getSystemLanguage()
         }
-        setAppLanguage(languageToSet)
+
+        if(languageToSet.contains("zh",false) && (languageToSet.contains("tw",false)||languageToSet.contains("hk",false))){
+            Logger.info {"initAppLanguage and switchLanguage $languageToSet to zh-Hant"}
+            switchLanguage(context,"zh-Hant")
+        }else{
+            setAppLanguage(languageToSet)
+        }
     }
 
     fun getAppLanguage(context: Context, refresh: Boolean): String? {
@@ -91,10 +98,11 @@ object LanguageUtils {
 
     // 获取系统当前语言
     fun getSystemLanguage(): String {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        var lang = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             LocaleList.getDefault()[0].toLanguageTag()
         } else {
             Locale.getDefault().toLanguageTag()
         }
+        return lang
     }
 }
