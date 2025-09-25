@@ -17,11 +17,11 @@ import sdk.chat.core.dao.Message
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.core.utils.Device.dpToPx
 import sdk.chat.demo.pre.R
+import sdk.chat.demo.robot.activities.BaseActivity
 import sdk.chat.demo.robot.api.model.MessageDetail
 import sdk.chat.demo.robot.extensions.findTopmostVisibleViewByResId
 import sdk.chat.demo.robot.handlers.GWMsgHandler
 import sdk.chat.demo.robot.handlers.GWThreadHandler
-import sdk.chat.ui.activities.BaseActivity
 import java.lang.ref.WeakReference
 import kotlin.text.isEmpty
 

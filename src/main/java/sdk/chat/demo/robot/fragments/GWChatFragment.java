@@ -61,6 +61,8 @@ import sdk.chat.core.utils.PermissionRequestHandler;
 import sdk.chat.core.utils.StringChecker;
 import sdk.chat.demo.examples.helper.CustomPrivateThreadsFragment;
 import sdk.chat.demo.pre.R;
+import sdk.chat.demo.robot.activities.BaseActivity;
+import sdk.chat.demo.robot.activities.SplashScreenActivity;
 import sdk.chat.demo.robot.activities.TaskActivity;
 import sdk.chat.demo.robot.adpter.data.AIExplore;
 import sdk.chat.demo.robot.audio.AsrHelper;
@@ -72,7 +74,6 @@ import sdk.chat.demo.robot.ui.GWMsgInput;
 import sdk.chat.demo.robot.ui.KeyboardOverlayHelper;
 import sdk.chat.demo.robot.ui.listener.GWClickListener;
 import sdk.chat.ui.ChatSDKUI;
-import sdk.chat.ui.activities.BaseActivity;
 import sdk.chat.ui.activities.preview.ChatPreviewActivity;
 import sdk.chat.ui.fragments.AbstractChatFragment;
 import sdk.chat.ui.interfaces.TextInputDelegate;
@@ -400,7 +401,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
 
         getKeyboardAwareView().keyboardHiddenListeners.add(() -> {
             input.updateInputHeight();
-            if(!input.isFullScreen()){
+            if (!input.isFullScreen()) {
                 scrollBottom.setVisibility(View.VISIBLE);
             }
         });
@@ -510,7 +511,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
                     String errType = (String) params.getOrDefault("type", "");
                     String msg = (String) params.getOrDefault("msg", "");
                     if ("asr".equals(errType)) {
-                        if(msg!=null&&!msg.isEmpty()){
+                        if (msg != null && !msg.isEmpty()) {
                             ToastHelper.show(getActivity(), msg);
                         }
                         input.onAsrStop(true);
@@ -599,7 +600,7 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
         completable.observeOn(RX.main()).doOnError(throwable -> {
             Log.e("sending", throwable.getLocalizedMessage());
             showToast(throwable.getLocalizedMessage());
-            Logger.error(throwable,"handleMessageSend");
+            Logger.error(throwable, "handleMessageSend");
         }).subscribe(this);
     }
 
@@ -904,6 +905,18 @@ public class GWChatFragment extends AbstractChatFragment implements GWChatContai
     @Override
     public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
         super.onViewStateRestored(savedInstanceState);
+        try {
+            ChatSDK.currentUser();
+        } catch (Exception e) {
+            Logger.error(e, "currentUser error");
+            Intent intent = new Intent(getContext(), SplashScreenActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            if(getActivity()!=null){
+                getActivity().finish();
+            }
+            return;
+        }
         restoreState(savedInstanceState);
     }
 

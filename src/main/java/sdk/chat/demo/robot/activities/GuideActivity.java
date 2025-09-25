@@ -30,7 +30,6 @@ import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.extensions.LanguageUtils;
 import sdk.chat.demo.robot.extensions.LogHelper;
 import sdk.chat.demo.robot.handlers.GWAuthenticationHandler;
-import sdk.chat.ui.activities.BaseActivity;
 import sdk.chat.ui.utils.ToastHelper;
 import sdk.guru.common.RX;
 

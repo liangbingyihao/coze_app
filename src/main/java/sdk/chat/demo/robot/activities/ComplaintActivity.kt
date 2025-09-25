@@ -7,7 +7,6 @@ import android.widget.TextView
 import io.reactivex.android.schedulers.AndroidSchedulers
 import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.handlers.LogUploader
-import sdk.chat.ui.activities.BaseActivity
 import sdk.chat.ui.utils.ToastHelper
 
 

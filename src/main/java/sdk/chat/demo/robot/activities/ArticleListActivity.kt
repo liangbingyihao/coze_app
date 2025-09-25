@@ -40,7 +40,6 @@ import sdk.chat.demo.robot.handlers.GWMsgHandler
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.demo.robot.ui.LoadMoreSwipeRefreshLayout
 import sdk.chat.demo.robot.ui.PopupMenuHelper
-import sdk.chat.ui.activities.BaseActivity
 import sdk.chat.ui.utils.ToastHelper
 import sdk.guru.common.RX
 

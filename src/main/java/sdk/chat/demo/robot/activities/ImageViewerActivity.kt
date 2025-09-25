@@ -25,7 +25,6 @@ import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.demo.robot.holder.DailyGWHolder
 import sdk.chat.demo.robot.holder.ImageHolder
 import sdk.chat.demo.robot.ui.listener.GWClickListener
-import sdk.chat.ui.activities.BaseActivity
 
 class ImageViewerActivity : BaseActivity(), View.OnClickListener {
     private lateinit var viewPager: ViewPager2

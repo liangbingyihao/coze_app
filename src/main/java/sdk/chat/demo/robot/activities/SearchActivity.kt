@@ -28,7 +28,6 @@ import sdk.chat.demo.robot.fragments.OnDataListener
 import sdk.chat.demo.robot.fragments.SearchResultFragment
 import sdk.chat.demo.robot.handlers.FrequencyCounter
 import sdk.chat.demo.robot.handlers.GWThreadHandler
-import sdk.chat.ui.activities.BaseActivity
 
 class SearchResultPagerAdapter(
     fragmentActivity: FragmentActivity

@@ -510,7 +510,7 @@ object AsrHelper {
     fun stopAsr() {
         if (recordIsRunning) {
             recordIsRunning = false
-            Logger.info("stop asr" as Any)
+            Logger.info {"stop asr"}
             Log.i(TAG, "AsrTouch: Finish")
             // Directive：结束用户音频输入。
             Log.i(TAG, "Directive: DIRECTIVE_FINISH_TALKING")

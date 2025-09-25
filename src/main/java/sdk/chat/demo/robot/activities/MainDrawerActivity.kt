@@ -28,6 +28,7 @@ import sdk.chat.demo.robot.adpter.SessionAdapter
 import sdk.chat.demo.robot.audio.AsrHelper
 import sdk.chat.demo.robot.audio.TTSHelper
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil
+import sdk.chat.demo.robot.extensions.LanguageUtils.updateContext
 import sdk.chat.demo.robot.extensions.dpToPx
 import sdk.chat.demo.robot.fragments.GWChatFragment
 import sdk.chat.demo.robot.handlers.DailyTaskHandler
@@ -36,12 +37,11 @@ import sdk.chat.demo.robot.ui.CustomDivider
 import sdk.chat.demo.robot.ui.HighlightOverlayView
 import sdk.chat.demo.robot.ui.hasShownGuideOverlay
 import sdk.chat.demo.robot.ui.listener.GWClickListener
-import sdk.chat.ui.activities.MainActivity
 import sdk.guru.common.RX
 import java.util.concurrent.TimeUnit
 
 
-class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener.TTSSpeaker {
+class MainDrawerActivity : BaseActivity(), View.OnClickListener, GWClickListener.TTSSpeaker {
     open lateinit var drawerLayout: DrawerLayout
     open lateinit var searchView: MaterialSearchView
     private lateinit var recyclerView: RecyclerView
@@ -77,10 +77,17 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
         super.onCreate(savedInstanceState)
         setContentView(layout)
 
-//        val daoCore: DaoCore = ChatSDK.db().getDaoCore()
-//        if (daoCore==null||daoCore.getDaoSession() == null) {
-//            LogHelper.reportExportEvent("app.init", "getDaoSession == null: "+LogHelper.logStr, null)
-//        }
+
+        try {
+            ChatSDK.currentUser()
+        } catch (e: Exception) {
+            Logger.error(e, "currentUser error")
+            val intent = Intent(this, SplashScreenActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            startActivity(intent)
+            finish()
+            return
+        }
 
 
         var isInitialized = (application as MainApp).isInitialized
@@ -201,7 +208,7 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container, GWChatFragment(), chatTag).commit()
 
-        requestPermissions();
+//        requestPermissions();
         TTSHelper.initTTS(this@MainDrawerActivity)
         AsrHelper.initAsrEngine()
         checkTaskDetail()
@@ -408,6 +415,7 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
 
     override fun onResume() {
         super.onResume()
+        updateContext(this)
         if (!ChatSDK.connectionStateMonitor().isOnline()) {
             vErrorHint.visibility = View.VISIBLE
             vErrorHint.setText(R.string.network_error)
@@ -427,29 +435,29 @@ class MainDrawerActivity : MainActivity(), View.OnClickListener, GWClickListener
         return R.layout.activity_main_coze_drawer;
     }
 
-    override fun searchEnabled(): Boolean {
-        return false
-    }
-
-    override fun search(text: String?) {
-
-    }
-
-    override fun searchView(): MaterialSearchView {
-        return searchView
-    }
-
-    override fun reloadData() {
-
-    }
-
-    override fun clearData() {
-
-    }
-
-    override fun updateLocalNotificationsForTab() {
-
-    }
+//    override fun searchEnabled(): Boolean {
+//        return false
+//    }
+//
+//    override fun search(text: String?) {
+//
+//    }
+//
+//    override fun searchView(): MaterialSearchView {
+//        return searchView
+//    }
+//
+//    override fun reloadData() {
+//
+//    }
+//
+//    override fun clearData() {
+//
+//    }
+//
+//    override fun updateLocalNotificationsForTab() {
+//
+//    }
 
     // 显示引导层
     fun showTutorialOverlay(targetView: View) {

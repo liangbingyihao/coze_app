@@ -8,11 +8,27 @@ import android.os.Build
 import android.os.LocaleList
 import androidx.core.content.edit
 import android.icu.text.Transliterator
+import androidx.annotation.StringRes
 import com.zqc.opencc.android.lib.ChineseConverter
 import com.zqc.opencc.android.lib.ConversionType
 import org.tinylog.Logger
+import sdk.chat.demo.MainApp
+import java.lang.ref.WeakReference
 
 object LanguageUtils {
+    private var contextRef: WeakReference<Context>? = null
+
+    fun updateContext(context: Context) {
+        contextRef = WeakReference(context)
+    }
+
+    fun getString(@StringRes resId: Int): String? {
+        // 尝试从弱引用获取 Context
+        val context = contextRef?.get()
+        return context?.// 如果弱引用有效，使用它获取字符串
+        getString(resId) ?: // 如果弱引用失效，回退到 Application Context
+        MainApp.getContext().getString(resId)
+    }
 
     fun isChineseChar(c: Char): Boolean {
         return c in '\u4E00'..'\u9FA5' || c in '\u3400'..'\u4DBF'

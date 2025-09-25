@@ -24,7 +24,6 @@ import sdk.chat.demo.robot.api.model.ExportInfo
 import sdk.chat.demo.robot.audio.TTSHelper
 import sdk.chat.demo.robot.extensions.LanguageUtils
 import sdk.chat.demo.robot.handlers.GWThreadHandler
-import sdk.chat.ui.activities.BaseActivity
 import sdk.chat.ui.utils.ToastHelper
 import sdk.guru.common.RX
 

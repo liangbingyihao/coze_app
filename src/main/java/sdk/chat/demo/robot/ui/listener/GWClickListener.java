@@ -1,5 +1,6 @@
 package sdk.chat.demo.robot.ui.listener;
 
+import static android.app.Application.getProcessName;
 import static sdk.chat.demo.MainApp.getContext;
 
 import android.content.ClipData;
@@ -31,6 +32,7 @@ import sdk.chat.core.utils.PermissionRequestHandler;
 import sdk.chat.demo.MainApp;
 import sdk.chat.demo.pre.R;
 import sdk.chat.demo.robot.activities.ArticleListActivity;
+import sdk.chat.demo.robot.activities.BaseActivity;
 import sdk.chat.demo.robot.activities.ImageViewerActivity;
 import sdk.chat.demo.robot.adpter.ChatAdapter;
 import sdk.chat.demo.robot.adpter.data.AIExplore;
@@ -45,7 +47,6 @@ import sdk.chat.demo.robot.handlers.GWThreadHandler;
 import sdk.chat.demo.robot.holder.DailyGWHolder;
 import sdk.chat.demo.robot.holder.ImageHolder;
 import sdk.chat.demo.robot.holder.TextHolder;
-import sdk.chat.ui.activities.BaseActivity;
 import sdk.chat.ui.utils.ToastHelper;
 import sdk.guru.common.RX;
 
@@ -171,7 +172,7 @@ public class GWClickListener<MESSAGE extends IMessage> implements ChatAdapter.On
                     .andThen( // After permission is granted, execute the following operations
                             Observable.<Bitmap>create(emitter -> {
                                         CardGenerator.Companion.getInstance()
-                                                .generateBibleCard(MainApp.getContext(),
+                                                .generateBibleCard(view.getContext(),
                                                         resId,
                                                         imageDaily,
                                                         result -> {

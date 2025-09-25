@@ -47,6 +47,10 @@ public class MainApp extends Application implements Configuration.Provider, Appl
         return context;
     }
 
+    public Activity getCurrentActivity() {
+        return currentActivity;
+    }
+
     private void scheduleTokenUpdate() {
         // 创建每7天执行一次的定期工作请求
         PeriodicWorkRequest workRequest = new PeriodicWorkRequest.Builder(

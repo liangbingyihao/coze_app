@@ -31,31 +31,30 @@
             android:textSize="18sp"
             android:textStyle="bold" />
 
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/dashed_line" />
+
         <FrameLayout
             android:id="@+id/footer"
             android:layout_width="match_parent"
-            android:layout_height="140dp"
+            android:layout_height="wrap_content"
             android:background="#FAFAFA">
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="2dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/dashed_line" />
 
             <ImageView
                 android:layout_width="64dp"
                 android:layout_height="64dp"
-                android:layout_gravity="bottom"
-                android:layout_margin="34dp"
+                android:layout_gravity="center|left"
+                android:layout_margin="30dp"
                 android:src="@mipmap/ic_qr_verse" />
 
             <TextView
                 android:layout_width="wrap_content"
-                android:layout_height="64dp"
-                android:layout_gravity="bottom"
-                android:layout_marginLeft="112dp"
-                android:layout_marginBottom="34dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="110dp"
                 android:gravity="center_vertical"
                 android:text="@string/download_prompt"
                 android:textColor="#B1B1B1"

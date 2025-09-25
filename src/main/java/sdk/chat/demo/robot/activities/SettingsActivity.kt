@@ -19,7 +19,6 @@ import sdk.chat.demo.pre.R
 import sdk.chat.demo.robot.api.ImageApi
 import sdk.chat.demo.robot.api.model.ExportInfo
 import sdk.chat.demo.robot.extensions.LanguageUtils
-import sdk.chat.ui.activities.BaseActivity
 import sdk.chat.ui.utils.ToastHelper
 
 class SettingsActivity : BaseActivity(), View.OnClickListener {

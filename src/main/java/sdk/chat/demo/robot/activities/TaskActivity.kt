@@ -28,11 +28,9 @@ import sdk.chat.demo.robot.adpter.data.AIExplore
 import sdk.chat.demo.robot.api.model.Story
 import sdk.chat.demo.robot.api.model.TaskProgress
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil.formatDayAgo
-import sdk.chat.demo.robot.extensions.LogHelper
 import sdk.chat.demo.robot.handlers.DailyTaskHandler
 import sdk.chat.demo.robot.handlers.GWThreadHandler
 import sdk.chat.demo.robot.ui.TaskList
-import sdk.chat.ui.activities.BaseActivity
 import sdk.chat.ui.utils.ToastHelper
 
 class TaskActivity : BaseActivity(), View.OnClickListener {

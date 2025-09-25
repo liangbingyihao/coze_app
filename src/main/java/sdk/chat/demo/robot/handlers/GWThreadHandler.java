@@ -5,6 +5,7 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatDelegate;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -57,6 +59,7 @@ import sdk.chat.demo.robot.api.model.ImageDaily;
 import sdk.chat.demo.robot.api.model.MessageDetail;
 import sdk.chat.demo.robot.api.model.SystemConf;
 import sdk.chat.demo.robot.extensions.DateLocalizationUtil;
+import sdk.chat.demo.robot.extensions.LanguageUtils;
 import sdk.chat.demo.robot.extensions.LogHelper;
 import sdk.chat.demo.robot.extensions.StateStorage;
 import sdk.chat.demo.robot.holder.AIFeedbackType;
@@ -858,13 +861,13 @@ public class GWThreadHandler extends AbstractThreadHandler {
 
             List<ArticleSession> ret = new ArrayList<>();
             // 新增逻辑：将名为"信仰问答"的线程提到第一位
-            Log.e("listSessions", "sort....\n");
+//            Log.e("listSessions", "sort...."+ AppCompatDelegate.getApplicationLocales());
             if (threads != null && !threads.isEmpty()) {
                 // 查找名为headTopic的线程
                 for (Thread thread : threads) {
                     ArticleSession s;
                     if (headTopic.equals(thread.getName())) {
-                        s = new ArticleSession(thread.getEntityID(), MainApp.getContext().getString(R.string.questions), true);
+                        s = new ArticleSession(thread.getEntityID(), Objects.requireNonNull(LanguageUtils.INSTANCE.getString(R.string.questions)), true);
                     } else {
                         s = new ArticleSession(thread.getEntityID(), thread.getName(), false);
                     }
@@ -1211,7 +1214,7 @@ public class GWThreadHandler extends AbstractThreadHandler {
     public synchronized void startPolling(Long localId, String contextId, int retry) throws Exception {
         if (pendingMsgId != null && !pendingMsgId.equals(localId)) {
 //            disposables.clear();
-            throw new Exception(MainApp.getContext().getString(R.string.sending));
+            throw new Exception(LanguageUtils.INSTANCE.getString(R.string.sending));
         }
 
         pendingMsgId = localId;

@@ -19,14 +19,9 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import sdk.chat.core.session.ChatSDK
 import sdk.chat.demo.pre.R
-import sdk.chat.demo.robot.adpter.TaskPieAdapter
-import sdk.chat.demo.robot.api.model.Chapter
-import sdk.chat.demo.robot.api.model.TaskDetail
 import sdk.chat.demo.robot.api.model.TaskHistory
 import sdk.chat.demo.robot.extensions.StoryHelper
 import sdk.chat.demo.robot.handlers.DailyTaskHandler
-import sdk.chat.demo.robot.ui.TaskList
-import sdk.chat.ui.activities.BaseActivity
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
 
