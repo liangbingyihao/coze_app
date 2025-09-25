@@ -2,7 +2,6 @@
 /local.properties
 /.idea/workspace.xml
 .DS_Store
-
 # Generated files
 **/bin/
 **/gen/
@@ -43,3 +42,6 @@ chat-sdk-typing-indicator
 chat-sdk-video-message
 
 ajcore.*
+
+doubao.json
+google-services.json
