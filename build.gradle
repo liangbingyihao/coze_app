@@ -94,21 +94,22 @@ android {
             ext.alwaysUpdateBuildId = false
         }
     }
-//    applicationVariants.all { variant ->
+
+    applicationVariants.all { variant ->
 //        def buildType = variant.buildType.name
 //        copy {
 //            from "src/${buildType}/google-services.json"
 //            into "."
 //        }
-////        variant.outputs.all { output ->
-////            def versionName = variant.versionName
-////            def versionCode = variant.versionCode
-////            def flavor = variant.flavorName
-////            def formattedDate = new Date().format('yyyyMMddHHmm')
-////
-////            outputFileName = "graceword_v${versionName}_${versionCode}.apk"
-////        }
-//    }
+        variant.outputs.all { output ->
+            def versionName = variant.versionName
+            def versionCode = variant.versionCode
+            def flavor = variant.flavorName
+            def formattedDate = new Date().format('yyyyMMddHHmm')
+
+            outputFileName = "graceword_v${versionName}_${versionCode}.apk"
+        }
+    }
 
     lint {
         abortOnError false
@@ -122,12 +123,12 @@ android {
 
 }
 
-gradle.taskGraph.whenReady {
-    tasks.each { task ->
-        if (task.name.contains("uploadCrashlyticsMappingFile")) {
-            task.enabled = false
-        }
-    }}
+//gradle.taskGraph.whenReady {
+//    tasks.each { task ->
+//        if (task.name.contains("uploadCrashlyticsMappingFile")) {
+//            task.enabled = false
+//        }
+//    }}
 
 
 repositories {
